@@ -1,0 +1,31 @@
+{
+  "name": "squiggle",
+  "version": "1.0.0",
+  "description": "Real-time multiplayer drawing and guessing game",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "client": "npm run dev --prefix client",
+    "server": "npm run dev --prefix server",
+    "install:all": "npm install && npm install --prefix client && npm install --prefix server",
+    "build": "npm run build --prefix client",
+    "start": "npm start --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "drawing",
+    "multiplayer",
+    "game",
+    "socket.io",
+    "webrtc",
+    "react"
+  ],
+  "author": "",
+  "license": "MIT"
+}
