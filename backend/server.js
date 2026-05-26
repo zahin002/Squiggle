@@ -19,6 +19,7 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/rooms', require('./routes/rooms'));
+app.use('/api/words', require('./routes/words'));
 
 // Base route - just to test server is running
 app.get('/', (req, res) => {
