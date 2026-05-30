@@ -61,15 +61,16 @@ router.post('/create', protect, async (req, res) => {
 
     // ── Integration Point with Ashfaque ──────────────────────
     // When Ashfaque finishes roomStore.js, uncomment this:
-    // const { setRoom } = require('../socket/roomStore');
-    // setRoom(room.roomCode, {
-    //   roomId: room._id,
-    //   host: req.user._id,
-    //   players: [req.user._id],
-    //   settings: room.settings,
-    //   status: 'waiting',
-    //   currentRound: 0
-    // });
+    //uncommnet by ashfaque(30/05/26)
+    const { setRoom } = require('../socket/roomStore');
+    setRoom(room.roomCode, {
+      roomId: room._id,
+      host: req.user._id,
+      players: [req.user._id],
+      settings: room.settings,
+      status: 'waiting',
+      currentRound: 0
+    });
     // ─────────────────────────────────────────────────────────
 
     res.status(201).json({

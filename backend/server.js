@@ -1,33 +1,40 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const http = require('http');                          // ADD THIS
+const { Server } = require('socket.io');              // ADD THIS
 const connectDB = require('./config/db');
 
-// Load environment variables
 dotenv.config();
-
-// Connect to MongoDB
 connectDB();
 
-// Create express app
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/rooms', require('./routes/rooms'));
 app.use('/api/words', require('./routes/words'));
 
-// Base route - just to test server is running
 app.get('/', (req, res) => {
   res.json({ message: 'Squiggle API is running!' });
 });
 
-// Start server
+// CHANGE THIS — replace app.listen() with these lines
+const httpServer = http.createServer(app);
+
+const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:5173",   // Nirob's React frontend port
+    methods: ["GET", "POST"]
+  }
+});
+
+// Load your socket logic
+require('./socket/index')(io);
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
