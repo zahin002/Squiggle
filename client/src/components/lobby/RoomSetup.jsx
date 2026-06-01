@@ -1,96 +1,179 @@
+// client/src/components/lobby/RoomSetup.jsx
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
+
+const GENRES = [
+  'Animals', 'Food & Drink', 'Nature', 'Entertainment', 'Video Games',
+  'Anime & Manga', 'Historical Figures', 'Brands & Logos', 'Space & Sci-Fi', 'Idioms',
+];
 
 export default function RoomSetup() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
   const [settings, setSettings] = useState({
     maxPlayers: 8,
     drawTime: 80,
     rounds: 3,
     wordCount: 3,
     hints: 2,
-    gameMode: 'standard', // 'standard' | 'custom' | 'genre' | 'wordle'
+    gameMode: 'standard',
     isPrivate: false,
     customWords: '',
-    selectedGenres: []
+    selectedGenres: [],
   });
 
-  const genres = ['Animals', 'Food & Drink', 'Nature', 'Entertainment', 'Video Games', 
-                  'Anime & Manga', 'Historical Figures', 'Brands & Logos', 'Space & Sci-Fi', 'Idioms'];
+  const isGuest = !!user?.isGuest;
 
   const createRoom = async () => {
     try {
-      const res = await axios.post('/api/rooms/create', settings);
-      // Navigate to game page — roomId comes from the server
+      // For guests: override to standard mode before sending, even if state drifted
+      const effectiveSettings = isGuest
+        ? {
+            ...settings,
+            gameMode: 'standard',
+            customWords: '',
+            selectedGenres: [],
+          }
+        : settings;
+
+      const res = await axios.post('/api/rooms/create', effectiveSettings);
       navigate(`/game/${res.data.roomId}`);
     } catch (err) {
       console.error('Failed to create room:', err);
     }
   };
 
+  const handleGenreToggle = (genre, checked) => {
+    const updated = checked
+      ? [...settings.selectedGenres, genre]
+      : settings.selectedGenres.filter((g) => g !== genre);
+    setSettings({ ...settings, selectedGenres: updated });
+  };
+
   return (
     <div className="room-setup">
       <h2>Create Room</h2>
-      <label>Max Players (2–20):
-        <input type="number" min={2} max={20}
+
+      {/* ── Guest restriction banner ───────────────────────────────────── */}
+      {isGuest && (
+        <div className="guest-restriction-banner">
+          🎮 <strong>Guest Mode:</strong> Only Standard gameplay is available.{' '}
+          <a href="/register">Register for free</a> to unlock Genre, Custom &amp; Wordle modes.
+        </div>
+      )}
+
+      {/* ── Max players ───────────────────────────────────────────────── */}
+      <label>
+        Max Players (2–20):
+        <input
+          type="number"
+          min={2}
+          max={20}
           value={settings.maxPlayers}
-          onChange={e => setSettings({ ...settings, maxPlayers: +e.target.value })}
+          onChange={(e) =>
+            setSettings({ ...settings, maxPlayers: +e.target.value })
+          }
         />
       </label>
-      <label>Draw Time (seconds):
-        <select value={settings.drawTime}
-          onChange={e => setSettings({ ...settings, drawTime: +e.target.value })}>
-          {[15,20,30,40,50,60,70,80,90,100,120,150,180,210,240].map(t =>
-            <option key={t} value={t}>{t}s</option>
+
+      {/* ── Draw time ─────────────────────────────────────────────────── */}
+      <label>
+        Draw Time (seconds):
+        <select
+          value={settings.drawTime}
+          onChange={(e) =>
+            setSettings({ ...settings, drawTime: +e.target.value })
+          }
+        >
+          {[15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 150, 180, 210, 240].map(
+            (t) => (
+              <option key={t} value={t}>
+                {t}s
+              </option>
+            )
           )}
         </select>
       </label>
-      <label>Rounds:
-        <input type="number" min={1} max={10}
+
+      {/* ── Rounds ────────────────────────────────────────────────────── */}
+      <label>
+        Rounds:
+        <input
+          type="number"
+          min={1}
+          max={10}
           value={settings.rounds}
-          onChange={e => setSettings({ ...settings, rounds: +e.target.value })}
+          onChange={(e) =>
+            setSettings({ ...settings, rounds: +e.target.value })
+          }
         />
       </label>
-      <label>Game Mode:
-        <select value={settings.gameMode}
-          onChange={e => setSettings({ ...settings, gameMode: e.target.value })}>
+
+      {/* ── Game mode ─────────────────────────────────────────────────── */}
+      <label>
+        Game Mode:
+        <select
+          value={settings.gameMode}
+          onChange={(e) =>
+            setSettings({ ...settings, gameMode: e.target.value })
+          }
+          // Guests cannot change the game mode
+          disabled={isGuest}
+          title={isGuest ? 'Register to unlock additional game modes' : undefined}
+        >
           <option value="standard">Standard</option>
-          <option value="genre">Genre</option>
-          <option value="custom">Custom Words</option>
-          <option value="wordle">Wordle Mode</option>
+          {/* Non-standard options are only rendered for registered users */}
+          {!isGuest && <option value="genre">Genre</option>}
+          {!isGuest && <option value="custom">Custom Words</option>}
+          {!isGuest && <option value="wordle">Wordle Mode</option>}
         </select>
       </label>
-      {settings.gameMode === 'genre' && (
+
+      {/* ── Genre selector (registered users only, genre mode only) ──── */}
+      {!isGuest && settings.gameMode === 'genre' && (
         <div className="genre-selector">
-          {genres.map(g => (
+          <p>Select genres:</p>
+          {GENRES.map((g) => (
             <label key={g}>
-              <input type="checkbox"
+              <input
+                type="checkbox"
                 checked={settings.selectedGenres.includes(g)}
-                onChange={e => {
-                  const updated = e.target.checked
-                    ? [...settings.selectedGenres, g]
-                    : settings.selectedGenres.filter(x => x !== g);
-                  setSettings({ ...settings, selectedGenres: updated });
-                }} />
+                onChange={(e) => handleGenreToggle(g, e.target.checked)}
+              />
               {g}
             </label>
           ))}
         </div>
       )}
-      {settings.gameMode === 'custom' && (
+
+      {/* ── Custom words (registered users only, custom mode only) ────── */}
+      {!isGuest && settings.gameMode === 'custom' && (
         <textarea
-          placeholder="Enter words separated by commas (min 10 words)"
+          placeholder="Enter words separated by commas (minimum 10 words)"
           value={settings.customWords}
-          onChange={e => setSettings({ ...settings, customWords: e.target.value })}
+          onChange={(e) =>
+            setSettings({ ...settings, customWords: e.target.value })
+          }
           rows={4}
         />
       )}
+
+      {/* ── Private room toggle ───────────────────────────────────────── */}
       <label>
-        <input type="checkbox" checked={settings.isPrivate}
-          onChange={e => setSettings({ ...settings, isPrivate: e.target.checked })}
-        /> Private Room
+        <input
+          type="checkbox"
+          checked={settings.isPrivate}
+          onChange={(e) =>
+            setSettings({ ...settings, isPrivate: e.target.checked })
+          }
+        />
+        {' '}Private Room
       </label>
+
       <button onClick={createRoom}>Create Room</button>
     </div>
   );

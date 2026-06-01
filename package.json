@@ -15,7 +15,7 @@
     "concurrently": "^8.2.2"
   },
   "engines": {
-    "node": ">=18.0.0",
+    "node": ">=20.0.0",
     "npm": ">=9.0.0"
   },
   "keywords": [
@@ -29,6 +29,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@google/genai": "^2.7.0",
     "socket.io": "^4.8.3"
   }
 }

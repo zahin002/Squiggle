@@ -39,4 +39,12 @@ function getWordChoices(settings) {
   return shuffled.slice(0, (wordCount || 3) + 1);
 }
 
+const { generateAIWords } = require('../services/aiWordGenerator');
+
+async function getWordChoices(settings) {
+  const aiWords = await generateAIWords(settings);
+  if (aiWords) return aiWords;           // AI path succeeded
+  // ... existing static pool fallback below
+}
+
 module.exports = { wordBank, getWordChoices };
