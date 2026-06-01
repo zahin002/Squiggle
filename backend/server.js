@@ -2,12 +2,13 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const { setupIndexes } = require('./utils/setupIndexes');
 
 // Load environment variables
 dotenv.config();
 
 // Connect to MongoDB
-connectDB();
+connectDB().then(() => setupIndexes());
 
 // Create express app
 const app = express();
@@ -20,7 +21,8 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/rooms', require('./routes/rooms'));
 app.use('/api/words', require('./routes/words'));
-
+app.use('/api/users', require('./routes/users'));
+app.use('/api/rewards', require('./routes/rewards'));
 // Base route - just to test server is running
 app.get('/', (req, res) => {
   res.json({ message: 'Squiggle API is running!' });

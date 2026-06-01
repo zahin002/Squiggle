@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Room = require('../models/Room');
 const { protect } = require('../middleware/authMiddleware');
+const { optionalAuth } = require('../middleware/optionalAuthMiddleware');
 
 // ─── Helper: Generate Unique Room Code ────────────────────────
 const generateRoomCode = () => {
@@ -15,7 +16,7 @@ const generateRoomCode = () => {
 
 // ─── CREATE ROOM ──────────────────────────────────────────────
 // POST /api/rooms/create
-router.post('/create', protect, async (req, res) => {
+router.post('/create', optionalAuth, async (req, res) => {
   const {
     playerCount,
     drawTime,
@@ -41,10 +42,10 @@ router.post('/create', protect, async (req, res) => {
     }
 
     // Create the room in MongoDB
-    const room = await Room.create({
+  const room = await Room.create({
       roomCode,
-      host: req.user._id,
-      players: [req.user._id],
+      host: req.user ? req.user._id : null,
+      players: req.user ? [req.user._id] : [],
       settings: {
         playerCount: playerCount || 8,
         drawTime: drawTime || 80,

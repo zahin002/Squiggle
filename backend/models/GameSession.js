@@ -71,8 +71,12 @@ const gameSessionSchema = new mongoose.Schema({
     enum: ['standard', 'custom', 'genre', 'wordle'],
     default: 'standard'
   },
-  totalRounds: {
+totalRounds: {
     type: Number
+  },
+  hadGuestPlayers: {
+    type: Boolean,
+    default: false
   },
   startedAt: {
     type: Date,
