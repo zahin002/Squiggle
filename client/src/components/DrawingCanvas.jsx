@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useCanvas } from '../../hooks/useCanvas';
+import { useCanvas } from '../hooks/useCanvas';
 import ToolBar from './ToolBar';
 import ColorPicker from './ColorPicker';
 

@@ -7,18 +7,25 @@ const router = express.Router();
 router.post('/register', async (req, res) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ message: 'Username and password required' });
-    }
+
+    console.log('BODY:', req.body);
+
     const exists = await User.findOne({ username });
-    if (exists) return res.status(409).json({ message: 'Username already taken' });
+
+    console.log('EXISTS:', exists);
 
     const user = new User({ username, password });
+
+    console.log('USER CREATED');
+
     await user.save();
+
+    console.log('USER SAVED');
 
     res.status(201).json({ message: 'Registered successfully' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('REGISTER ERROR:', err);
+    res.status(500).json({ message: err.message });
   }
 });
 
@@ -57,7 +64,11 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+      console.error('REGISTER ERROR:', err);
+      res.status(500).json({
+      message: err.message,
+      stack: err.stack
+     });
   }
 });
 
