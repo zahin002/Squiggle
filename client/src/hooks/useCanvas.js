@@ -8,9 +8,11 @@ export function useCanvas(socket, roomId, isDrawer) {
 
   const getPos = (e, canvas) => {
     const rect = canvas.getBoundingClientRect();
+
     // Support both mouse and touch events
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
     return {
       x: (clientX - rect.left) * (canvas.width / rect.width),
       y: (clientY - rect.top) * (canvas.height / rect.height)
@@ -19,19 +21,26 @@ export function useCanvas(socket, roomId, isDrawer) {
 
   const startDraw = useCallback((e) => {
     if (!isDrawer) return;
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
+
     isDrawing.current = true;
+
     const pos = getPos(e, canvas);
+
     lastPos.current = pos;
+
     ctx.beginPath();
     ctx.moveTo(pos.x, pos.y);
   }, [isDrawer]);
 
   const draw = useCallback((e, tool, color, size) => {
     if (!isDrawer || !isDrawing.current) return;
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
+
     const pos = getPos(e, canvas);
 
     ctx.lineWidth = size;
@@ -49,7 +58,7 @@ export function useCanvas(socket, roomId, isDrawer) {
     ctx.lineTo(pos.x, pos.y);
     ctx.stroke();
 
-    // Emit to server — the server will broadcast to all other players
+    // Broadcast drawing to other players
     socket.emit('drawing', {
       roomId,
       from: lastPos.current,
@@ -64,82 +73,177 @@ export function useCanvas(socket, roomId, isDrawer) {
 
   const endDraw = useCallback(() => {
     if (!isDrawer || !isDrawing.current) return;
+
     isDrawing.current = false;
-    // Save snapshot for undo
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    history.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
-    if (history.current.length > 30) history.current.shift(); // limit memory
+
+    // Save snapshot for undo
+    history.current.push(
+      ctx.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      )
+    );
+
+    if (history.current.length > 30) {
+      history.current.shift();
+    }
   }, [isDrawer]);
 
   const undo = useCallback(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
+
     history.current.pop();
-    const last = history.current[history.current.length - 1];
+
+    const last =
+      history.current[history.current.length - 1];
+
     if (last) {
       ctx.putImageData(last, 0, 0);
     } else {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
     }
-    socket.emit('canvasState', { roomId, state: canvas.toDataURL() });
+
+    socket.emit('canvasState', {
+      roomId,
+      state: canvas.toDataURL()
+    });
   }, [socket, roomId]);
 
   const clearCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.clearRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
     history.current = [];
+
     socket.emit('clearCanvas', { roomId });
   }, [socket, roomId]);
 
-  // Listen for other players' drawing events
   useEffect(() => {
     if (!socket) return;
 
-    socket.on('drawing', ({ from, to, tool, color, size }) => {
+    // Receive drawing from other players
+    socket.on('drawing', ({
+      from,
+      to,
+      tool,
+      color,
+      size
+    }) => {
       const canvas = canvasRef.current;
+
       if (!canvas) return;
+
       const ctx = canvas.getContext('2d');
+
       ctx.lineWidth = size;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
+
       if (tool === 'eraser') {
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.strokeStyle = 'rgba(0,0,0,1)';
+        ctx.globalCompositeOperation =
+          'destination-out';
+        ctx.strokeStyle =
+          'rgba(0,0,0,1)';
       } else {
-        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalCompositeOperation =
+          'source-over';
         ctx.strokeStyle = color;
       }
+
       ctx.beginPath();
       ctx.moveTo(from.x, from.y);
       ctx.lineTo(to.x, to.y);
       ctx.stroke();
     });
 
+    // Receive clear canvas
     socket.on('clearCanvas', () => {
       const canvas = canvasRef.current;
+
+      if (!canvas) return;
+
       const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
     });
 
-    // When a new player joins mid-game, send them the current canvas state
+    // Receive full canvas snapshot
     socket.on('canvasState', ({ state }) => {
       const canvas = canvasRef.current;
+
+      if (!canvas) return;
+
       const img = new Image();
+
       img.src = state;
+
       img.onload = () => {
         const ctx = canvas.getContext('2d');
+
+        ctx.clearRect(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
         ctx.drawImage(img, 0, 0);
       };
+    });
+
+    // NEW: Current drawer sends canvas state to late joiner
+    socket.on('sendCanvasStateTo', ({
+      targetSocketId
+    }) => {
+      if (!isDrawer) return;
+
+      const canvas = canvasRef.current;
+
+      if (!canvas) return;
+
+      socket.emit('canvasStateFor', {
+        targetSocketId,
+        state: canvas.toDataURL()
+      });
     });
 
     return () => {
       socket.off('drawing');
       socket.off('clearCanvas');
       socket.off('canvasState');
+      socket.off('sendCanvasStateTo');
     };
-  }, [socket]);
+  }, [socket, isDrawer]);
 
-  return { canvasRef, startDraw, draw, endDraw, undo, clearCanvas };
+  return {
+    canvasRef,
+    startDraw,
+    draw,
+    endDraw,
+    undo,
+    clearCanvas
+  };
 }
