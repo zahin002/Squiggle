@@ -4,17 +4,19 @@ import axios from 'axios';
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null); // { id, username, coins, diamonds }
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // On app load, check if user is already logged in via stored token
     const token = localStorage.getItem('token');
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       axios.get('/api/users/me')
         .then(res => setUser(res.data))
-        .catch(() => localStorage.removeItem('token'))
+        .catch(() => {
+          localStorage.removeItem('token');
+          delete axios.defaults.headers.common['Authorization'];
+        })
         .finally(() => setLoading(false));
     } else {
       setLoading(false);
@@ -28,6 +30,20 @@ export function AuthProvider({ children }) {
     setUser(res.data.user);
   };
 
+  const loginAsGuest = () => {
+    localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
+
+    const guestUser = {
+      username: `Guest_${Math.floor(Math.random() * 9000) + 1000}`,
+      isGuest: true,
+      goldCoins: 0,
+      diamonds: 0,
+    };
+    setUser(guestUser);
+    return guestUser;
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
@@ -35,7 +51,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, setUser, login, loginAsGuest, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

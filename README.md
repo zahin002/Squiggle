@@ -33,7 +33,7 @@ A real-time multiplayer drawing and guessing game built with React, Node.js, Soc
 
 ### Prerequisites
 
-- Node.js >= 18.0.0
+- Node.js >= 20.0.0
 - npm >= 9.0.0
 - MongoDB (local or Atlas)
 
@@ -54,6 +54,11 @@ npm run install:all
 ```bash
 cp .env.example server/.env
 # Then open server/.env and fill in your values
+```
+
+For AI-powered word generation, create a Google Gemini API key and set:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 **4. Run in development mode**

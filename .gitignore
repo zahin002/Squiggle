@@ -45,3 +45,6 @@ coverage/
 # Misc
 .cache/
 tmp/
+node_modules/
+node_modules/
+.env
