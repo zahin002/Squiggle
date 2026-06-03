@@ -1,3 +1,4 @@
+import { useCanvas } from '../hooks/useCanvas';  // one level up, not two
 import { useRef, useEffect, useCallback } from 'react';
 
 export function useCanvas(socket, roomId, isDrawer) {
