@@ -64,12 +64,15 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (err) {
-      console.error('REGISTER ERROR:', err);
-      res.status(500).json({
-      message: err.message,
-      stack: err.stack
-     });
-  }
+  console.error('REGISTER ERROR');
+  console.error(err);
+  console.error(err.stack);
+
+  res.status(500).json({
+    message: err.message,
+    stack: err.stack
+  });
+}
 });
 
 module.exports = router;
