@@ -250,8 +250,40 @@ module.exports = (io) => {
         message: 'Game is starting!'
       });
 
-      require('./roundManager')
+      require('./roundManager.js')
         .startNextRound(io, roomId);
+    });
+
+    // ----- WORD SELECTED -----
+    socket.on('wordSelected', ({ roomId, word }) => {
+      const room = getRoom(roomId);
+      if (!room || room.currentDrawer?.socketId !== socket.id) return;
+
+      room.currentWord = word;
+      room.status = 'playing';
+      room.timeLeft = room.settings.drawTime;
+      setRoom(roomId, room);
+
+      const hint = word.replace(/[a-zA-Z]/g, '_').split('').join(' ');
+
+      io.to(roomId).emit('roundStarted', {
+        drawer: { username: room.currentDrawer.username, socketId: room.currentDrawer.socketId },
+        wordHint: hint,
+        wordLength: word.length,
+        round: room.currentRound,
+        totalRounds: room.settings.rounds,
+        timeLeft: room.timeLeft
+      });
+
+      io.to(roomId).emit('chatMessage', {
+        type: 'system',
+        text: `${room.currentDrawer.username} started drawing`
+      });
+
+
+      io.to(room.currentDrawer.socketId).emit('yourWord', { word });
+
+      require('./roundManager').startRoundTimer(io, room, roomId);
     });
 
     // ----- DISCONNECT -----

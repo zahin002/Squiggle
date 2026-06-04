@@ -29,7 +29,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useCanvas } from '../../hooks/useCanvas';
+import { useCanvas } from '../hooks/useCanvas';
 import ToolBar from './ToolBar';
 import ColorPicker from './ColorPicker';
 
@@ -49,6 +49,7 @@ const TOOL_CURSORS = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function DrawingCanvas({ socket, roomId, isDrawer }) {
+  console.log("DrawingCanvas rendered");
   // ── Tool / Color / Size state ─────────────────────────────────────────────
   const [tool, setTool]   = useState('brush');
   const [color, setColor] = useState('#000000');
@@ -255,6 +256,7 @@ export default function DrawingCanvas({ socket, roomId, isDrawer }) {
         height={600}
         className="drawing-canvas"
         style={{ cursor: isDrawer ? (TOOL_CURSORS[tool] || 'crosshair') : 'default' }}
+        style={{ border: "5px solid red" }}
         /* Mouse events */
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}

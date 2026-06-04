@@ -21,7 +21,6 @@ export default function GamePage() {
       setActiveUser(user);
       return;
     }
-
     setActiveUser(loginAsGuest());
   }, [user, loginAsGuest]);
 
@@ -29,18 +28,6 @@ export default function GamePage() {
     if (!activeUser) return undefined;
 
     socket.connect();
-
-    // DEBUG
-    socket.on('connect', () => {
-      console.log('SOCKET CONNECTED:', socket.id);
-    });
-
-    console.log('EMITTING joinRoom:', {
-      roomId,
-      username: activeUser.username,
-      isGuest: !!activeUser.isGuest,
-    });
-
     socket.emit('joinRoom', {
       roomId,
       token: localStorage.getItem('token'),
@@ -50,64 +37,43 @@ export default function GamePage() {
     });
 
     socket.on('roomState', (state) => {
-      console.log('ROOM STATE RECEIVED:', state);
-
       setRoomState(state);
-
       socket.emit('requestCanvasState', { roomId });
     });
-
     socket.on('playerJoined', ({ players }) => {
-      console.log('PLAYER JOINED EVENT:', players);
+      console.log('PLAYER_JOINED EVENT');
+      console.log('received players =', players);
+      console.log('received count =', players?.length);
 
       setRoomState((state) =>
-        state ? { ...state, players } : state
+      state ? { ...state, players } : state
       );
     });
-
     socket.on('playerLeft', ({ players }) => {
-      console.log('PLAYER LEFT EVENT:', players);
-
-      setRoomState((state) =>
-        state ? { ...state, players } : state
-      );
+      setRoomState((state) => state ? { ...state, players } : state);
     });
-
     socket.on('gameStarted', ({ message }) => {
-      console.log('GAME STARTED:', message);
-
-      setMessages((items) => [
-        ...items,
-        { type: 'system', text: message },
-      ]);
+      setMessages((items) => [...items, { type: 'system', text: message }]);
+    });
+    
+    // --- Added: wordChoices Listener ---
+    socket.on('wordChoices', ({ choices }) => {
+      setRoomState((s) => s ? { ...s, wordChoices: choices, status: 'wordSelection' } : s);
     });
 
     socket.on('roundStarted', (round) => {
-      console.log('ROUND STARTED:', round);
+      setRoomState((state) => state ? { ...state, status: 'playing', ...round } : state);
+    });
 
-      setRoomState((state) =>
-        state
-          ? {
-              ...state,
-              status: 'playing',
-              ...round,
-            }
-          : state
-      );
+    socket.on('yourWord', ({ word }) => {
+      setRoomState((s) => (s ? { ...s, selectedWord: word } : s));
     });
 
     socket.on('chatMessage', (message) => {
-      console.log('CHAT MESSAGE:', message);
-
-      setMessages((items) => [
-        ...items.slice(-30),
-        message,
-      ]);
+      setMessages((items) => [...items.slice(-30), message]);
     });
 
     socket.on('error', (payload) => {
-      console.error('SOCKET ERROR:', payload);
-
       setError(payload.message || 'Something went wrong');
     });
 
@@ -117,15 +83,23 @@ export default function GamePage() {
     };
   }, [activeUser, roomId, socket]);
 
-  const isDrawer =
-    roomState?.currentDrawer?.socketId === socket.id;
-
+  const isDrawer = roomState?.currentDrawer?.socketId === socket.id;
   const isHost = roomState?.isHost;
 
-  // DEBUG
-  console.log('CURRENT ROOM STATE:', roomState);
-  console.log('IS HOST:', isHost);
-  console.log('IS DRAWER:', isDrawer);
+  console.log('socket.id =', socket.id);
+  console.log('currentDrawer =', roomState?.currentDrawer);
+  console.log('isDrawer =', isDrawer);
+  console.log('wordChoices =', roomState?.wordChoices);
+  console.log('status =', roomState?.status);
+  console.log('wordHint =', roomState?.wordHint);
+  console.log('wordLength =', roomState?.wordLength);
+
+  console.log("isHost =", isHost);
+
+  console.log("room status =", roomState?.status);
+  console.log("players count =", roomState?.players?.length);
+  console.log("players =", roomState?.players);
+
 
   return (
     <main className="page game-page">
@@ -140,61 +114,62 @@ export default function GamePage() {
       <section className="game-layout">
         <div className="canvas-panel">
           <div className="round-bar">
-            <strong>
-              {isDrawer
-                ? 'You are drawing'
-                : `${roomState?.currentDrawer?.username || 'Waiting'} is drawing`}
-            </strong>
+            <strong>{isDrawer ? 'You are drawing' : `${roomState?.currentDrawer?.username || 'Waiting'} is drawing`}</strong>
 
-            {roomState?.wordChoices && isDrawer && (
-              <span>
-                Choices: {roomState.wordChoices.join(', ')}
-              </span>
+            {!isDrawer &&
+              roomState?.status === 'playing' &&
+              roomState?.wordHint && (
+                <div className="word-hint">
+                  <h2>{roomState.wordHint}</h2>
+                  <p>{roomState.wordLength} letters</p>
+                </div>
+              )}
+
+            {isDrawer &&
+              roomState?.selectedWord && (
+                <div className="selected-word">
+                  Word: {roomState.selectedWord}
+                </div>
+              )}
+
+
+            {/* --- Replaced: Plain text choices replaced with interactive selection buttons --- */}
+
+            {roomState?.wordChoices && isDrawer && roomState.status === 'wordSelection' && (
+              <div className="word-choices">
+                {roomState.wordChoices.map((word) => (
+                  <button key={word} onClick={() => {
+                    socket.emit('wordSelected', { roomId, word });
+                    setRoomState((s) => ({ ...s, wordChoices: null }));
+                  }}>
+                    {word}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
-
-          <DrawingCanvas
-            socket={socket}
-            roomId={roomId}
-            isDrawer={isDrawer}
-          />
+          <DrawingCanvas socket={socket} roomId={roomId} isDrawer={isDrawer} />
         </div>
 
         <aside className="side-panel">
           <h2>Players</h2>
-
           <ul className="player-list">
             {(roomState?.players || []).map((player) => (
               <li key={player.socketId}>
-                <span>
-                  {player.username}
-                  {player.isGuest ? ' (Guest)' : ''}
-                </span>
-
+                <span>{player.username}{player.isGuest ? ' (Guest)' : ''}</span>
                 <strong>{player.score}</strong>
               </li>
             ))}
           </ul>
 
           {isHost && roomState?.status === 'lobby' && (
-            <button
-              onClick={() => {
-                console.log('START GAME CLICKED');
-
-                socket.emit('startGame', { roomId });
-              }}
-            >
-              Start Game
-            </button>
+            <button onClick={() => socket.emit('startGame', { roomId })}>Start Game</button>
           )}
 
           <h2>Room Log</h2>
-
           <div className="chat-log">
             {messages.map((message, index) => (
-              <p key={`${message.text}-${index}`}>
-                {message.text}
-              </p>
+              <p key={`${message.text}-${index}`}>{message.text}</p>
             ))}
           </div>
         </aside>
