@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Squiggle - Week 7-9 Documentation</title>
+
+  <style>
+    *{ margin:0; padding:0; box-sizing:border-box; }
+    body{ font-family:'Segoe UI',sans-serif; background:#eef3f8; color:#2c3e50; line-height:1.8; }
+    header{ background:linear-gradient(135deg,#e74c3c,#c0392b); color:white; text-align:center; padding:70px 20px; box-shadow:0 5px 20px rgba(0,0,0,0.2); }
+    header h1{ font-size:52px; }
+    header h2{ margin-top:10px; font-weight:300; }
+    header p{ margin-top:15px; font-size:18px; }
+    .container{ width:90%; max-width:1300px; margin:auto; padding:30px; }
+    .card{ background:white; padding:30px; margin-bottom:30px; border-radius:15px; box-shadow:0 3px 15px rgba(0,0,0,0.08); }
+    h2{ color:#e74c3c; border-left:6px solid #e74c3c; padding-left:15px; margin-bottom:20px; }
+    h3{ color:#c0392b; margin-top:20px; margin-bottom:10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+    ul{ padding-left:25px; }
+    li{ margin-bottom:8px; }
+    pre{ background:#1e1e1e; color:#d4d4d4; padding:20px; border-radius:10px; overflow-x:auto; margin-top:15px; border-left: 4px solid #e74c3c; }
+    code{ color:#ffd166; font-family: 'Consolas', monospace; }
+    .code-explain { background: #fdf2f0; padding: 15px; border-radius: 8px; margin-top: 10px; font-size: 15px; }
+    .code-explain strong { color: #c0392b; }
+    table{ width:100%; border-collapse:collapse; margin-top:15px; }
+    th{ background:#e74c3c; color:white; padding:12px; }
+    td{ padding:12px; border:1px solid #ddd; }
+    .success{ color:#27ae60; font-weight:bold; }
+    .info{ background:#fdf2f0; border-left:5px solid #e74c3c; padding:15px; margin-top:15px; }
+    .toc a{ text-decoration:none; color:#e74c3c; }
+    .footer{ text-align:center; padding:30px; color:#666; }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>🎨 Squiggle</h1>
+  <h2>Week 7–9 Documentation</h2>
+  <p>Round Lifecycle, Timers, Auto-Hints & Major Debugging</p>
+  <p>Software Project Lab II (SPL-II)</p>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h2>📚 Table of Contents</h2>
+    <div class="toc">
+      <ul>
+        <li><a href="#overview">1. Phase Overview</a></li>
+        <li><a href="#features">2. Features Implemented</a></li>
+        <li><a href="#code-walkthrough">3. Step-by-Step Code Walkthrough (For Beginners)</a></li>
+        <li><a href="#debugging">4. Debugging & Issues Faced</a></li>
+        <li><a href="#viva">5. Final Viva Preparation</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" id="overview">
+    <h2>1. Phase Overview</h2>
+    <p>
+      The goal of Week 7–9 was to transition the project from a "lobby and free-draw sandbox" into a fully functional, timed, round-based game. We implemented complex timers, game state logic, word selections, and fully automated Skribbl-style hint reveal mechanics.
+    </p>
+    <div class="info">
+      <b>Main Objective:</b> Seamlessly orchestrate the round lifecycle (Lobby -> Word Selection -> Drawing/Guessing -> End Round) using Socket.IO, while squashing critical state-management bugs.
+    </div>
+  </div>
+
+  <div class="card" id="features">
+    <h2>2. Features Implemented</h2>
+    <ul>
+      <li>✅ <b>25-Second Word Selection Phase:</b> The drawer is given 3 word choices and has 25 seconds to pick one. If they fail to pick, the server automatically selects one for them.</li>
+      <li>✅ <b>Canvas Freezing Guard:</b> The drawing canvas is completely locked out for the drawer until they actually select a word and the drawing phase begins.</li>
+      <li>✅ <b>Dynamic Skribbl Auto-Hints:</b> Guesses get automated hints based strictly on mathematical logic depending on word length.</li>
+      <li>✅ <b>Automated Ghost Room Sweeper:</b> A cron-job runs every 60 seconds to scan for dead rooms and completely wipes them from memory and MongoDB.</li>
+      <li>✅ <b>Spectator Safeguards:</b> Spectators do not keep rooms alive. If all active players leave, the room instantly collapses and spectators are kicked to the lobby.</li>
+    </ul>
+  </div>
+
+  <div class="card" id="code-walkthrough">
+    <h2>3. Step-by-Step Code Walkthrough (For Beginners)</h2>
+    <p>This section breaks down the most essential blocks of code we wrote this week so that anyone with zero basics can understand exactly how our backend and frontend talk to each other.</p>
+
+    <h3>A. The Canvas Freeze Logic (Frontend)</h3>
+    <p>This code lives inside <code>client/src/components/DrawingCanvas.jsx</code>. We needed a way to physically prevent the drawer from drawing while they were supposed to be picking a word.</p>
+    <pre><code>const handleMouseDown = useCallback((e) => {
+  // If the game phase is not 'playing', STOP the function immediately
+  if (status !== 'playing') return;
+
+  // Otherwise, if you are the drawer, start drawing!
+  if (isDrawer) {
+    startDrawing(e);
+  }
+}, [isDrawer, startDrawing, status]);</code></pre>
+    <div class="code-explain">
+      <strong>What this means:</strong> When the user clicks their mouse on the canvas, this function runs. The very first line checks the <code>status</code> variable. If the status is <code>'wordSelection'</code> or <code>'lobby'</code>, the <code>return;</code> command forces the function to exit immediately before doing anything else. <br><br>
+      <strong>How it connects:</strong> The <code>status</code> variable is passed down from <code>GamePage.jsx</code>, which gets its value directly from the Socket.IO server. Because we added <code>status</code> to the dependency array <code>[isDrawer, startDrawing, status]</code>, React will always use the freshest, most up-to-date status!
+    </div>
+
+    <h3>B. The Zombie Room Sweeper (Backend)</h3>
+    <p>This code lives at the bottom of <code>server/socket/gameEvents.js</code>. Its job is to hunt down dead rooms and delete them from the database.</p>
+    <pre><code>// Run this block of code every 60,000 milliseconds (1 minute)
+setInterval(async () => {
+  const now = Date.now();
+  
+  // Loop through every single room in our active memory
+  for (const [roomId, room] of rooms.entries()) {
+    
+    // Calculate how many milliseconds since the room was last active
+    const inactiveTime = now - (room.lastActive || now);
+    
+    // If it has been more than 15 minutes (900,000 ms)...
+    if (inactiveTime > 15 * 60 * 1000) {
+      
+      // Delete the room from server memory
+      deleteRoom(roomId);
+      
+      // Tell MongoDB to delete the room so it vanishes from the Lobby
+      await require('../models/Room').deleteOne({ roomId });
+    }
+  }
+}, 60000);</code></pre>
+    <div class="code-explain">
+      <strong>What this means:</strong> We created an infinite loop (<code>setInterval</code>) that acts like a janitor. It checks the <code>lastActive</code> timestamp of every room. If a room has been sitting empty and quiet for 15 minutes, it completely destroys it.<br><br>
+      <strong>How it connects:</strong> By calling <code>Room.deleteOne</code>, it directly talks to our MongoDB database. This ensures that the "Public Rooms" list on the frontend Lobby page stays perfectly clean and doesn't get clogged up with empty, abandoned rooms.
+    </div>
+
+    <h3>C. The Auto-Hint Distribution Algorithm (Backend)</h3>
+    <p>This code calculates exactly how many hints to give a word, and randomly drops them over time. It lives in the round manager.</p>
+    <pre><code>// 1. Calculate max hints based on how long the word is
+let maxHints = 0;
+if (len === 4) maxHints = 1;
+else if (len >= 5 && len <= 7) maxHints = Math.floor(Math.random() * 3) + 2; // Gives 2, 3, or 4 hints
+else if (len >= 8 && len <= 9) maxHints = Math.floor(Math.random() * 2) + 4; // Gives 4 or 5 hints
+
+// 2. Decide if we should drop a hint RIGHT NOW
+const timePercentage = room.timeLeft / room.settings.drawTime; 
+let expectedHints = Math.floor((1 - timePercentage) * (maxHints + 1));
+
+// If we haven't revealed enough hints yet, reveal one!
+if (expectedHints > room.hintsRevealed.length) {
+    revealRandomHint();
+}</code></pre>
+    <div class="code-explain">
+      <strong>What this means:</strong> First, we use basic <code>if/else</code> statements to say "if the word is 5 letters long, give it 2 to 4 hints max". <br>
+      Second, we look at the clock. If the round is 50% finished (<code>timePercentage = 0.5</code>), the system expects 50% of the hints to be revealed. If it notices it is behind schedule, it drops a new hint.<br><br>
+      <strong>How it connects:</strong> Every single second, the main round countdown timer runs this exact block of code. If a hint is revealed, it emits a <code>hintRevealed</code> Socket.IO event to all guessers, and the blank spaces <code>_ _ _</code> on their screen magically fill in with a letter!
+    </div>
+
+  </div>
+
+  <div class="card" id="debugging">
+    <h2>4. Debugging & Issues Faced</h2>
+
+    <h3>Issue #1: The Canvas Freeze Bug</h3>
+    <div class="info">
+      <b>The Problem:</b> We locked the canvas during the "Word Selection" phase. However, when the drawer finally selected a word and the phase shifted to "playing", the canvas <b>remained frozen</b> for several seconds, reducing their draw time.
+    </div>
+    <p><b>The Investigation:</b> Initially, we suspected network lag. However, tracing the Socket events proved the backend was instantly telling the frontend the status was 'playing'. The issue was actually a <b>Stale React Closure</b>.</p>
+    <p><b>The Fix:</b> Inside <code>DrawingCanvas.jsx</code>, the <code>handleMouseMove</code> and <code>handleMouseUp</code> functions were wrapped in <code>useCallback</code> hooks. We forgot to add the new <code>status</code> variable to the dependency array (as shown in the code walkthrough above). React was executing the mouse events using the <i>old</i> memory reference of the status (which was still 'wordSelection'). Adding <code>status</code> to the dependency array fixed it instantly.</p>
+
+    <hr style="margin:20px 0;">
+
+    <h3>Issue #2: The MongoDB "Zombie Rooms" Bug</h3>
+    <div class="info">
+      <b>The Problem:</b> When players created rooms and later the server crashed or restarted, the rooms would permanently remain on the "Public Rooms" list in the lobby, but clicking them would cause an error.
+    </div>
+    <p><b>The Investigation:</b> Active rooms are tracked in an in-memory Map, but they are also saved to MongoDB so the lobby can read them via an API. When the Node server restarts, the RAM (in-memory Map) is wiped clean, but MongoDB persists. Because the memory was wiped, our cleanup scripts didn't know those rooms existed to delete them!</p>
+    <p><b>The Fix:</b> 
+      First, we updated the standard <code>deleteRoom</code> function to ensure it always executes <code>Room.deleteOne()</code>.
+      Second, we injected a script into <code>server/index.js</code> during the database connection phase. Now, every time the backend boots up, it automatically runs <code>Room.deleteMany({})</code>, ensuring the server always starts with a perfectly clean database, entirely eliminating ghost rooms.
+    </p>
+
+  </div>
+
+  <div class="card" id="viva">
+    <h2>🎓 Final Viva Preparation</h2>
+
+    <h3>1. How did you handle the synchronization between the timer on the server and the clients?</h3>
+    <p>
+      The timer is strictly managed on the backend inside <code>roundManager.js</code> using a <code>setInterval</code>. Every second, it decreases <code>room.timeLeft</code> and emits a <code>timerTick</code> event to all clients in the room via Socket.IO. We never trust the client's clock because clients could manipulate their local time or experience browser lag.
+    </p>
+
+    <h3>2. How does the hint system work dynamically? Why not just hardcode the hint drops?</h3>
+    <p>
+      Because words range from 3 letters to 15+ letters, hardcoding when a hint reveals doesn't scale. Our backend randomly allocates a maximum number of hints based on a math formula. Then, it uses the formula <code>Math.floor((1 - timePercentage) * (maxHints + 1))</code> to mathematically distribute exactly that amount of hints evenly across whatever time remains in the round.
+    </p>
+
+    <h3>3. What happens if the drawer never picks a word? Does the game freeze?</h3>
+    <p>
+      No. We implemented a <code>wordSelectionTimer</code>. When the word choices are sent to the drawer, the backend starts a 25-second countdown. If the drawer fails to emit a <code>wordSelected</code> event before it hits 0, the backend intercepts the process, randomly selects one of the 3 choices on their behalf, and forces the round to start.
+    </p>
+
+    <h3>4. How did you fix the React "Stale Closure" bug in the drawing canvas?</h3>
+    <p>
+      React's <code>useCallback</code> caches functions to prevent unnecessary re-renders. If a variable used inside that function changes, but isn't listed in the dependency array, the function will forever use the old value. We fixed the canvas freeze bug by adding our <code>status</code> variable to the <code>useCallback</code> dependency arrays for mouse events.
+    </p>
+  </div>
+
+  <div class="footer">
+    Squiggle Documentation — Week 7–9
+  </div>
+
+</div>
+
+</body>
+</html>

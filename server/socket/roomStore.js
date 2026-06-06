@@ -2,28 +2,41 @@
 // MongoDB stores persistent data; this Map holds transient round state.
 const rooms = new Map();
 
-function createRoomState(roomId, settings, hostSocketId) {
+function createRoomState(roomId, settings, hostUserIdOrSocketId) {
+  const isProbablyUserId = typeof hostUserIdOrSocketId === 'string' && hostUserIdOrSocketId && hostUserIdOrSocketId.length > 10;
+
   return {
     roomId,
     settings,
-    hostId: hostSocketId,
-    status: 'lobby',       // 'lobby' | 'wordSelection' | 'playing' | 'roundEnd' | 'gameEnd'
-    players: [],           // [{ socketId, userId, username, score, isGuest, role: 'player' }]
-    spectators: [],        // [{ socketId, username, isGuest }]
+
+    // Prefer persisting by userId (stable across refreshes). If we only have a socketId,
+    // we’ll fall back to that for backward compatibility.
+    hostUserId: isProbablyUserId ? hostUserIdOrSocketId : null,
+    hostSocketId: isProbablyUserId ? null : hostUserIdOrSocketId,
+
+    status: 'lobby',
+    players: [],
+    spectators: [],
     currentDrawer: null,
     currentWord: null,
     wordChoices: [],
-    correctGuessers: [],   // socketIds of players who guessed correctly this round
+    correctGuessers: [],
     currentRound: 0,
     timeLeft: 0,
-    roundTimer: null,      // setInterval reference — clear on round end
-    wordPool: [],          // words queued for this session (refilled by Gemini if depleted)
-    usedWords: new Set(),  // prevent repeats within a session
+    roundTimer: null,
+    wordPool: [],
+    usedWords: new Set(),
   };
 }
 
 function getRoom(roomId)          { return rooms.get(roomId) || null; }
-function setRoom(roomId, state)   { rooms.set(roomId, state); }
-function deleteRoom(roomId)       { rooms.delete(roomId); }
+function setRoom(roomId, state)   { 
+  state.lastActive = Date.now();
+  rooms.set(roomId, state); 
+}
+function deleteRoom(roomId)       { 
+  rooms.delete(roomId); 
+  require('../models/Room').deleteOne({ roomId }).catch(err => console.error("Error deleting room from DB:", err));
+}
 
 module.exports = { rooms, createRoomState, getRoom, setRoom, deleteRoom };

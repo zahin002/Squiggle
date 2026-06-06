@@ -306,9 +306,17 @@ async function generateAIWords(settings = {}) {
     return null;
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const keysEnv = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY;
+  let apiKey = null;
+  if (keysEnv) {
+    const keys = keysEnv.split(',').map(k => k.trim()).filter(Boolean);
+    if (keys.length > 0) {
+      apiKey = keys[Math.floor(Math.random() * keys.length)];
+    }
+  }
+
   if (!apiKey) {
-    console.warn('[aiWordGenerator] GEMINI_API_KEY not set - skipping AI generation');
+    console.warn('[aiWordGenerator] No GEMINI_API_KEYS found - skipping AI generation');
     return null;
   }
 
