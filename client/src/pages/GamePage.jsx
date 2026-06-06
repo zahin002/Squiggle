@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import DrawingCanvas from '../components/DrawingCanvas';
@@ -14,7 +14,10 @@ export default function GamePage() {
   const [messages, setMessages] = useState([]);
   const [error, setError] = useState('');
 
+  const hasJoinedRef = useRef(false);
+
   const socket = useMemo(() => io(SERVER_URL, { autoConnect: false }), []);
+
 
   useEffect(() => {
     if (user) {
@@ -25,21 +28,48 @@ export default function GamePage() {
   }, [user, loginAsGuest]);
 
   useEffect(() => {
-    if (!activeUser) return undefined;
+    if (!activeUser) return;
+
+    if (hasJoinedRef.current) return;
+
+    hasJoinedRef.current = true;
 
     socket.connect();
+    console.log('[CLIENT JOIN ROOM EMIT]', {
+      roomId,
+      socketId: socket.id,
+      time: Date.now()
+    });
+
+    console.log(
+      '[CLIENT JOIN ROOM EMIT]',
+      Date.now()
+    );
+
     socket.emit('joinRoom', {
       roomId,
       token: localStorage.getItem('token'),
       username: activeUser.username,
       role: 'player',
       isGuest: !!activeUser.isGuest,
+      guestId: activeUser.id,
+      userId: activeUser.id,
     });
 
     socket.on('roomState', (state) => {
-      setRoomState(state);
+      console.log('[ROOMSTATE RECEIVED]', state);
+      setRoomState(prev => ({
+        ...prev,
+        ...state,
+      }));
+    });
+
+
+    socket.on('connect', () => {
       socket.emit('requestCanvasState', { roomId });
     });
+
+
     socket.on('playerJoined', ({ players }) => {
       console.log('PLAYER_JOINED EVENT');
       console.log('received players =', players);
@@ -78,7 +108,16 @@ export default function GamePage() {
     });
 
     return () => {
-      socket.removeAllListeners();
+      socket.off('roomState');
+      socket.off('playerJoined');
+      socket.off('playerLeft');
+      socket.off('gameStarted');
+      socket.off('wordChoices');
+      socket.off('roundStarted');
+      socket.off('yourWord');
+      socket.off('chatMessage');
+      socket.off('error');
+
       socket.disconnect();
     };
   }, [activeUser, roomId, socket]);

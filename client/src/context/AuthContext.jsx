@@ -9,16 +9,38 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      axios.defaults.headers.common['Authorization'] =
+        `Bearer ${token}`;
+
       axios.get('/api/users/me')
-        .then(res => setUser(res.data))
+        .then((res) => {
+          setUser(res.data);
+        })
         .catch(() => {
           localStorage.removeItem('token');
           delete axios.defaults.headers.common['Authorization'];
+
+          const guestUser =
+            localStorage.getItem('guestUser');
+
+          if (guestUser) {
+            setUser(JSON.parse(guestUser));
+          }
         })
-        .finally(() => setLoading(false));
+        .finally(() => {
+          setLoading(false);
+        });
+
     } else {
+      const guestUser =
+        localStorage.getItem('guestUser');
+
+      if (guestUser) {
+        setUser(JSON.parse(guestUser));
+      }
+
       setLoading(false);
     }
   }, []);
@@ -34,19 +56,38 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
 
+    const savedGuest = localStorage.getItem('guestUser');
+
+    if (savedGuest) {
+      const guestUser = JSON.parse(savedGuest);
+      setUser(guestUser);
+      return guestUser;
+    }
+
     const guestUser = {
+      id: crypto.randomUUID(),
       username: `Guest_${Math.floor(Math.random() * 9000) + 1000}`,
       isGuest: true,
       goldCoins: 0,
       diamonds: 0,
     };
+
+    localStorage.setItem(
+      'guestUser',
+      JSON.stringify(guestUser)
+    );
+
     setUser(guestUser);
+
     return guestUser;
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('guestUser');
+
     delete axios.defaults.headers.common['Authorization'];
+
     setUser(null);
   };
 

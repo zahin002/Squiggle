@@ -1,6 +1,7 @@
 const { createRoomState, getRoom, setRoom, deleteRoom } = require('./roomStore');
 const Room = require('../models/Room');
 const jwt = require('jsonwebtoken');
+const { buildRoomState } = require('./buildRoomState');
 
 module.exports = (io) => {
   io.on('connection', (socket) => {
@@ -8,7 +9,7 @@ module.exports = (io) => {
     console.log('[SOCKET CONNECTED]', socket.id);
 
     // ----- JOIN ROOM -----
-    socket.on('joinRoom', async ({ roomId, token, username, role, isGuest }) => {
+    socket.on('joinRoom', async ({ roomId, token, userId, username, role, isGuest }) => {
       try {
         console.log('[JOIN ROOM REQUEST]', {
           roomId,
@@ -68,7 +69,7 @@ module.exports = (io) => {
           return;
         }
 
-        let userId = null;
+        let resolvedUserId = userId;
 
         if (!isGuest && token) {
           try {
@@ -77,7 +78,7 @@ module.exports = (io) => {
               process.env.JWT_SECRET
             );
 
-            userId = decoded.id;
+            resolvedUserId = decoded.id;
           } catch {
             console.log(
               '[JWT INVALID]',
@@ -99,8 +100,21 @@ module.exports = (io) => {
           username,
           role: role || 'player',
           isGuest: !!isGuest,
-          userId
+          userId: resolvedUserId
         };
+
+        // Ensure we can derive host from stable userId across refreshes.
+        if (
+          roomState.players.length === 0 &&
+          !roomState.hostUserId &&
+          !roomState.hostId
+        ) {
+          if (resolvedUserId != null) {
+            roomState.hostUserId = resolvedUserId;
+          } else {
+            roomState.hostId = socket.id;
+          }
+        }
 
         if (role === 'spectator') {
           roomState.spectators.push({
@@ -121,34 +135,83 @@ module.exports = (io) => {
 
             socket.data.role = 'spectator';
 
+
             console.log(
               '[ROOM FULL → SPECTATOR]',
               username
             );
           } else {
-            roomState.players.push({
-              socketId: socket.id,
-              userId,
-              username,
-              isGuest: !!isGuest,
-              score: 0,
-              role: 'player'
-            });
-
-            console.log(
-              '[PLAYER ADDED]',
-              username
+            const existingPlayer = roomState.players.find(
+              p =>
+                p.userId &&
+                resolvedUserId &&
+                p.userId === resolvedUserId
             );
+
+            if (existingPlayer) {
+              const existingPlayerIndex = roomState.players.findIndex(
+                p => p.userId && resolvedUserId && p.userId === resolvedUserId
+              );
+
+              if (existingPlayerIndex !== -1) {
+                roomState.players[existingPlayerIndex].socketId =
+                  socket.id;
+              }
+
+              // Rebind drawer to the latest player record after reconnect.
+              const player = roomState.players.find(
+                p => p.userId && resolvedUserId && p.userId === resolvedUserId
+              );
+
+              if (
+                player &&
+                roomState.currentDrawer &&
+                roomState.currentDrawer.userId === resolvedUserId
+              ) {
+                roomState.currentDrawer = player;
+              }
+
+
+              console.log(
+                '[PLAYER RECONNECTED]',
+                username
+              );
+            } else {
+              roomState.players.push({
+                socketId: socket.id,
+                userId: resolvedUserId,
+                username,
+                isGuest: !!isGuest,
+                score: 0,
+                role: 'player'
+              });
+
+              console.log(
+                '[PLAYER ADDED]',
+                username
+              );
+            }
           }
         }
 
-        if (!roomState.hostId) {
-          roomState.hostId = socket.id;
+        // Persist host ownership across refreshes.
+        // If userId is available, use it as the stable host identifier.
+        // Fall back to socket.id only when userId is missing.
+        if (!roomState.hostUserId && !roomState.hostId) {
+          if (resolvedUserId != null) {
+            roomState.hostUserId = resolvedUserId;
+            roomState.hostSocketId = null;
+            // Keep hostId in sync for older logic/UI.
+            roomState.hostId = null;
+          } else {
+            roomState.hostId = socket.id;
+            roomState.hostSocketId = null;
+          }
 
           console.log(
             '[HOST ASSIGNED]',
             username,
-            socket.id
+            roomState.hostUserId || roomState.hostId
           );
         }
 
@@ -162,22 +225,47 @@ module.exports = (io) => {
           status: roomState.status
         });
 
-        socket.emit('roomState', {
-          roomId,
-          settings: roomState.settings,
-          players: roomState.players,
-          spectators: roomState.spectators,
+        const roomStateForThisUser = buildRoomState(
+          roomState,
+          resolvedUserId,
+          socket.id
+        );
+
+        console.log(
+          '[HOST DEBUG]',
+          {
+            hostUserId: roomState.hostUserId,
+            hostId: roomState.hostId,
+            currentUserId: userId,
+            username
+          }
+        );
+
+        console.log('[ROOMSTATE EMIT TO RECONNECTED USER]', {
+          roomId: roomState.roomId,
           status: roomState.status,
-          isHost: roomState.hostId === socket.id,
+          players: roomState.players?.length,
+          currentDrawer: roomState.currentDrawer?.username,
+          currentDrawerSocket: roomState.currentDrawer?.socketId
+        });
+
+        socket.emit('roomState', {
+          ...roomStateForThisUser,
           yourRole: socket.data.role,
           yourIsGuest: !!isGuest
         });
+
 
         socket.to(roomId).emit('playerJoined', {
           username,
           isGuest: !!isGuest,
           players: roomState.players
         });
+
+        console.log(
+          '[JOIN SYSTEM MESSAGE]',
+          username
+        );
 
         io.to(roomId).emit('chatMessage', {
           type: 'system',
@@ -210,7 +298,16 @@ module.exports = (io) => {
         return;
       }
 
-      if (roomState.hostId !== socket.id) {
+      const player = roomState.players.find(
+        p => p.socketId === socket.id
+      );
+
+      const isHost =
+        player &&
+        roomState.hostUserId &&
+        player.userId === roomState.hostUserId;
+
+      if (!isHost) {
         console.log(
           '[START GAME FAILED] Not host'
         );
@@ -308,17 +405,107 @@ module.exports = (io) => {
       if (!roomState) return;
 
       if (role === 'player') {
-        roomState.players =
-          roomState.players.filter(
-            p => p.socketId !== socket.id
-          );
+        const disconnectedSocketId = socket.id;
+        const disconnectedUserId = socket.data?.userId;
+        const roomIdForCleanup = roomId;
+
+        // Delay cleanup to allow quick refresh/reconnect.
+        // If the same user reconnects with a different socketId, we keep them.
+        setTimeout(() => {
+          const room = getRoom(roomIdForCleanup);
+          if (!room) return;
+
+          const reconnected =
+            room.players.some(
+              p =>
+                p.userId === disconnectedUserId &&
+                p.socketId !== disconnectedSocketId
+            );
+
+          if (reconnected) {
+            console.log('[REFRESH DETECTED]', {
+              userId: disconnectedUserId,
+              oldSocketId: disconnectedSocketId
+            });
+            return;
+          }
+
+          room.players =
+            room.players.filter(
+              p => p.socketId !== disconnectedSocketId
+            );
+
+          console.log('[AFTER REMOVE]', {
+            disconnectedSocket: disconnectedSocketId,
+            players: room.players.map(p => ({
+              username: p.username,
+              socketId: p.socketId,
+              userId: p.userId
+            }))
+          });
+
+          // Re-apply host reassignment logic after delayed removal.
+          if (
+            room.hostId === disconnectedSocketId &&
+            room.players.length > 0
+          ) {
+            if (room.players[0].userId != null) {
+              room.hostUserId = room.players[0].userId;
+              room.hostSocketId = null;
+            } else {
+              room.hostId = room.players[0].socketId;
+            }
+
+            console.log(
+              '[HOST REASSIGNED]',
+              room.players[0].username
+            );
+
+            io.to(roomIdForCleanup).emit('chatMessage', {
+              type: 'system',
+              text: `${room.players[0].username} is now the room owner.`
+            });
+          }
+
+          if (
+            room.players.length === 0 &&
+            room.spectators.length === 0
+          ) {
+            console.log('[ROOM DELETED]', roomIdForCleanup);
+
+            if (room.roundTimer)
+              clearInterval(room.roundTimer);
+
+            deleteRoom(roomIdForCleanup);
+            return;
+          }
+
+          setRoom(roomIdForCleanup, room);
+
+          io.to(roomIdForCleanup).emit('playerLeft', {
+            username: socket.data?.username,
+            isGuest: socket.data?.isGuest,
+            players: room.players
+          });
+
+          io.to(roomIdForCleanup).emit('chatMessage', {
+            type: 'system',
+            text: `${socket.data?.username}${socket.data?.isGuest ? ' (Guest)' : ''} left the room.`
+          });
+        }, 3000);
+
 
         if (
           roomState.hostId === socket.id &&
           roomState.players.length > 0
         ) {
-          roomState.hostId =
-            roomState.players[0].socketId;
+          // Keep hostUserId stable across refreshes where possible.
+          if (roomState.players[0].userId != null) {
+            roomState.hostUserId = roomState.players[0].userId;
+            roomState.hostSocketId = null;
+          } else {
+            roomState.hostId = roomState.players[0].socketId;
+          }
 
           console.log(
             '[HOST REASSIGNED]',

@@ -30,7 +30,21 @@ async function startNextRound(io, roomId) {
   room.wordChoices = choices;
   setRoom(roomId, room);
 
-  io.to(roomId).emit('roomState', room);
+  // Emit roomState with `isHost` computed per-socket.
+  // `room` contains host identifiers; `isHost` needs to be resolved against each socket.
+  const { buildRoomState } = require('./buildRoomState');
+  const nsp = io.of('/');
+  const sockets = await nsp.in(roomId).fetchSockets();
+  sockets.forEach((s) => {
+    const roomStateForThisSocket = buildRoomState(
+      room,
+      s.data?.userId ?? null,
+      s.id
+    );
+    s.emit('roomState', roomStateForThisSocket);
+  });
+
+
 
   // Only the drawer gets word choices
   io.to(room.currentDrawer.socketId).emit('wordChoices', { choices });
