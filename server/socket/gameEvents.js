@@ -356,31 +356,62 @@ module.exports = (io) => {
       const room = getRoom(roomId);
       if (!room || room.currentDrawer?.socketId !== socket.id) return;
 
-      room.currentWord = word;
-      room.status = 'playing';
-      room.timeLeft = room.settings.drawTime;
-      setRoom(roomId, room);
+      require('./roundManager.js').processWordSelection(io, roomId, word);
+    });
 
-      const hint = word.replace(/[a-zA-Z]/g, '_').split('').join(' ');
+    // ----- GUESS WORD -----
+    socket.on('guessWord', ({ roomId, guess }) => {
+      const room = getRoom(roomId);
+      if (!room || room.status !== 'playing' || !guess) return;
 
-      io.to(roomId).emit('roundStarted', {
-        drawer: { username: room.currentDrawer.username, socketId: room.currentDrawer.socketId },
-        wordHint: hint,
-        wordLength: word.length,
-        round: room.currentRound,
-        totalRounds: room.settings.rounds,
-        timeLeft: room.timeLeft
-      });
+      const player = room.players.find(p => p.socketId === socket.id);
+      if (!player) return;
 
-      io.to(roomId).emit('chatMessage', {
-        type: 'system',
-        text: `${room.currentDrawer.username} started drawing`
-      });
+      // Drawers can't guess
+      if (room.currentDrawer?.socketId === socket.id) return;
 
+      const isCorrect = guess.toLowerCase() === room.currentWord?.toLowerCase();
 
-      io.to(room.currentDrawer.socketId).emit('yourWord', { word });
+      if (isCorrect) {
+        // Prevent duplicate scoring
+        const guesserId = player.userId || player.socketId;
+        if (!room.correctGuessers) room.correctGuessers = [];
+        if (room.correctGuessers.includes(guesserId)) return;
+        
+        room.correctGuessers.push(guesserId);
 
-      require('./roundManager').startRoundTimer(io, room, roomId);
+        // Award points based on timeLeft
+        const points = Math.max(10, room.timeLeft * 10);
+        player.score += points;
+        
+        // Award points to drawer as well
+        if (room.currentDrawer) {
+          const drawerPlayer = room.players.find(p => p.userId === room.currentDrawer.userId || p.socketId === room.currentDrawer.socketId);
+          if (drawerPlayer) drawerPlayer.score += 50;
+        }
+
+        setRoom(roomId, room);
+
+        io.to(roomId).emit('chatMessage', {
+          type: 'system',
+          text: `🎉 ${player.username} guessed the word!`
+        });
+
+        // Broadcast updated players list for scores
+        io.to(roomId).emit('playerJoined', { players: room.players });
+
+        // Check if all players (except drawer) have guessed
+        if (room.correctGuessers.length >= room.players.length - 1) {
+           require('./roundManager').endRound(io, room, roomId);
+        }
+
+      } else {
+        // Incorrect guess -> standard chat message
+        io.to(roomId).emit('chatMessage', {
+          type: 'chat',
+          text: `${player.username}: ${guess}`
+        });
+      }
     });
 
     // ----- DISCONNECT -----
@@ -408,6 +439,16 @@ module.exports = (io) => {
         const disconnectedSocketId = socket.id;
         const disconnectedUserId = socket.data?.userId;
         const roomIdForCleanup = roomId;
+
+        const isDrawer = roomState.currentDrawer && roomState.currentDrawer.socketId === socket.id;
+        if (isDrawer && (roomState.status === 'playing' || roomState.status === 'wordSelection')) {
+          console.log('[DRAWER DISCONNECTED] Ending round immediately');
+          io.to(roomId).emit('chatMessage', {
+            type: 'system',
+            text: `The drawer disconnected! Round over.`
+          });
+          require('./roundManager').endRound(io, roomState, roomId);
+        }
 
         // Delay cleanup to allow quick refresh/reconnect.
         // If the same user reconnects with a different socketId, we keep them.
@@ -467,14 +508,17 @@ module.exports = (io) => {
             });
           }
 
-          if (
-            room.players.length === 0 &&
-            room.spectators.length === 0
-          ) {
+          if (room.players.length === 0) {
             console.log('[ROOM DELETED]', roomIdForCleanup);
+            
+            if (room.spectators.length > 0) {
+              io.to(roomIdForCleanup).emit('error', { message: 'All players have left the room. Room closed.' });
+            }
 
             if (room.roundTimer)
               clearInterval(room.roundTimer);
+            if (room.wordSelectionTimer)
+              clearInterval(room.wordSelectionTimer);
 
             deleteRoom(roomIdForCleanup);
             return;
@@ -495,64 +539,48 @@ module.exports = (io) => {
         }, 3000);
 
 
-        if (
-          roomState.hostId === socket.id &&
-          roomState.players.length > 0
-        ) {
-          // Keep hostUserId stable across refreshes where possible.
-          if (roomState.players[0].userId != null) {
-            roomState.hostUserId = roomState.players[0].userId;
-            roomState.hostSocketId = null;
-          } else {
-            roomState.hostId = roomState.players[0].socketId;
-          }
-
-          console.log(
-            '[HOST REASSIGNED]',
-            roomState.players[0].username
-          );
-
-          io.to(roomId).emit('chatMessage', {
-            type: 'system',
-            text: `${roomState.players[0].username} is now the room owner.`
-          });
-        }
-
-        if (
-          roomState.players.length === 0 &&
-          roomState.spectators.length === 0
-        ) {
-          console.log(
-            '[ROOM DELETED]',
-            roomId
-          );
-
-          if (roomState.roundTimer)
-            clearInterval(roomState.roundTimer);
-
-          deleteRoom(roomId);
-
-          return;
-        }
       } else {
         roomState.spectators =
           roomState.spectators.filter(
             s => s.socketId !== socket.id
           );
+        
+        if (roomState.players.length === 0) {
+          console.log('[ROOM DELETED]', roomId);
+          if (roomState.roundTimer) clearInterval(roomState.roundTimer);
+          if (roomState.wordSelectionTimer) clearInterval(roomState.wordSelectionTimer);
+          deleteRoom(roomId);
+          return;
+        }
+
+        setRoom(roomId, roomState);
+
+        io.to(roomId).emit('playerLeft', {
+          username,
+          isGuest,
+          players: roomState.players
+        });
+
+        io.to(roomId).emit('chatMessage', {
+          type: 'system',
+          text: `${username}${isGuest ? ' (Guest)' : ''} left the room.`
+        });
       }
-
-      setRoom(roomId, roomState);
-
-      io.to(roomId).emit('playerLeft', {
-        username,
-        isGuest,
-        players: roomState.players
-      });
-
-      io.to(roomId).emit('chatMessage', {
-        type: 'system',
-        text: `${username}${isGuest ? ' (Guest)' : ''} left the room.`
-      });
     });
   });
+
+  // 15-minute inactivity cleaner
+  setInterval(() => {
+    const { rooms, deleteRoom } = require('./roomStore');
+    const now = Date.now();
+    for (const [roomId, room] of rooms.entries()) {
+      if (room.lastActive && now - room.lastActive > 15 * 60 * 1000) {
+        console.log(`[INACTIVITY] Closing room ${roomId}`);
+        io.to(roomId).emit('error', { message: 'Room closed due to 15 minutes of inactivity.' });
+        if (room.roundTimer) clearInterval(room.roundTimer);
+        if (room.wordSelectionTimer) clearInterval(room.wordSelectionTimer);
+        deleteRoom(roomId);
+      }
+    }
+  }, 60 * 1000);
 };

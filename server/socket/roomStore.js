@@ -30,7 +30,13 @@ function createRoomState(roomId, settings, hostUserIdOrSocketId) {
 }
 
 function getRoom(roomId)          { return rooms.get(roomId) || null; }
-function setRoom(roomId, state)   { rooms.set(roomId, state); }
-function deleteRoom(roomId)       { rooms.delete(roomId); }
+function setRoom(roomId, state)   { 
+  state.lastActive = Date.now();
+  rooms.set(roomId, state); 
+}
+function deleteRoom(roomId)       { 
+  rooms.delete(roomId); 
+  require('../models/Room').deleteOne({ roomId }).catch(err => console.error("Error deleting room from DB:", err));
+}
 
 module.exports = { rooms, createRoomState, getRoom, setRoom, deleteRoom };

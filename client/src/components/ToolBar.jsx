@@ -30,7 +30,7 @@ import { useState } from 'react';
 // Each entry defines the tool's key, display label, and SVG icon path.
 // Keeping this as data makes it easy to add new tools without changing JSX.
 
-const TOOLS = [
+const BASIC_TOOLS = [
   {
     key: 'brush',
     label: 'Brush',
@@ -65,6 +65,9 @@ const TOOLS = [
       </svg>
     ),
   },
+];
+
+const SHAPES = [
   {
     key: 'rect',
     label: 'Rectangle',
@@ -95,6 +98,72 @@ const TOOLS = [
       </svg>
     ),
   },
+  {
+    key: 'oval',
+    label: 'Oval',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+        <ellipse cx="12" cy="12" rx="10" ry="6" />
+      </svg>
+    ),
+  },
+  {
+    key: 'dotted_line',
+    label: 'Dotted Line',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+        <line x1="4" y1="20" x2="20" y2="4" strokeDasharray="4 4" />
+      </svg>
+    ),
+  },
+  {
+    key: 'curve',
+    label: 'Curve Line',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+        <path d="M4 20 Q 12 4 20 20" />
+      </svg>
+    ),
+  },
+  {
+    key: 'arrow_single',
+    label: 'Arrow →',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+        <line x1="4" y1="12" x2="20" y2="12" />
+        <polyline points="14 6 20 12 14 18" />
+      </svg>
+    ),
+  },
+  {
+    key: 'arrow_double',
+    label: 'Arrow ↔️',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+        <line x1="4" y1="12" x2="20" y2="12" />
+        <polyline points="10 6 4 12 10 18" />
+        <polyline points="14 6 20 12 14 18" />
+      </svg>
+    ),
+  },
+  {
+    key: 'arc',
+    label: 'Arc',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+        <path d="M4 16 A 8 8 0 0 1 20 16" />
+      </svg>
+    ),
+  },
+  {
+    key: 'squircle',
+    label: 'Squircle',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+        <rect x="4" y="4" width="16" height="16" rx="6" />
+      </svg>
+    ),
+  },
 ];
 
 // ─── Size Presets ─────────────────────────────────────────────────────────────
@@ -122,16 +191,22 @@ export default function ToolBar({ tool, setTool, size, setSize, onUndo, onClear 
   };
   const handleClearCancel = () => setShowClearConfirm(false);
 
+  const [showShapes, setShowShapes] = useState(false);
+
+  // Check if current tool is a shape
+  const isShapeActive = SHAPES.some(s => s.key === tool);
+  const activeShape = SHAPES.find(s => s.key === tool) || SHAPES[0];
+
   return (
     <div className="toolbar" role="toolbar" aria-label="Drawing tools">
 
       {/* ── Tool Buttons ──────────────────────────────────────────────────── */}
       <div className="toolbar__group toolbar__tools" role="group" aria-label="Tool selection">
-        {TOOLS.map(({ key, label, icon }) => (
+        {BASIC_TOOLS.map(({ key, label, icon }) => (
           <button
             key={key}
             className={`toolbar__tool-btn ${tool === key ? 'toolbar__tool-btn--active' : ''}`}
-            onClick={() => setTool(key)}
+            onClick={() => { setTool(key); setShowShapes(false); }}
             title={label}
             aria-label={label}
             aria-pressed={tool === key}
@@ -141,6 +216,57 @@ export default function ToolBar({ tool, setTool, size, setSize, onUndo, onClear 
             <span className="toolbar__tool-label">{label}</span>
           </button>
         ))}
+
+        {/* ── Shapes Dropdown ───────────────────────────────────────────── */}
+        <div style={{ position: 'relative' }}>
+          <button
+            className={`toolbar__tool-btn ${isShapeActive ? 'toolbar__tool-btn--active' : ''}`}
+            onClick={() => setShowShapes(!showShapes)}
+            title="Shapes"
+            aria-label="Shapes Menu"
+            type="button"
+          >
+            {activeShape.icon || (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" />
+              </svg>
+            )}
+            <span className="toolbar__tool-label">Shapes ▼</span>
+          </button>
+
+          {showShapes && (
+            <div className="toolbar__shapes-menu" style={{
+              position: 'absolute', top: '100%', left: 0, 
+              background: '#fff', border: '1px solid #ccc', borderRadius: '4px',
+              zIndex: 10, display: 'flex', flexDirection: 'column',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.1)', padding: '4px'
+            }}>
+              {SHAPES.map(({ key, label, icon }) => (
+                <button
+                  key={key}
+                  style={{ 
+                    display: 'flex', alignItems: 'center', padding: '8px 12px', 
+                    border: 'none', background: tool === key ? '#f0f0f0' : 'transparent', 
+                    textAlign: 'left', cursor: 'pointer', minWidth: '130px', borderRadius: '4px' 
+                  }}
+                  onClick={() => { setTool(key); setShowShapes(false); }}
+                  type="button"
+                >
+                  {icon ? (
+                    <span style={{ marginRight: '8px', display: 'flex', alignItems: 'center' }}>{icon}</span>
+                  ) : (
+                    <span style={{ marginRight: '8px', display: 'flex', alignItems: 'center' }}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                        <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" />
+                      </svg>
+                    </span>
+                  )}
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="toolbar__divider" aria-hidden="true" />

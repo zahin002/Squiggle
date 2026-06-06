@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 export default function LobbyPage() {
   const [rooms, setRooms] = useState([]);
   const [joinCode, setJoinCode] = useState('');
+  const [joinRole, setJoinRole] = useState('player');
   const [error, setError] = useState('');
   const { user, loginAsGuest, loading } = useAuth();
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ export default function LobbyPage() {
     return user || loginAsGuest();
   };
 
-  const joinRoom = async (roomId) => {
+  const joinRoom = async (roomId, role = joinRole) => {
     const normalized = roomId.trim().toUpperCase();
     if (!normalized) return;
 
@@ -30,7 +31,7 @@ export default function LobbyPage() {
     try {
       ensureUser();
       await axios.get(`/api/rooms/${normalized}`);
-      navigate(`/game/${normalized}`);
+      navigate(`/game/${normalized}`, { state: { role } });
     } catch (err) {
       setError(err.response?.data?.message || 'Could not join that room');
     }
@@ -58,6 +59,10 @@ export default function LobbyPage() {
               value={joinCode}
               onChange={(event) => setJoinCode(event.target.value)}
             />
+            <select value={joinRole} onChange={e => setJoinRole(e.target.value)} style={{ padding: '8px', marginLeft: '8px' }}>
+              <option value="player">As Player</option>
+              <option value="spectator">As Spectator</option>
+            </select>
             <button onClick={() => joinRoom(joinCode)}>Join</button>
           </div>
           {error && <p className="error">{error}</p>}
@@ -71,7 +76,10 @@ export default function LobbyPage() {
                 <li key={room.roomId}>
                   <span>{room.roomId}</span>
                   <span>{room.settings?.gameMode || 'standard'}</span>
-                  <button onClick={() => joinRoom(room.roomId)}>Join</button>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <button onClick={() => joinRoom(room.roomId, 'player')}>Join</button>
+                    <button onClick={() => joinRoom(room.roomId, 'spectator')} className="secondary">Spectate</button>
+                  </div>
                 </li>
               ))}
             </ul>

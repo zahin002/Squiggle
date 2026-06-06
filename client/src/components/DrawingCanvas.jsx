@@ -48,7 +48,7 @@ const TOOL_CURSORS = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function DrawingCanvas({ socket, roomId, isDrawer }) {
+export default function DrawingCanvas({ socket, roomId, isDrawer, status }) {
   console.log("DrawingCanvas rendered");
   // ── Tool / Color / Size state ─────────────────────────────────────────────
   const [tool, setTool]   = useState('brush');
@@ -134,6 +134,7 @@ export default function DrawingCanvas({ socket, roomId, isDrawer }) {
 
   const handleMouseDown = useCallback((e) => {
     if (!isDrawer) return;
+    if (status !== 'playing') return;
 
     if (tool === 'fill') {
       // Fill tool: act immediately on mouseDown, no drag
@@ -150,7 +151,8 @@ export default function DrawingCanvas({ socket, roomId, isDrawer }) {
       return;
     }
 
-    if (['rect', 'circle', 'line'].includes(tool)) {
+    const SHAPE_KEYS = ['rect', 'circle', 'line', 'oval', 'dotted_line', 'curve', 'arrow_single', 'arrow_double', 'arc', 'squircle'];
+    if (SHAPE_KEYS.includes(tool)) {
       // Shape tools: record start, take pre-draw snapshot
       const pos = getPos(e);
       shapeStartPos.current = pos;
@@ -164,12 +166,14 @@ export default function DrawingCanvas({ socket, roomId, isDrawer }) {
 
     // Freehand brush / eraser — delegate to useCanvas
     startDraw(e);
-  }, [isDrawer, tool, color, socket, roomId, getPos, canvasRef, startDraw]);
+  }, [isDrawer, status, tool, color, socket, roomId, getPos, canvasRef, startDraw]);
 
   const handleMouseMove = useCallback((e) => {
     if (!isDrawer) return;
+    if (status !== 'playing') return;
 
-    if (['rect', 'circle', 'line'].includes(tool) && isShapeDrawing.current) {
+    const SHAPE_KEYS = ['rect', 'circle', 'line', 'oval', 'dotted_line', 'curve', 'arrow_single', 'arrow_double', 'arc', 'squircle'];
+    if (SHAPE_KEYS.includes(tool) && isShapeDrawing.current) {
       // Live shape preview: restore pre-shape canvas, then draw ghost
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
@@ -187,12 +191,14 @@ export default function DrawingCanvas({ socket, roomId, isDrawer }) {
 
     // Freehand brush / eraser — delegate to useCanvas
     draw(e, tool, color, size);
-  }, [isDrawer, tool, color, size, getPos, canvasRef, draw]);
+  }, [isDrawer, status, tool, color, size, getPos, canvasRef, draw]);
 
   const handleMouseUp = useCallback((e) => {
     if (!isDrawer) return;
+    if (status !== 'playing') return;
 
-    if (['rect', 'circle', 'line'].includes(tool) && isShapeDrawing.current) {
+    const SHAPE_KEYS = ['rect', 'circle', 'line', 'oval', 'dotted_line', 'curve', 'arrow_single', 'arrow_double', 'arc', 'squircle'];
+    if (SHAPE_KEYS.includes(tool) && isShapeDrawing.current) {
       isShapeDrawing.current = false;
 
       const canvas = canvasRef.current;
@@ -231,7 +237,7 @@ export default function DrawingCanvas({ socket, roomId, isDrawer }) {
 
     // Freehand brush / eraser — delegate to useCanvas
     endDraw();
-  }, [isDrawer, tool, color, size, socket, roomId, getPos, canvasRef, endDraw]);
+  }, [isDrawer, status, tool, color, size, socket, roomId, getPos, canvasRef, endDraw]);
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
@@ -312,6 +318,14 @@ function renderShape(ctx, shapeType, startX, startY, endX, endY, color, size) {
     ctx.strokeRect(startX, startY, w, h);
 
   } else if (shapeType === 'circle') {
+    // Draw a perfect circle by taking the largest dimension
+    const cx = (startX + endX) / 2;
+    const cy = (startY + endY) / 2;
+    const r = Math.max(Math.abs(endX - startX), Math.abs(endY - startY)) / 2;
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+
+  } else if (shapeType === 'oval') {
     // Draw an ellipse bounded by the drag rectangle
     const cx = (startX + endX) / 2;
     const cy = (startY + endY) / 2;
@@ -324,6 +338,68 @@ function renderShape(ctx, shapeType, startX, startY, endX, endY, color, size) {
     ctx.moveTo(startX, startY);
     ctx.lineTo(endX, endY);
     ctx.stroke();
+
+  } else if (shapeType === 'dotted_line') {
+    ctx.setLineDash([size * 2, size * 2]);
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+    ctx.setLineDash([]); // reset
+
+  } else if (shapeType === 'curve') {
+    // A simple swoop curve: use perpendicular offset for control point
+    ctx.moveTo(startX, startY);
+    const dx = endX - startX;
+    const dy = endY - startY;
+    const cx = startX + dx/2 - dy/2;
+    const cy = startY + dy/2 + dx/2;
+    ctx.quadraticCurveTo(cx, cy, endX, endY);
+    ctx.stroke();
+
+  } else if (shapeType === 'arrow_single' || shapeType === 'arrow_double') {
+    // Draw the main line
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+    
+    // Draw arrow head at 'end'
+    const drawArrowHead = (x, y, angle) => {
+      const headLen = Math.max(15, size * 3);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - headLen * Math.cos(angle - Math.PI / 6), y - headLen * Math.sin(angle - Math.PI / 6));
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - headLen * Math.cos(angle + Math.PI / 6), y - headLen * Math.sin(angle + Math.PI / 6));
+      ctx.stroke();
+    };
+
+    const angle = Math.atan2(endY - startY, endX - startX);
+    drawArrowHead(endX, endY, angle);
+
+    if (shapeType === 'arrow_double') {
+      drawArrowHead(startX, startY, angle + Math.PI);
+    }
+
+  } else if (shapeType === 'arc') {
+    // Draw a semi-circle based on drag distance
+    const r = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2)) / 2;
+    const cx = (startX + endX) / 2;
+    const cy = (startY + endY) / 2;
+    const angle = Math.atan2(endY - startY, endX - startX);
+    ctx.arc(cx, cy, r, angle, angle + Math.PI);
+    ctx.stroke();
+
+  } else if (shapeType === 'squircle') {
+    const w = endX - startX;
+    const h = endY - startY;
+    // heavily rounded corners, but constrained by size
+    const radius = Math.min(Math.abs(w)/3, Math.abs(h)/3, 30); 
+    if (ctx.roundRect) {
+      ctx.roundRect(startX, startY, w, h, radius);
+      ctx.stroke();
+    } else {
+      ctx.strokeRect(startX, startY, w, h); // Fallback for very old browsers
+    }
   }
 
   ctx.restore();

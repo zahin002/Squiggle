@@ -188,6 +188,8 @@ export function useCanvas(socket, roomId, isDrawer) {
         canvas.width,
         canvas.height
       );
+
+      history.current = [];
     });
 
     // Receive full canvas snapshot

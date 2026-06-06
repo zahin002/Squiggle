@@ -38,7 +38,11 @@ drawingEvents(io); // Week 5–6
 // Database
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
+  .then(async () => {
+    console.log('MongoDB connected');
+    await require('./models/Room').deleteMany({});
+    console.log('Cleared ghost rooms from database');
+  })
   .catch((err) => console.error('MongoDB error:', err));
 
 const PORT = process.env.PORT || 5000;

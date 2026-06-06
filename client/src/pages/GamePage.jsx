@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import DrawingCanvas from '../components/DrawingCanvas';
 import { useAuth } from '../context/AuthContext';
@@ -8,11 +8,16 @@ const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
 
 export default function GamePage() {
   const { roomId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const requestedRole = location.state?.role || 'player';
   const { user, loginAsGuest, loading } = useAuth();
   const [activeUser, setActiveUser] = useState(user);
   const [roomState, setRoomState] = useState(null);
   const [messages, setMessages] = useState([]);
   const [error, setError] = useState('');
+  const [guess, setGuess] = useState('');
+  const [timeLeft, setTimeLeft] = useState(0);
 
   const hasJoinedRef = useRef(false);
 
@@ -51,7 +56,7 @@ export default function GamePage() {
       roomId,
       token: localStorage.getItem('token'),
       username: activeUser.username,
-      role: 'player',
+      role: requestedRole,
       isGuest: !!activeUser.isGuest,
       guestId: activeUser.id,
       userId: activeUser.id,
@@ -63,6 +68,10 @@ export default function GamePage() {
         ...prev,
         ...state,
       }));
+      
+      if (state?.timeLeft !== undefined) {
+        setTimeLeft(state.timeLeft);
+      }
 
       // HYDRATE MESSAGES FROM SERVER LOG HISTORY
       if (state?.chatHistory) {
@@ -100,6 +109,14 @@ export default function GamePage() {
 
     socket.on('roundStarted', (round) => {
       setRoomState((state) => state ? { ...state, status: 'playing', ...round } : state);
+      if (round?.timeLeft !== undefined) setTimeLeft(round.timeLeft);
+    });
+
+    socket.on('timerTick', ({ timeLeft, wordHint }) => {
+      setTimeLeft(timeLeft);
+      if (wordHint) {
+        setRoomState((s) => (s ? { ...s, wordHint } : s));
+      }
     });
 
     socket.on('yourWord', ({ word }) => {
@@ -112,6 +129,9 @@ export default function GamePage() {
 
     socket.on('error', (payload) => {
       setError(payload.message || 'Something went wrong');
+      if (payload.message && payload.message.includes('All players have left')) {
+        setTimeout(() => navigate('/lobby'), 2000);
+      }
     });
 
     return () => {
@@ -123,6 +143,7 @@ export default function GamePage() {
       socket.off('roundStarted');
       socket.off('yourWord');
       socket.off('chatMessage');
+      socket.off('timerTick');
       socket.off('error');
 
       socket.disconnect();
@@ -181,6 +202,16 @@ export default function GamePage() {
           <div className="round-bar">
             <strong>{isDrawer ? 'You are drawing' : `${roomState?.currentDrawer?.username || 'Waiting'} is drawing`}</strong>
 
+            {(roomState?.status === 'playing' || roomState?.status === 'wordSelection') && (
+              <div className="timer">⏱️ {timeLeft}s</div>
+            )}
+
+            {!isDrawer && roomState?.status === 'wordSelection' && (
+              <div className="word-selection-overlay" style={{ marginTop: '10px', color: '#666' }}>
+                <h2>{roomState.currentDrawer?.username} is choosing a word...</h2>
+              </div>
+            )}
+
             {!isDrawer &&
               roomState?.status === 'playing' &&
               roomState?.wordHint && (
@@ -213,7 +244,7 @@ export default function GamePage() {
               </div>
             )}
           </div>
-          <DrawingCanvas socket={socket} roomId={roomId} isDrawer={isDrawer} />
+          <DrawingCanvas socket={socket} roomId={roomId} isDrawer={isDrawer} status={roomState?.status} />
         </div>
 
         <aside className="side-panel">
@@ -228,7 +259,13 @@ export default function GamePage() {
           </ul>
 
           {isHost && roomState?.status === 'lobby' && (
-            <button onClick={() => socket.emit('startGame', { roomId })}>Start Game</button>
+            <button 
+              onClick={() => socket.emit('startGame', { roomId })}
+              disabled={(roomState?.players?.length || 0) < 2}
+              title={(roomState?.players?.length || 0) < 2 ? "Need at least 2 players to start" : ""}
+            >
+              Start Game
+            </button>
           )}
 
           <h2>Room Log</h2>
@@ -237,6 +274,24 @@ export default function GamePage() {
               <p key={`${message.text}-${index}`}>{message.text}</p>
             ))}
           </div>
+
+          {!isDrawer && requestedRole !== 'spectator' && roomState?.status === 'playing' && (
+            <form className="chat-form" onSubmit={(e) => {
+              e.preventDefault();
+              if (!guess.trim()) return;
+              socket.emit('guessWord', { roomId, guess: guess.trim() });
+              setGuess('');
+            }} style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+              <input 
+                type="text" 
+                placeholder="Type your guess here..." 
+                value={guess} 
+                onChange={e => setGuess(e.target.value)} 
+                style={{ flex: 1 }}
+              />
+              <button type="submit">Send</button>
+            </form>
+          )}
         </aside>
       </section>
     </main>
