@@ -8,7 +8,7 @@ const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
 
 export default function GamePage() {
   const { roomId } = useParams();
-  const { user, loginAsGuest } = useAuth();
+  const { user, loginAsGuest, loading } = useAuth();
   const [activeUser, setActiveUser] = useState(user);
   const [roomState, setRoomState] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -20,12 +20,13 @@ export default function GamePage() {
 
 
   useEffect(() => {
+    if (loading) return;
     if (user) {
       setActiveUser(user);
       return;
     }
     setActiveUser(loginAsGuest());
-  }, [user, loginAsGuest]);
+  }, [user, loginAsGuest, loading]);
 
   useEffect(() => {
     if (!activeUser) return;
@@ -62,7 +63,13 @@ export default function GamePage() {
         ...prev,
         ...state,
       }));
+
+      // HYDRATE MESSAGES FROM SERVER LOG HISTORY
+      if (state?.chatHistory) {
+        setMessages(state.chatHistory);
+      }
     });
+
 
 
     socket.on('connect', () => {
@@ -125,20 +132,39 @@ export default function GamePage() {
   const isDrawer = roomState?.currentDrawer?.socketId === socket.id;
   const isHost = roomState?.isHost;
 
-  console.log('socket.id =', socket.id);
-  console.log('currentDrawer =', roomState?.currentDrawer);
-  console.log('isDrawer =', isDrawer);
-  console.log('wordChoices =', roomState?.wordChoices);
-  console.log('status =', roomState?.status);
-  console.log('wordHint =', roomState?.wordHint);
-  console.log('wordLength =', roomState?.wordLength);
+  useEffect(() => {
+    // Avoid logging socket.id before Socket.IO finishes connecting.
+    const log = () => {
+      console.log('socket.id =', socket?.id);
+      console.log('currentDrawer =', roomState?.currentDrawer);
+      console.log('isDrawer =', isDrawer);
+      console.log('wordChoices =', roomState?.wordChoices);
+      console.log('status =', roomState?.status);
+      console.log('wordHint =', roomState?.wordHint);
+      console.log('wordLength =', roomState?.wordLength);
+      console.log('isHost =', isHost);
+      console.log('room status =', roomState?.status);
+      console.log('players count =', roomState?.players?.length);
+      console.log('players =', roomState?.players);
+    };
 
-  console.log("isHost =", isHost);
+    if (socket?.connected) {
+      log();
+      return;
+    }
 
-  console.log("room status =", roomState?.status);
-  console.log("players count =", roomState?.players?.length);
-  console.log("players =", roomState?.players);
+    socket?.on?.('connect', log);
+    return () => {
+      socket?.off?.('connect', log);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket, roomState, isDrawer, isHost]);
 
+
+
+  if (loading) {
+    return <main className="page"><p>Loading player data...</p></main>;
+  }
 
   return (
     <main className="page game-page">

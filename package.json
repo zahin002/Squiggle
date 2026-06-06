@@ -6,10 +6,10 @@
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "client": "npm run dev --prefix client",
-    "server": "npm run dev --prefix server",
-    "install:all": "npm install && npm install --prefix client && npm install --prefix server",
+    "server": "node server/index.js",
+    "install:all": "npm install && npm install --prefix client",
     "build": "npm run build --prefix client",
-    "start": "npm start --prefix server"
+    "start": "node server/index.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

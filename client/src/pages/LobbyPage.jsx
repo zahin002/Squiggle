@@ -8,7 +8,7 @@ export default function LobbyPage() {
   const [rooms, setRooms] = useState([]);
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState('');
-  const { user, loginAsGuest } = useAuth();
+  const { user, loginAsGuest, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,7 +17,10 @@ export default function LobbyPage() {
       .catch(() => setRooms([]));
   }, []);
 
-  const ensureUser = () => user || loginAsGuest();
+  const ensureUser = () => {
+    if (loading) return null;
+    return user || loginAsGuest();
+  };
 
   const joinRoom = async (roomId) => {
     const normalized = roomId.trim().toUpperCase();
@@ -32,6 +35,10 @@ export default function LobbyPage() {
       setError(err.response?.data?.message || 'Could not join that room');
     }
   };
+
+  if (loading) {
+    return <main className="page"><p>Loading player data...</p></main>;
+  }
 
   return (
     <main className="page lobby-page">

@@ -11,8 +11,9 @@ router.post('/register', async (req, res) => {
     console.log('BODY:', req.body);
 
     const exists = await User.findOne({ username });
-
-    console.log('EXISTS:', exists);
+    if (exists) {
+      return res.status(400).json({ message: 'Username already taken' });
+    }
 
     const user = new User({ username, password });
 

@@ -9,8 +9,17 @@ module.exports = (io) => {
     socket.on('canvasState', ({ roomId, state }) => {
       socket.to(roomId).emit('canvasState', { state });
     });
+    socket.on('drawShape', (data) => {
+      socket.to(data.roomId).emit('drawShape', data);
+    });
+    socket.on('fillArea', (data) => {
+      socket.to(data.roomId).emit('fillArea', data);
+    });
     socket.on('requestCanvasState', ({ roomId }) => {
-      socket.to(roomId).emit('sendCanvasState', { requesterId: socket.id });
+      socket.to(roomId).emit('sendCanvasStateTo', { targetSocketId: socket.id });
+    });
+    socket.on('canvasStateFor', ({ targetSocketId, state }) => {
+      io.to(targetSocketId).emit('canvasState', { state });
     });
   });
 };

@@ -1,9 +1,9 @@
-# TODO
-- [x] Add a single helper `buildRoomState(room, currentUserId, socketId)` on the server.
-- [x] Replace duplicated roomState payload creation with the helper (joinRoom emit + roundManager emit).
-- [x] Ensure `isHost` logic matches existing behavior (hostUserId vs hostId fallback).
-- [ ] Run quick sanity check by starting server (if available) and verifying `roomState` payload shape for players and spectators.
+# Squiggle TODO
 
+## Chat history + notifications (server/socket/gameEvents.js)
+- [x] Update joinRoom system message persistence to include id/username/text/type and emit roomStateUpdate + chatMessage
+- [x] Add/replace sendMessage handler to append user messages into room.chatHistory and broadcast chatMessage with id/username/text/type
 
-
+- [ ] Verify roomStateUpdate emission format and client compatibility
+- [ ] Quick runtime check (start server + send/receive chat)
 
