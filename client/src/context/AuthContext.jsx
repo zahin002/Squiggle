@@ -22,9 +22,7 @@ export function AuthProvider({ children }) {
           localStorage.removeItem('token');
           delete axios.defaults.headers.common['Authorization'];
 
-          const guestUser =
-            localStorage.getItem('guestUser');
-
+          const guestUser = sessionStorage.getItem('guestUser');
           if (guestUser) {
             setUser(JSON.parse(guestUser));
           }
@@ -34,13 +32,10 @@ export function AuthProvider({ children }) {
         });
 
     } else {
-      const guestUser =
-        localStorage.getItem('guestUser');
-
+      const guestUser = sessionStorage.getItem('guestUser');
       if (guestUser) {
         setUser(JSON.parse(guestUser));
       }
-
       setLoading(false);
     }
   }, []);
@@ -56,7 +51,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
 
-    const savedGuest = localStorage.getItem('guestUser');
+    const savedGuest = sessionStorage.getItem('guestUser');
 
     if (savedGuest) {
       const guestUser = JSON.parse(savedGuest);
@@ -72,11 +67,7 @@ export function AuthProvider({ children }) {
       diamonds: 0,
     };
 
-    localStorage.setItem(
-      'guestUser',
-      JSON.stringify(guestUser)
-    );
-
+    sessionStorage.setItem('guestUser', JSON.stringify(guestUser));
     setUser(guestUser);
 
     return guestUser;
@@ -84,10 +75,8 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('guestUser');
-
+    sessionStorage.removeItem('guestUser');
     delete axios.defaults.headers.common['Authorization'];
-
     setUser(null);
   };
 

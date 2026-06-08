@@ -145,7 +145,6 @@ export default function DrawingCanvas({ socket, roomId, isDrawer, status }) {
       // Emit so other players see it
       socket.emit('fillArea', { roomId, x: pos.x, y: pos.y, color });
       // Save snapshot for undo
-      const ctx = canvas.getContext('2d');
       // We piggyback on useCanvas's history by emitting canvasState
       socket.emit('canvasState', { roomId, state: canvas.toDataURL() });
       return;
@@ -243,26 +242,13 @@ export default function DrawingCanvas({ socket, roomId, isDrawer, status }) {
   return (
     <div className="canvas-container">
 
-      {/* ToolBar: only visible to the drawer */}
-      {isDrawer && (
-        <ToolBar
-          tool={tool}
-          setTool={setTool}
-          size={size}
-          setSize={setSize}
-          onUndo={undo}
-          onClear={clearCanvas}
-        />
-      )}
-
-      {/* The HTML5 canvas — 800×600 logical pixels, scales via CSS */}
+      {/* The HTML5 canvas — 800x600 logical pixels, scales via CSS */}
       <canvas
         ref={canvasRef}
         width={800}
         height={600}
         className="drawing-canvas"
         style={{ cursor: isDrawer ? (TOOL_CURSORS[tool] || 'crosshair') : 'default' }}
-        style={{ border: "5px solid red" }}
         /* Mouse events */
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -276,9 +262,19 @@ export default function DrawingCanvas({ socket, roomId, isDrawer, status }) {
         role="img"
       />
 
-      {/* ColorPicker: only visible to the drawer */}
+      {/* Tools and Colors: only visible to the drawer */}
       {isDrawer && (
-        <ColorPicker color={color} setColor={setColor} />
+        <div className="canvas-tools-panel">
+          <ColorPicker color={color} setColor={setColor} />
+          <ToolBar
+            tool={tool}
+            setTool={setTool}
+            size={size}
+            setSize={setSize}
+            onUndo={undo}
+            onClear={clearCanvas}
+          />
+        </div>
       )}
 
     </div>

@@ -10,7 +10,21 @@ const userSchema = new mongoose.Schema({
     minLength: 3,
     maxLength: 20
   },
-  password: { type: String, required: true },
+  email: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true,
+    lowercase: true
+  },
+  password: { type: String }, // Optional for Google Auth users
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
   avatar: {
     body: { type: String, default: 'default_body' },
     color: { type: String, default: '#4A90E2' },
