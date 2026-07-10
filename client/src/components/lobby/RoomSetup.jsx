@@ -174,7 +174,7 @@ export default function RoomSetup() {
         {' '}Private Room
       </label>
 
-      <button onClick={createRoom}>Create Room</button>
+      <button className="btn-create" onClick={createRoom}>Create Room</button>
     </div>
   );
 }
