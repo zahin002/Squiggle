@@ -2,11 +2,12 @@ const { createRoomState, getRoom, setRoom, deleteRoom } = require('./roomStore')
 const Room = require('../models/Room');
 const jwt = require('jsonwebtoken');
 const { buildRoomState } = require('./buildRoomState');
+const drawingEvents = require('./drawingEvents');
 
 module.exports = (io) => {
   io.on('connection', (socket) => {
 
-    console.log('[SOCKET CONNECTED]', socket.id);
+    drawingEvents(socket, io);
 
     // ----- JOIN ROOM -----
     socket.on('joinRoom', async ({ roomId, token, userId, username, role, isGuest }) => {
@@ -304,8 +305,8 @@ module.exports = (io) => {
 
       const isHost =
         player &&
-        roomState.hostUserId &&
-        player.userId === roomState.hostUserId;
+        ((roomState.hostUserId && player.userId === roomState.hostUserId) ||
+         (roomState.hostId && player.socketId === roomState.hostId));
 
       if (!isHost) {
         console.log(
@@ -412,6 +413,20 @@ module.exports = (io) => {
           text: `${player.username}: ${guess}`
         });
       }
+    });
+
+    // ----- CHAT MESSAGE -----
+    socket.on('chatMessage', ({ roomId, text }) => {
+      const room = getRoom(roomId);
+      if (!room || room.status === 'lobby') return;
+      const player = room.players.find(p => p.socketId === socket.id);
+      if (!player) return;
+
+      io.to(roomId).emit('chatMessage', {
+        type: 'chat',
+        username: player.username,
+        text
+      });
     });
 
     // ----- DISCONNECT -----

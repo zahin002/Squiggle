@@ -42,16 +42,6 @@ export default function GamePage() {
     hasJoinedRef.current = true;
 
     socket.connect();
-    console.log('[CLIENT JOIN ROOM EMIT]', {
-      roomId,
-      socketId: socket.id,
-      time: Date.now()
-    });
-
-    console.log(
-      '[CLIENT JOIN ROOM EMIT]',
-      Date.now()
-    );
 
     socket.emit('joinRoom', {
       roomId,
@@ -113,6 +103,16 @@ export default function GamePage() {
       if (round?.timeLeft !== undefined) setTimeLeft(round.timeLeft);
     });
 
+    socket.on('roundEnded', ({ word }) => {
+      setRoomState((state) => state ? { ...state, status: 'lobby' } : state);
+      setMessages((items) => [...items, { type: 'system', text: `Round over! The word was: ${word}` }]);
+    });
+
+    socket.on('gameEnded', () => {
+      setRoomState((state) => state ? { ...state, status: 'finished' } : state);
+      setMessages((items) => [...items, { type: 'system', text: `Game Over!` }]);
+    });
+
     socket.on('timerTick', ({ timeLeft, wordHint }) => {
       setTimeLeft(timeLeft);
       if (wordHint) {
@@ -142,6 +142,8 @@ export default function GamePage() {
       socket.off('gameStarted');
       socket.off('wordChoices');
       socket.off('roundStarted');
+      socket.off('roundEnded');
+      socket.off('gameEnded');
       socket.off('yourWord');
       socket.off('chatMessage');
       socket.off('timerTick');
@@ -152,37 +154,7 @@ export default function GamePage() {
   }, [activeUser, roomId, socket]);
 
   const isDrawer = roomState?.currentDrawer?.socketId === socket.id;
-  const isHost = roomState?.isHost || roomState?.players?.some(p => p.socketId === socket.id && p.isHost);
-
-  useEffect(() => {
-    // Avoid logging socket.id before Socket.IO finishes connecting.
-    const log = () => {
-      console.log('socket.id =', socket?.id);
-      console.log('currentDrawer =', roomState?.currentDrawer);
-      console.log('isDrawer =', isDrawer);
-      console.log('wordChoices =', roomState?.wordChoices);
-      console.log('status =', roomState?.status);
-      console.log('wordHint =', roomState?.wordHint);
-      console.log('wordLength =', roomState?.wordLength);
-      console.log('isHost =', isHost);
-      console.log('room status =', roomState?.status);
-      console.log('players count =', roomState?.players?.length);
-      console.log('players =', roomState?.players);
-    };
-
-    if (socket?.connected) {
-      log();
-      return;
-    }
-
-    socket?.on?.('connect', log);
-    return () => {
-      socket?.off?.('connect', log);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socket, roomState, isDrawer, isHost]);
-
-
+  const isHost = roomState?.isHost;
 
   if (loading) {
     return <main className="game-page-modern"><p>Loading player data...</p></main>;
@@ -306,7 +278,7 @@ export default function GamePage() {
           )}
 
           {/* Word Hint (Guessers only) */}
-          {!isDrawer && roomState?.status === 'playing' && roomState?.wordHint && (
+          {(!isDrawer && roomState?.status === 'playing' && roomState?.wordHint) && (
             <div style={{background: '#0f172a', color: '#fff', padding: '12px', borderRadius: '16px', textAlign: 'center', letterSpacing: '4px', fontSize: '24px', fontWeight: 'bold'}}>
               {roomState.wordHint}
             </div>

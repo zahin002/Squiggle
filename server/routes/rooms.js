@@ -1,11 +1,10 @@
 // server/routes/rooms.js
 
 const express = require('express');
-const { nanoid } = require('nanoid');
+const crypto = require('crypto');
 const Room = require('../models/Room');
 const { createRoomState, setRoom } = require('../socket/roomStore');
 const optionalAuth = require('../utils/optionalAuthMiddleware'); // replaces authMiddleware
-const authMiddleware = require('../utils/authMiddleware');        // still used on protected routes
 const router = express.Router();
 
 // ---------------------------------------------------------------------------
@@ -15,7 +14,7 @@ const router = express.Router();
 // ---------------------------------------------------------------------------
 router.post('/create', optionalAuth, async (req, res) => {
   try {
-    const roomId = nanoid(6).toUpperCase(); // e.g. 'AB3X9Z'
+    const roomId = crypto.randomBytes(3).toString('hex').toUpperCase(); // e.g. 'AB3X9Z'
     let settings = { ...req.body };
 
     // req.user is null when no valid JWT was provided → guest host
@@ -48,7 +47,7 @@ router.post('/create', optionalAuth, async (req, res) => {
     // Persist room to MongoDB
     const room = new Room({
       roomId,
-      hostId: req.user?.id || null, // null for guest hosts
+      hostUserId: req.user?.id || null, // null for guest hosts
       isGuestHosted: isGuestHost,   // metadata — useful for analytics / admin
       settings,
     });

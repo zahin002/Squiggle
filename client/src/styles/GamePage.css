@@ -217,7 +217,7 @@
   flex-direction: column;
   gap: 16px;
   min-width: 0;
-  overflow-y: auto;
+  overflow: hidden;
   padding-bottom: 20px;
 }
 

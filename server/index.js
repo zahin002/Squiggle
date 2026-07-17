@@ -1,3 +1,6 @@
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -33,15 +36,12 @@ app.use('/api/users', userRoutes);
 
 // Socket Events
 gameEvents(io);
-drawingEvents(io); // Week 5–6
 
 // Database
 mongoose
   .connect(process.env.MONGO_URI)
   .then(async () => {
     console.log('MongoDB connected');
-    await require('./models/Room').deleteMany({});
-    console.log('Cleared ghost rooms from database');
   })
   .catch((err) => console.error('MongoDB error:', err));
 

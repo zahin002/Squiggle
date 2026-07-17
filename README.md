@@ -66,7 +66,7 @@ GEMINI_API_KEY=your_gemini_api_key_here
 npm run dev
 ```
 
-This starts both the client (http://localhost:3000) and server (http://localhost:5000) concurrently.
+This starts both the client (http://localhost:5173) and server (http://localhost:5000) concurrently.
 
 ---
 

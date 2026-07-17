@@ -32,6 +32,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useCanvas } from '../hooks/useCanvas';
 import ToolBar from './ToolBar';
 import ColorPicker from './ColorPicker';
+import '../styles/canvas.css';
 
 // ─── Cursor map ───────────────────────────────────────────────────────────────
 // Maps tool keys to appropriate CSS cursor values so the drawer gets visual

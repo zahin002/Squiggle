@@ -2,7 +2,9 @@ const mongoose = require('mongoose');
 
 const roomSchema = new mongoose.Schema({
   roomId: { type: String, required: true, unique: true }, // short code like 'ABC123'
-  hostId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  hostUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  hostSocketId: { type: String },
+  isGuestHosted: { type: Boolean, default: false },
   settings: {
     maxPlayers: { type: Number, default: 8, min: 2, max: 20 },
     drawTime: { type: Number, default: 80 },
