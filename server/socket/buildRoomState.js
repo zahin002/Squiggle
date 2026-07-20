@@ -12,6 +12,7 @@ function buildRoomState(room, currentUserId, socketId) {
         room.hostId
           ? room.hostId === socketId
           : false;
+  const isDrawer = room.currentDrawer?.socketId === socketId;
 
   return {
     roomId: room.roomId,
@@ -22,10 +23,12 @@ function buildRoomState(room, currentUserId, socketId) {
 
     status: room.status,
     currentDrawer: room.currentDrawer,
-    currentWord: room.currentWord,
+    // The word and alternatives must never be included in another player's state.
+    // A client can inspect every Socket.IO payload even if the UI does not render it.
+    currentWord: isDrawer ? room.currentWord : null,
     currentRound: room.currentRound,
     timeLeft: room.timeLeft,
-    wordChoices: room.wordChoices,
+    wordChoices: isDrawer ? room.wordChoices : [],
 
     isHost
   };

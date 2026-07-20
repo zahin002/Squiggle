@@ -1,9 +1,18 @@
-const { getRoom, setRoom } = require('./roomStore');
+const { getRoom, setRoom, persistRoom } = require('./roomStore');
 const { getWordChoices } = require('../utils/WordBank');
 
 async function startNextRound(io, roomId) {
   const room = getRoom(roomId);
   if (!room) return;
+
+  // A start request and a delayed end-of-round callback may both reach here.
+  // Only those two lifecycle states are allowed to create a new round.
+  if (!['starting', 'roundEnding'].includes(room.status)) return;
+
+  if (room.nextRoundTimeout) {
+    clearTimeout(room.nextRoundTimeout);
+    room.nextRoundTimeout = null;
+  }
 
   room.currentRound += 1;
 
@@ -13,8 +22,9 @@ async function startNextRound(io, roomId) {
       players: room.players,
       winner: winner?.username
     });
-    room.status = 'gameEnd';
+    room.status = 'finished';
     setRoom(roomId, room);
+    persistRoom(roomId, { status: 'finished' });
     return;
   }
 
@@ -24,12 +34,23 @@ async function startNextRound(io, roomId) {
   room.correctGuessers = [];
   room.currentWord = null;
   room.status = 'wordSelection';
+  setRoom(roomId, room);
 
   // Auto-clear canvas for the new round
   io.to(roomId).emit('clearCanvas');
 
   // Get word choices (async — Gemini or static fallback)
   const choices = await getWordChoices(room.settings);
+  // The room may have ended or been replaced while an AI request was pending.
+  const currentRoom = getRoom(roomId);
+  if (!currentRoom || currentRoom !== room || currentRoom.status !== 'wordSelection') return;
+  if (!Array.isArray(choices) || choices.length === 0) {
+    currentRoom.status = 'finished';
+    setRoom(roomId, currentRoom);
+    persistRoom(roomId, { status: 'finished' });
+    io.to(roomId).emit('error', { message: 'Unable to generate words for this round.' });
+    return;
+  }
   room.wordChoices = choices;
   setRoom(roomId, room);
 
@@ -64,6 +85,7 @@ async function startNextRound(io, roomId) {
 function processWordSelection(io, roomId, word) {
   const room = getRoom(roomId);
   if (!room || room.status !== 'wordSelection') return;
+  if (typeof word !== 'string' || !room.wordChoices.includes(word)) return;
 
   if (room.wordSelectionTimer) {
     clearInterval(room.wordSelectionTimer);
@@ -199,7 +221,13 @@ function startRoundTimer(io, room, roomId) {
 }
 
 async function endRound(io, room, roomId) {
+  if (!room || room.status === 'roundEnding' || room.status === 'finished') return;
+
   clearInterval(room.roundTimer);
+  clearInterval(room.wordSelectionTimer);
+  room.roundTimer = null;
+  room.wordSelectionTimer = null;
+  room.status = 'roundEnding';
 
   io.to(roomId).emit('roundEnded', {
     word: room.currentWord,
@@ -208,7 +236,13 @@ async function endRound(io, room, roomId) {
 
   setRoom(roomId, room);
 
-  setTimeout(() => startNextRound(io, roomId), 5000);
+  room.nextRoundTimeout = setTimeout(() => {
+    const current = getRoom(roomId);
+    if (!current || current.status !== 'roundEnding') return;
+    current.nextRoundTimeout = null;
+    startNextRound(io, roomId);
+  }, 5000);
+  setRoom(roomId, room);
 }
 
 module.exports = { startNextRound, startRoundTimer, endRound, processWordSelection };

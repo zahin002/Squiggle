@@ -334,7 +334,7 @@ module.exports = (io) => {
         return;
       }
 
-      roomState.status = 'playing';
+      roomState.status = 'starting';
       roomState.currentRound = 0;
 
       setRoom(roomId, roomState);

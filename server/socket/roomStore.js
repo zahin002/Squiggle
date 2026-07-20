@@ -35,8 +35,20 @@ function setRoom(roomId, state)   {
   rooms.set(roomId, state); 
 }
 function deleteRoom(roomId)       { 
+  const room = rooms.get(roomId);
+  if (room) {
+    if (room.roundTimer) clearInterval(room.roundTimer);
+    if (room.wordSelectionTimer) clearInterval(room.wordSelectionTimer);
+    if (room.nextRoundTimeout) clearTimeout(room.nextRoundTimeout);
+  }
   rooms.delete(roomId); 
   require('../models/Room').deleteOne({ roomId }).catch(err => console.error("Error deleting room from DB:", err));
 }
 
-module.exports = { rooms, createRoomState, getRoom, setRoom, deleteRoom };
+function persistRoom(roomId, updates) {
+  require('../models/Room')
+    .updateOne({ roomId }, { $set: updates })
+    .catch(err => console.error('Error persisting room state:', err));
+}
+
+module.exports = { rooms, createRoomState, getRoom, setRoom, deleteRoom, persistRoom };

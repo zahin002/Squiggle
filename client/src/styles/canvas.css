@@ -10,12 +10,14 @@
   flex-direction: column;
   align-items: center;
   gap: 0;
-  background: #1e1e2e;
-  border-radius: 12px;
+  background: #ffffff;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  border: 1.5px solid #e2e8f0;
   width: 100%;
-  max-width: 840px;
+  max-width: 800px;
+  box-sizing: border-box;
 }
 
 .drawing-canvas {

@@ -19,11 +19,12 @@ export default function GamePage() {
   const [error, setError] = useState('');
   const [guess, setGuess] = useState('');
   const [timeLeft, setTimeLeft] = useState(0);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const hasJoinedRef = useRef(false);
+  const chatBottomRef = useRef(null);
 
   const socket = useMemo(() => io(SERVER_URL, { autoConnect: false }), []);
-
 
   useEffect(() => {
     if (loading) return;
@@ -34,13 +35,16 @@ export default function GamePage() {
     setActiveUser(loginAsGuest());
   }, [user, loginAsGuest, loading]);
 
+  // Auto-scroll chat to bottom when messages update
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   useEffect(() => {
     if (!activeUser) return;
-
     if (hasJoinedRef.current) return;
 
     hasJoinedRef.current = true;
-
     socket.connect();
 
     socket.emit('joinRoom', {
@@ -55,62 +59,53 @@ export default function GamePage() {
 
     socket.on('roomState', (state) => {
       console.log('[ROOMSTATE RECEIVED]', state);
-      setRoomState(prev => ({
+      setRoomState((prev) => ({
         ...prev,
         ...state,
       }));
-      
+
       if (state?.timeLeft !== undefined) {
         setTimeLeft(state.timeLeft);
       }
 
-      // HYDRATE MESSAGES FROM SERVER LOG HISTORY
       if (state?.chatHistory) {
         setMessages(state.chatHistory);
       }
     });
 
-
-
     socket.on('connect', () => {
       socket.emit('requestCanvasState', { roomId });
     });
 
-
     socket.on('playerJoined', ({ players }) => {
-      console.log('PLAYER_JOINED EVENT');
-      console.log('received players =', players);
-      console.log('received count =', players?.length);
+      setRoomState((state) => (state ? { ...state, players } : state));
+    });
 
-      setRoomState((state) =>
-      state ? { ...state, players } : state
-      );
-    });
     socket.on('playerLeft', ({ players }) => {
-      setRoomState((state) => state ? { ...state, players } : state);
+      setRoomState((state) => (state ? { ...state, players } : state));
     });
+
     socket.on('gameStarted', ({ message }) => {
       setMessages((items) => [...items, { type: 'system', text: message }]);
     });
-    
-    // --- Added: wordChoices Listener ---
+
     socket.on('wordChoices', ({ choices }) => {
-      setRoomState((s) => s ? { ...s, wordChoices: choices, status: 'wordSelection' } : s);
+      setRoomState((s) => (s ? { ...s, wordChoices: choices, status: 'wordSelection' } : s));
     });
 
     socket.on('roundStarted', (round) => {
-      setRoomState((state) => state ? { ...state, status: 'playing', ...round } : state);
+      setRoomState((state) => (state ? { ...state, status: 'playing', ...round } : state));
       if (round?.timeLeft !== undefined) setTimeLeft(round.timeLeft);
     });
 
-    socket.on('roundEnded', ({ word }) => {
-      setRoomState((state) => state ? { ...state, status: 'lobby' } : state);
-      setMessages((items) => [...items, { type: 'system', text: `Round over! The word was: ${word}` }]);
+    socket.on('roundEnded', ({ word, players }) => {
+      setRoomState((state) => (state ? { ...state, status: 'roundEnding', revealedWord: word, players: players || state.players } : state));
+      setMessages((items) => [...items, { type: 'system', text: `Round over! The word was: "${word}"` }]);
     });
 
-    socket.on('gameEnded', () => {
-      setRoomState((state) => state ? { ...state, status: 'finished' } : state);
-      setMessages((items) => [...items, { type: 'system', text: `Game Over!` }]);
+    socket.on('gameEnded', ({ winner, players }) => {
+      setRoomState((state) => (state ? { ...state, status: 'finished', winner, players: players || state.players } : state));
+      setMessages((items) => [...items, { type: 'system', text: `🏆 Game Over! Winner: ${winner || 'Nobody'}` }]);
     });
 
     socket.on('timerTick', ({ timeLeft, wordHint }) => {
@@ -121,17 +116,17 @@ export default function GamePage() {
     });
 
     socket.on('yourWord', ({ word }) => {
-      setRoomState((s) => (s ? { ...s, selectedWord: word } : s));
+      setRoomState((s) => (s ? { ...s, selectedWord: word, currentWord: word } : s));
     });
 
     socket.on('chatMessage', (message) => {
-      setMessages((items) => [...items.slice(-30), message]);
+      setMessages((items) => [...items.slice(-40), message]);
     });
 
     socket.on('error', (payload) => {
       setError(payload.message || 'Something went wrong');
       if (payload.message && payload.message.includes('All players have left')) {
-        setTimeout(() => navigate('/lobby'), 2000);
+        setTimeout(() => navigate('/lobby'), 2500);
       }
     });
 
@@ -151,52 +146,75 @@ export default function GamePage() {
 
       socket.disconnect();
     };
-  }, [activeUser, roomId, socket]);
+  }, [activeUser, roomId, socket, navigate, requestedRole]);
 
   const isDrawer = roomState?.currentDrawer?.socketId === socket.id;
   const isHost = roomState?.isHost;
 
   if (loading) {
-    return <main className="game-page-modern"><p>Loading player data...</p></main>;
+    return (
+      <main className="game-page-modern" style={{ justifyContent: 'center', alignItems: 'center' }}>
+        <p style={{ fontSize: '1.2rem', fontWeight: 700 }}>Loading game session...</p>
+      </main>
+    );
   }
 
   const currentDrawerId = roomState?.currentDrawer?.socketId;
-  
-  // Sort players by score descending
   const sortedPlayers = [...(roomState?.players || [])].sort((a, b) => (b.score || 0) - (a.score || 0));
-  
+
   const handleCopyInvite = () => {
     navigator.clipboard.writeText(window.location.href);
-    // Could add a toast notification here
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2500);
   };
+
+  const currentWordDisplay = roomState?.currentWord || roomState?.selectedWord;
 
   return (
     <div className="game-page-modern">
       {/* 1. Global Navbar */}
-      <nav className="game-navbar">
-        <Link to="/" className="game-navbar-logo">
-          <img src="/Top Corner Logo.png" alt="Squiggle Logo" />
-        </Link>
+      <header className="game-navbar">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <Link to="/lobby" className="game-navbar-logo" title="Back to Lobby">
+            <span style={{ fontSize: '24px', fontWeight: 900, color: '#1a64ff', letterSpacing: '-0.5px' }}>
+              Squiggle 🎨
+            </span>
+          </Link>
+          <button className="leave-room-btn" onClick={() => navigate('/lobby')}>
+            ← Leave
+          </button>
+        </div>
+
         <div className="game-navbar-links">
-          <a href="#">Leaderboard</a>
-          <a href="#">Shop</a>
-          
+          {/* Persistent Room Code Display */}
+          <div className="room-code-display">
+            <span className="room-code-label">Room Code:</span>
+            <span className="room-code-value">{roomId}</span>
+          </div>
+
+          {/* Copy Link Input & Button */}
           <div className="invite-link-box">
-            <span className="invite-link-text">{window.location.href}</span>
-            <button className="invite-copy-btn" onClick={handleCopyInvite}>Copy</button>
+            <input type="text" readOnly value={window.location.href} className="invite-link-input" />
+            <button className="invite-copy-btn" onClick={handleCopyInvite}>
+              {copySuccess ? 'Copied! ✓' : 'Copy Link'}
+            </button>
           </div>
         </div>
+
         <div className="game-navbar-profile">
-          <svg viewBox="0 0 24 24" fill="#0f172a" width="24" height="24">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-          </svg>
+          <span className="user-badge-name">{activeUser?.username || 'Player'}</span>
         </div>
-      </nav>
+      </header>
 
+      {/* 2. Main 3-Column Grid */}
       <main className="game-main-content">
-        {error && <p style={{color: 'red', fontWeight: 'bold', textAlign: 'center', gridColumn: '1 / -1'}}>{error}</p>}
+        {error && (
+          <div className="game-error-banner">
+            ⚠️ {error}
+          </div>
+        )}
 
-        {/* LEFT COLUMN: Players */}
+        {/* LEFT COLUMN: Players & Leaderboard */}
         <aside className="game-left-col">
           <div className="players-header">
             Players ({roomState?.players?.length || 0})
@@ -204,24 +222,27 @@ export default function GamePage() {
           <div className="players-list">
             {(roomState?.players || []).map((player) => {
               const isDrawing = player.socketId === currentDrawerId;
+              const playerRankIndex = sortedPlayers.findIndex((p) => p.socketId === player.socketId);
+              let medalEmoji = '';
+              if (player.score > 0) {
+                if (playerRankIndex === 0) medalEmoji = '🥇 ';
+                else if (playerRankIndex === 1) medalEmoji = '🥈 ';
+                else if (playerRankIndex === 2) medalEmoji = '🥉 ';
+              }
+
               return (
-                <div key={player.socketId} className={`player-card-vertical ${isDrawing ? 'is-drawing' : ''}`}>
+                <div key={player.socketId || player.userId} className={`player-card-vertical ${isDrawing ? 'is-drawing' : ''}`}>
                   {isDrawing && (
-                    <div className="player-drawing-icon" title="Drawing">
+                    <div className="player-drawing-icon" title="Drawing Now">
                       ✏️
                     </div>
                   )}
                   <div className="player-avatar-small">
-                    <svg viewBox="0 0 100 100" fill="#cbd5e1" width="100%" height="100%">
-                      <circle cx="50" cy="40" r="20" fill="#94a3b8" />
-                      <path d="M20 100 Q 50 60 80 100" fill="#94a3b8" />
-                    </svg>
+                    <span>{(player.username || 'P').charAt(0).toUpperCase()}</span>
                   </div>
                   <div className="player-info-vertical">
                     <span className="player-name-small" title={player.username}>
-                      {player.score > 0 && sortedPlayers.findIndex(p => p.socketId === player.socketId) === 0 ? '🥇 ' : ''}
-                      {player.score > 0 && sortedPlayers.findIndex(p => p.socketId === player.socketId) === 1 ? '🥈 ' : ''}
-                      {player.score > 0 && sortedPlayers.findIndex(p => p.socketId === player.socketId) === 2 ? '🥉 ' : ''}
+                      {medalEmoji}
                       {player.username} {player.isHost ? '(Host)' : ''}
                     </span>
                     <span className="player-score-small">{player.score || 0} pts</span>
@@ -232,23 +253,26 @@ export default function GamePage() {
           </div>
         </aside>
 
-        {/* MIDDLE COLUMN: Canvas & Guess */}
+        {/* MIDDLE COLUMN: Round Header, Banners, Canvas */}
         <section className="game-mid-col">
-          
-          {/* Round Info Bar */}
+          {/* Top Round Info Bar */}
           <div className="round-info-bar">
-            <strong style={{fontSize: '16px', fontWeight: 800, color: '#0f172a'}}>
-              {roomState?.status === 'lobby' 
-                ? 'Waiting for players...' 
-                : isDrawer 
-                  ? 'You are drawing!' 
-                  : `${roomState?.currentDrawer?.username || 'Waiting'} is drawing...`
-              }
-            </strong>
+            <div className="round-info-text">
+              <span className="round-count-badge">
+                Round {roomState?.currentRound || 1} / {roomState?.settings?.rounds || 3}
+              </span>
+              <strong className="round-status-title">
+                {roomState?.status === 'lobby'
+                  ? 'Waiting for game to start...'
+                  : isDrawer
+                  ? '🎨 You are drawing!'
+                  : `${roomState?.currentDrawer?.username || 'Drawer'} is drawing`}
+              </strong>
+            </div>
 
             {(roomState?.status === 'playing' || roomState?.status === 'wordSelection') && (
-              <div className="timer-bubble">
-                <svg className="timer-clock-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <div className={`timer-bubble ${timeLeft <= 10 ? 'timer-warning' : ''}`}>
+                <svg className="timer-clock-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <circle cx="12" cy="12" r="10"></circle>
                   <polyline points="12 6 12 12 16 14"></polyline>
                 </svg>
@@ -257,139 +281,195 @@ export default function GamePage() {
             )}
           </div>
 
-          {/* Word Selection (Drawer only) */}
-          {roomState?.wordChoices && isDrawer && roomState.status === 'wordSelection' && (
-            <div style={{display: 'flex', gap: '10px', background: '#fff', padding: '16px', borderRadius: '16px', border: '3px solid #0f172a'}}>
-              <h3 style={{margin: 0, alignSelf: 'center', marginRight: '10px'}}>Choose a word:</h3>
-              {roomState.wordChoices.map((word) => (
-                <button 
-                  key={word} 
-                  className="guess-submit-btn" 
-                  style={{padding: '8px 16px', borderRadius: '8px'}}
-                  onClick={() => {
-                    socket.emit('wordSelected', { roomId, word });
-                    setRoomState((s) => ({ ...s, wordChoices: null }));
-                  }}
-                >
-                  {word}
-                </button>
-              ))}
+          {/* Drawer Persistent Word Banner */}
+          {isDrawer && roomState?.status === 'playing' && currentWordDisplay && (
+            <div className="drawer-word-banner">
+              <span className="banner-label">YOUR WORD TO DRAW:</span>
+              <span className="banner-word">{currentWordDisplay}</span>
             </div>
           )}
 
-          {/* Word Hint (Guessers only) */}
-          {(!isDrawer && roomState?.status === 'playing' && roomState?.wordHint) && (
-            <div style={{background: '#0f172a', color: '#fff', padding: '12px', borderRadius: '16px', textAlign: 'center', letterSpacing: '4px', fontSize: '24px', fontWeight: 'bold'}}>
-              {roomState.wordHint}
+          {/* Guesser Word Hint Banner */}
+          {!isDrawer && roomState?.status === 'playing' && roomState?.wordHint && (
+            <div className="guesser-hint-banner">
+              <span className="hint-label">GUESS THE WORD:</span>
+              <span className="hint-mask">{roomState.wordHint}</span>
+              {roomState.wordLength && (
+                <span className="hint-length">({roomState.wordLength} letters)</span>
+              )}
             </div>
           )}
 
-          {/* Drawing Canvas and Overlay Component */}
-          <div style={{ position: 'relative' }}>
+          {/* Drawing Canvas Container */}
+          <div className="canvas-wrapper-relative">
             <DrawingCanvas socket={socket} roomId={roomId} isDrawer={isDrawer} status={roomState?.status} />
-            
-            {/* Start Game Overlay (Lobby) */}
+
+            {/* OVERLAY 1: Lobby Overlay (Waiting / Start Game) */}
             {roomState?.status === 'lobby' && (
               <div className="lobby-canvas-overlay">
-                <h2>Waiting for other players...</h2>
+                <h2>Game Lobby</h2>
+                <p className="overlay-subtitle">
+                  {(roomState?.players?.length || 0)} / {roomState?.settings?.maxPlayers || 8} Players Joined
+                </p>
                 {isHost ? (
-                  <button 
+                  <button
                     className="start-game-btn"
                     onClick={() => socket.emit('startGame', { roomId })}
                     disabled={(roomState?.players?.length || 0) < 2}
                   >
-                    Start Game Now!
+                    {(roomState?.players?.length || 0) < 2 ? 'Need at least 2 players to start' : '🚀 Start Game Now'}
                   </button>
                 ) : (
-                  <p style={{ fontSize: '1.2rem', color: '#64748b', fontWeight: 'bold' }}>
-                    Waiting for the host to start the game.
-                  </p>
+                  <div className="waiting-host-box">
+                    <span className="pulse-dot"></span>
+                    <span>Waiting for room host to start the game...</span>
+                  </div>
                 )}
               </div>
             )}
-          </div>
 
+            {/* OVERLAY 2: Word Selection Modal (Drawer only) */}
+            {roomState?.wordChoices && isDrawer && roomState.status === 'wordSelection' && (
+              <div className="word-selection-overlay">
+                <div className="word-selection-card">
+                  <h3>Choose a word to draw!</h3>
+                  <div className="word-choices-grid">
+                    {roomState.wordChoices.map((word) => (
+                      <button
+                        key={word}
+                        className="word-choice-btn"
+                        onClick={() => {
+                          socket.emit('wordSelected', { roomId, word });
+                          setRoomState((s) => ({ ...s, wordChoices: null, selectedWord: word, currentWord: word }));
+                        }}
+                      >
+                        {word}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="auto-pick-timer">Auto-selecting in {timeLeft}s...</p>
+                </div>
+              </div>
+            )}
+
+            {/* OVERLAY 3: Round Ended Reveal */}
+            {roomState?.status === 'roundEnding' && (
+              <div className="round-ended-overlay">
+                <div className="round-ended-card">
+                  <h2>Round Completed! 🎉</h2>
+                  <p className="revealed-word-label">The secret word was:</p>
+                  <div className="revealed-word-box">{roomState.revealedWord || roomState.currentWord}</div>
+                  <p className="next-round-countdown">Next round starting shortly...</p>
+                </div>
+              </div>
+            )}
+
+            {/* OVERLAY 4: Game Ended Podium */}
+            {roomState?.status === 'finished' && (
+              <div className="game-ended-overlay">
+                <div className="game-ended-card">
+                  <h2>🏆 Game Over!</h2>
+                  <p className="winner-announcement">
+                    Winner: <strong>{roomState.winner || sortedPlayers[0]?.username || 'Player'}</strong>!
+                  </p>
+                  <div className="podium-scores-list">
+                    {sortedPlayers.slice(0, 5).map((p, idx) => (
+                      <div key={p.socketId || idx} className="podium-player-row">
+                        <span className="podium-rank">#{idx + 1}</span>
+                        <span className="podium-name">{p.username}</span>
+                        <span className="podium-score">{p.score || 0} pts</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button className="start-game-btn" onClick={() => navigate('/lobby')} style={{ marginTop: '16px' }}>
+                    Return to Lobby
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </section>
 
-        {/* RIGHT COLUMN: Live Chat */}
+        {/* RIGHT COLUMN: Live Chat & Guess Input */}
         <aside className="game-right-col">
-          <div className="chat-header">
-            LIVE CHAT
-          </div>
-          
+          <div className="chat-header">LIVE CHAT</div>
+
           <div className="chat-messages">
             {messages.map((message, index) => {
               const isSystem = message.type === 'system';
-              const senderName = isSystem ? 'System' : (message.username || message.sender || 'Unknown');
-              
+              const senderName = isSystem ? 'System' : message.username || message.sender || 'Unknown';
+
               if (isSystem) {
                 return (
-                  <div key={`${index}-${message.time || index}`} className="chat-message system">
+                  <div key={`${index}-${message.text}`} className="chat-message system">
                     {message.text}
                   </div>
                 );
               }
 
               return (
-                <div key={`${index}-${message.time || index}`} className="chat-message">
+                <div key={`${index}-${message.text}-${index}`} className="chat-message">
                   <div className="chat-message-header">
                     <span className="chat-message-name">{senderName}</span>
                   </div>
-                  <div className="chat-message-bubble">
-                    {message.text}
-                  </div>
+                  <div className="chat-message-bubble">{message.text}</div>
                 </div>
               );
             })}
+            <div ref={chatBottomRef} />
           </div>
 
           <div className="chat-input-area">
-            <form className="chat-form-modern" onSubmit={(e) => {
-              e.preventDefault();
-              const val = e.target.chatInput.value;
-              if (!val.trim()) return;
-              socket.emit('chatMessage', { roomId, text: val.trim() });
-              e.target.chatInput.value = '';
-            }}>
-              <input 
-                name="chatInput"
-                type="text" 
-                className="chat-input-modern"
-                placeholder="Type a message..." 
-              />
-              <button type="submit" className="chat-send-modern">Send</button>
+            <form
+              className="chat-form-modern"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const val = e.target.chatInput.value;
+                if (!val.trim()) return;
+                socket.emit('chatMessage', { roomId, text: val.trim() });
+                e.target.chatInput.value = '';
+              }}
+            >
+              <input name="chatInput" type="text" className="chat-input-modern" placeholder="Type a chat message..." />
+              <button type="submit" className="chat-send-modern">
+                Send
+              </button>
             </form>
           </div>
 
-          {/* Guess The Word Section (Moved to right column) */}
-          {!isDrawer && requestedRole !== 'spectator' && (
-            <form 
-              className="guess-section" 
-              style={{ padding: '0 16px 16px 16px' }}
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!guess.trim()) return;
-                socket.emit('guessWord', { roomId, guess: guess.trim() });
-                setGuess('');
-              }}
-            >
-              <div className="guess-input-wrapper" style={{ flexDirection: 'column' }}>
-                <input 
-                  type="text" 
-                  className="guess-input"
-                  placeholder={roomState?.status === 'playing' ? "Type your guess here..." : "Waiting for game to start..."}
-                  value={guess} 
-                  onChange={e => setGuess(e.target.value)} 
-                  disabled={roomState?.status !== 'playing'}
-                />
-                <button type="submit" className="guess-submit-btn" disabled={roomState?.status !== 'playing'} style={{ padding: '12px', width: '100%' }}>
-                  Submit Guess →
-                </button>
-              </div>
-            </form>
+          {/* Guess Section for Guessers / Info for Drawer */}
+          {requestedRole !== 'spectator' && (
+            <div className="guess-section-wrapper">
+              {isDrawer ? (
+                <div className="drawer-active-banner">
+                  🎨 You are drawing! Watch player guesses in the chat above.
+                </div>
+              ) : (
+                <form
+                  className="guess-section"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!guess.trim()) return;
+                    socket.emit('guessWord', { roomId, guess: guess.trim() });
+                    setGuess('');
+                  }}
+                >
+                  <input
+                    type="text"
+                    className="guess-input"
+                    placeholder={roomState?.status === 'playing' ? 'Type your guess here...' : 'Waiting for game to start...'}
+                    value={guess}
+                    onChange={(e) => setGuess(e.target.value)}
+                    disabled={roomState?.status !== 'playing'}
+                  />
+                  <button type="submit" className="guess-submit-btn" disabled={roomState?.status !== 'playing' || !guess.trim()}>
+                    Submit Guess →
+                  </button>
+                </form>
+              )}
+            </div>
           )}
         </aside>
-
       </main>
     </div>
   );
