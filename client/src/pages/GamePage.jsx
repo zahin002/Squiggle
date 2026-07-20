@@ -35,7 +35,6 @@ export default function GamePage() {
     setActiveUser(loginAsGuest());
   }, [user, loginAsGuest, loading]);
 
-  // Auto-scroll chat to bottom when messages update
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -58,7 +57,6 @@ export default function GamePage() {
     });
 
     socket.on('roomState', (state) => {
-      console.log('[ROOMSTATE RECEIVED]', state);
       setRoomState((prev) => ({
         ...prev,
         ...state,
@@ -100,7 +98,7 @@ export default function GamePage() {
 
     socket.on('roundEnded', ({ word, players }) => {
       setRoomState((state) => (state ? { ...state, status: 'roundEnding', revealedWord: word, players: players || state.players } : state));
-      setMessages((items) => [...items, { type: 'system', text: `Round over! The word was: "${word}"` }]);
+      setMessages((items) => [...items, { type: 'system', text: `Round over! Word was: "${word}"` }]);
     });
 
     socket.on('gameEnded', ({ winner, players }) => {
@@ -172,49 +170,66 @@ export default function GamePage() {
 
   return (
     <div className="game-page-modern">
-      {/* 1. Global Navbar */}
-      <header className="game-navbar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <Link to="/lobby" className="game-navbar-logo" title="Back to Lobby">
-            <span style={{ fontSize: '24px', fontWeight: 900, color: '#1a64ff', letterSpacing: '-0.5px' }}>
-              Squiggle 🎨
-            </span>
+      {/* Unified Compact Top Header Bar */}
+      <header className="game-navbar-compact">
+        {/* Left: Logo & Leave Button */}
+        <div className="nav-left">
+          <Link to="/lobby" className="nav-logo">
+            Squiggle 🎨
           </Link>
-          <button className="leave-room-btn" onClick={() => navigate('/lobby')}>
+          <button className="leave-btn" onClick={() => navigate('/lobby')}>
             ← Leave
           </button>
         </div>
 
-        <div className="game-navbar-links">
-          {/* Persistent Room Code Display */}
-          <div className="room-code-display">
-            <span className="room-code-label">Room Code:</span>
-            <span className="room-code-value">{roomId}</span>
-          </div>
+        {/* Center: Live Round, Timer & Word Banner */}
+        <div className="nav-center">
+          <span className="round-badge">
+            Round {roomState?.currentRound || 1}/{roomState?.settings?.rounds || 3}
+          </span>
 
-          {/* Copy Link Input & Button */}
-          <div className="invite-link-box">
-            <input type="text" readOnly value={window.location.href} className="invite-link-input" />
-            <button className="invite-copy-btn" onClick={handleCopyInvite}>
-              {copySuccess ? 'Copied! ✓' : 'Copy Link'}
-            </button>
-          </div>
+          {(roomState?.status === 'playing' || roomState?.status === 'wordSelection') && (
+            <div className={`timer-bubble-compact ${timeLeft <= 10 ? 'warn' : ''}`}>
+              ⏱️ {timeLeft}s
+            </div>
+          )}
+
+          {/* Word / Hint Display in Navbar Center */}
+          {isDrawer && roomState?.status === 'playing' && currentWordDisplay && (
+            <div className="drawer-word-pill">
+              <span>DRAW:</span>
+              <strong>{currentWordDisplay}</strong>
+            </div>
+          )}
+
+          {!isDrawer && roomState?.status === 'playing' && roomState?.wordHint && (
+            <div className="guesser-hint-pill">
+              <span>GUESS:</span>
+              <strong className="hint-mask-text">{roomState.wordHint}</strong>
+            </div>
+          )}
         </div>
 
-        <div className="game-navbar-profile">
-          <span className="user-badge-name">{activeUser?.username || 'Player'}</span>
+        {/* Right: Room Code, Copy Link, User */}
+        <div className="nav-right">
+          <div className="room-code-badge">
+            <span>Code:</span>
+            <strong>{roomId}</strong>
+          </div>
+
+          <button className="copy-link-btn" onClick={handleCopyInvite}>
+            {copySuccess ? 'Copied! ✓' : 'Copy Link'}
+          </button>
+
+          <span className="user-badge">{activeUser?.username || 'Player'}</span>
         </div>
       </header>
 
-      {/* 2. Main 3-Column Grid */}
+      {/* Main 3-Column Content (100vh - 48px) */}
       <main className="game-main-content">
-        {error && (
-          <div className="game-error-banner">
-            ⚠️ {error}
-          </div>
-        )}
+        {error && <div className="game-error-banner">⚠️ {error}</div>}
 
-        {/* LEFT COLUMN: Players & Leaderboard */}
+        {/* LEFT SIDEBAR: Players */}
         <aside className="game-left-col">
           <div className="players-header">
             Players ({roomState?.players?.length || 0})
@@ -232,18 +247,13 @@ export default function GamePage() {
 
               return (
                 <div key={player.socketId || player.userId} className={`player-card-vertical ${isDrawing ? 'is-drawing' : ''}`}>
-                  {isDrawing && (
-                    <div className="player-drawing-icon" title="Drawing Now">
-                      ✏️
-                    </div>
-                  )}
+                  {isDrawing && <div className="player-drawing-icon" title="Drawing Now">✏️</div>}
                   <div className="player-avatar-small">
                     <span>{(player.username || 'P').charAt(0).toUpperCase()}</span>
                   </div>
                   <div className="player-info-vertical">
                     <span className="player-name-small" title={player.username}>
-                      {medalEmoji}
-                      {player.username} {player.isHost ? '(Host)' : ''}
+                      {medalEmoji}{player.username} {player.isHost ? '(Host)' : ''}
                     </span>
                     <span className="player-score-small">{player.score || 0} pts</span>
                   </div>
@@ -253,54 +263,8 @@ export default function GamePage() {
           </div>
         </aside>
 
-        {/* MIDDLE COLUMN: Round Header, Banners, Canvas */}
+        {/* CENTER COLUMN: Canvas & Canvas Overlays (NO SCROLLING) */}
         <section className="game-mid-col">
-          {/* Top Round Info Bar */}
-          <div className="round-info-bar">
-            <div className="round-info-text">
-              <span className="round-count-badge">
-                Round {roomState?.currentRound || 1} / {roomState?.settings?.rounds || 3}
-              </span>
-              <strong className="round-status-title">
-                {roomState?.status === 'lobby'
-                  ? 'Waiting for game to start...'
-                  : isDrawer
-                  ? '🎨 You are drawing!'
-                  : `${roomState?.currentDrawer?.username || 'Drawer'} is drawing`}
-              </strong>
-            </div>
-
-            {(roomState?.status === 'playing' || roomState?.status === 'wordSelection') && (
-              <div className={`timer-bubble ${timeLeft <= 10 ? 'timer-warning' : ''}`}>
-                <svg className="timer-clock-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
-                {timeLeft}s
-              </div>
-            )}
-          </div>
-
-          {/* Drawer Persistent Word Banner */}
-          {isDrawer && roomState?.status === 'playing' && currentWordDisplay && (
-            <div className="drawer-word-banner">
-              <span className="banner-label">YOUR WORD TO DRAW:</span>
-              <span className="banner-word">{currentWordDisplay}</span>
-            </div>
-          )}
-
-          {/* Guesser Word Hint Banner */}
-          {!isDrawer && roomState?.status === 'playing' && roomState?.wordHint && (
-            <div className="guesser-hint-banner">
-              <span className="hint-label">GUESS THE WORD:</span>
-              <span className="hint-mask">{roomState.wordHint}</span>
-              {roomState.wordLength && (
-                <span className="hint-length">({roomState.wordLength} letters)</span>
-              )}
-            </div>
-          )}
-
-          {/* Drawing Canvas Container */}
           <div className="canvas-wrapper-relative">
             <DrawingCanvas socket={socket} roomId={roomId} isDrawer={isDrawer} status={roomState?.status} />
 
@@ -317,12 +281,12 @@ export default function GamePage() {
                     onClick={() => socket.emit('startGame', { roomId })}
                     disabled={(roomState?.players?.length || 0) < 2}
                   >
-                    {(roomState?.players?.length || 0) < 2 ? 'Need at least 2 players to start' : '🚀 Start Game Now'}
+                    {(roomState?.players?.length || 0) < 2 ? 'Need 2+ players to start' : '🚀 Start Game Now'}
                   </button>
                 ) : (
                   <div className="waiting-host-box">
-                    <span className="pulse-dot"></span>
-                    <span>Waiting for room host to start the game...</span>
+                    <span className="pulse-dot" />
+                    <span>Waiting for room host to start...</span>
                   </div>
                 )}
               </div>
@@ -347,7 +311,7 @@ export default function GamePage() {
                       </button>
                     ))}
                   </div>
-                  <p className="auto-pick-timer">Auto-selecting in {timeLeft}s...</p>
+                  <p className="auto-pick-timer">Auto-picking in {timeLeft}s...</p>
                 </div>
               </div>
             )}
@@ -381,7 +345,7 @@ export default function GamePage() {
                       </div>
                     ))}
                   </div>
-                  <button className="start-game-btn" onClick={() => navigate('/lobby')} style={{ marginTop: '16px' }}>
+                  <button className="start-game-btn" onClick={() => navigate('/lobby')} style={{ marginTop: '12px' }}>
                     Return to Lobby
                   </button>
                 </div>
@@ -390,7 +354,7 @@ export default function GamePage() {
           </div>
         </section>
 
-        {/* RIGHT COLUMN: Live Chat & Guess Input */}
+        {/* RIGHT SIDEBAR: Live Chat & Guess Input */}
         <aside className="game-right-col">
           <div className="chat-header">LIVE CHAT</div>
 
@@ -430,7 +394,7 @@ export default function GamePage() {
                 e.target.chatInput.value = '';
               }}
             >
-              <input name="chatInput" type="text" className="chat-input-modern" placeholder="Type a chat message..." />
+              <input name="chatInput" type="text" className="chat-input-modern" placeholder="Type a message..." />
               <button type="submit" className="chat-send-modern">
                 Send
               </button>
@@ -442,7 +406,7 @@ export default function GamePage() {
             <div className="guess-section-wrapper">
               {isDrawer ? (
                 <div className="drawer-active-banner">
-                  🎨 You are drawing! Watch player guesses in the chat above.
+                  🎨 You are drawing! Watch guesses above.
                 </div>
               ) : (
                 <form
@@ -457,7 +421,7 @@ export default function GamePage() {
                   <input
                     type="text"
                     className="guess-input"
-                    placeholder={roomState?.status === 'playing' ? 'Type your guess here...' : 'Waiting for game to start...'}
+                    placeholder={roomState?.status === 'playing' ? 'Type your guess here...' : 'Waiting to start...'}
                     value={guess}
                     onChange={(e) => setGuess(e.target.value)}
                     disabled={roomState?.status !== 'playing'}
