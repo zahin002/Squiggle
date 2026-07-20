@@ -47,9 +47,14 @@ export default function LobbyPage() {
       <div className="lobby-card">
         <header className="lobby-header">
           <Link to="/">Squiggle</Link>
-          <span className="lobby-header-user">
-            {user ? `${user.username}${user.isGuest ? ' (Guest)' : ''}` : 'Guest ready'}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button className="btn-leaderboard-header" onClick={() => navigate('/leaderboard')}>
+              🏆 Leaderboard
+            </button>
+            <span className="lobby-header-user">
+              {user ? `${user.username}${user.isGuest ? ' (Guest)' : ''}` : 'Guest ready'}
+            </span>
+          </div>
         </header>
 
         <section className="lobby-grid">

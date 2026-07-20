@@ -81,8 +81,10 @@
   }
 }
 
-.room-setup, .room-browser {
-  background: #f3f5f8; /* Soft gray color */
+.room-setup,
+.room-browser {
+  background: #f3f5f8;
+  /* Soft gray color */
   border-radius: 24px;
   padding: 2.5rem;
   border: none;
@@ -93,7 +95,8 @@
   font-weight: 800;
   margin-bottom: 1.5rem;
   margin-top: 0;
-  color: #4facfe; /* Playful blue */
+  color: #4facfe;
+  /* Playful blue */
 }
 
 /* Room Setup Form */
@@ -121,7 +124,8 @@
   font-weight: 600;
   outline: none;
   transition: all 0.2s;
-  background: #ffffff; /* White embedded */
+  background: #ffffff;
+  /* White embedded */
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
@@ -159,16 +163,19 @@
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.btn-create, .btn-join-main {
+.btn-create,
+.btn-join-main {
   width: 100%;
-  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); /* Playful vibrant gradient */
+  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+  /* Playful vibrant gradient */
   color: #fff;
   box-shadow: 0 6px 20px rgba(253, 160, 133, 0.4);
   margin-top: 1rem;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.btn-create:hover, .btn-join-main:hover {
+.btn-create:hover,
+.btn-join-main:hover {
   transform: translateY(-4px) scale(1.02);
   box-shadow: 0 10px 25px rgba(253, 160, 133, 0.6);
 }
@@ -218,7 +225,8 @@
 }
 
 .room-list li {
-  background: #ffffff; /* White embedded inside gray container */
+  background: #ffffff;
+  /* White embedded inside gray container */
   border-radius: 20px;
   padding: 1.2rem 1.5rem;
   display: flex;

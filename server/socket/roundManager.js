@@ -18,6 +18,15 @@ async function startNextRound(io, roomId) {
 
   if (room.currentRound > room.settings.rounds) {
     const winner = [...room.players].sort((a, b) => b.score - a.score)[0];
+    
+    // Award win bonuses to MongoDB for registered winner
+    if (winner?.userId && !winner?.isGuest) {
+      const User = require('../models/User');
+      User.findByIdAndUpdate(winner.userId, {
+        $inc: { goldCoins: 20, totalWins: 1, currentWinStreak: 1 }
+      }).catch(() => {});
+    }
+
     io.to(roomId).emit('gameEnded', {
       players: room.players,
       winner: winner?.username

@@ -11,6 +11,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import LobbyPage from './pages/LobbyPage';
 import GamePage from './pages/GamePage';
+import LeaderboardPage from './pages/LeaderboardPage';
 
 // Replace with actual Client ID in production or pass via .env
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'dummy-client-id';
@@ -27,6 +28,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/lobby" element={<LobbyPage />} />
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
             <Route path="/game/:roomId" element={<GamePage />} />
           </Routes>
         </BrowserRouter>

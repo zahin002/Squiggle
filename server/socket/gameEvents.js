@@ -1,5 +1,6 @@
 const { createRoomState, getRoom, setRoom, deleteRoom } = require('./roomStore');
 const Room = require('../models/Room');
+const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const { buildRoomState } = require('./buildRoomState');
 const drawingEvents = require('./drawingEvents');
@@ -389,6 +390,14 @@ module.exports = (io) => {
         if (room.currentDrawer) {
           const drawerPlayer = room.players.find(p => p.userId === room.currentDrawer.userId || p.socketId === room.currentDrawer.socketId);
           if (drawerPlayer) drawerPlayer.score += 50;
+        }
+
+        // Persist Gold Coins to MongoDB for registered users
+        if (player.userId && !player.isGuest) {
+          User.findByIdAndUpdate(player.userId, { $inc: { goldCoins: 1 } }).catch(() => {});
+        }
+        if (room.currentDrawer?.userId && !room.currentDrawer?.isGuest) {
+          User.findByIdAndUpdate(room.currentDrawer.userId, { $inc: { goldCoins: 2 } }).catch(() => {});
         }
 
         setRoom(roomId, room);
