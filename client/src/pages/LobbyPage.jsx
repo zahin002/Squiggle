@@ -51,9 +51,20 @@ export default function LobbyPage() {
             <button className="btn-leaderboard-header" onClick={() => navigate('/leaderboard')}>
               🏆 Leaderboard
             </button>
-            <span className="lobby-header-user">
-              {user ? `${user.username}${user.isGuest ? ' (Guest)' : ''}` : 'Guest ready'}
-            </span>
+            {user && !user.isGuest ? (
+              <button
+                className="lobby-header-user"
+                onClick={() => navigate('/profile')}
+                style={{ cursor: 'pointer', background: '#eff6ff', color: '#1a64ff', border: '1.5px solid #bfdbfe' }}
+                title="View your profile"
+              >
+                👤 {user.username}
+              </button>
+            ) : (
+              <span className="lobby-header-user">
+                {user ? `${user.username} (Guest)` : 'Guest ready'}
+              </span>
+            )}
           </div>
         </header>
 
