@@ -1,59 +1,66 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&family=Fredoka:wght@600;700&display=swap');
+/* ============================================================
+   client/src/styles/Lobby.css
+   Unified theme matching the GamePage design language:
+   clean whites, #f1f5f9 slate bg, #1a64ff primary blue,
+   Nunito + Fredoka fonts, tight radius, no gimmicks.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@600;700&display=swap');
 
+/* ── Page Container ─────────────────────────────────────────── */
 .lobby-container {
   font-family: 'Nunito', sans-serif;
   min-height: 100vh;
-  background-color: #f4f9fb;
-  background-image: url("/bg-pattern.svg");
-  background-size: 800px 800px;
-  background-attachment: fixed;
-  background-repeat: repeat;
-  color: #333;
-  padding: 3rem 2rem;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  padding: 2.5rem 2rem;
   box-sizing: border-box;
-  width: 100vw;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: flex-start;
   margin: 0;
 }
 
+/* ── Main Card ─────────────────────────────────────────────── */
 .lobby-card {
   background: #ffffff;
-  border-radius: 40px;
+  border-radius: 24px;
   width: 100%;
   max-width: 1200px;
-  padding: 3rem;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+  padding: 2.5rem;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
+  border: 1.5px solid #e2e8f0;
 }
 
+/* ── Header ────────────────────────────────────────────────── */
 .lobby-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 3rem;
-  padding: 0 1rem;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .lobby-header a {
   font-family: 'Fredoka', 'Nunito', sans-serif;
-  font-size: 2.6rem;
-  font-weight: 600;
+  font-size: 2.2rem;
+  font-weight: 700;
   text-decoration: none;
   color: #5f6368;
   letter-spacing: -0.5px;
   position: relative;
   display: inline-block;
-  padding-right: 35px;
+  padding-right: 32px;
 }
 
 .lobby-header a::after {
   content: '';
   position: absolute;
   top: -4px;
-  right: -5px;
-  width: 40px;
-  height: 40px;
+  right: -4px;
+  width: 36px;
+  height: 36px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%235f6368' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 60 C 10 20, 50 20, 40 50 C 30 80, 70 80, 60 50 C 50 20, 90 20, 90 60' /%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: center;
@@ -62,17 +69,39 @@
 
 .lobby-header-user {
   font-weight: 700;
-  color: #555;
-  background: #f8f9fa;
-  padding: 0.6rem 1.2rem;
-  border-radius: 16px;
-  border: 1px solid #eee;
+  font-size: 13px;
+  color: #475569;
+  background: #f1f5f9;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1.5px solid #cbd5e1;
 }
 
+/* ── Leaderboard Header Button ─────────────────────────────── */
+.btn-leaderboard-header {
+  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.28);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-leaderboard-header:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.42);
+}
+
+/* ── Lobby Grid ─────────────────────────────────────────────── */
 .lobby-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 3rem;
+  gap: 2rem;
 }
 
 @media (max-width: 850px) {
@@ -81,165 +110,213 @@
   }
 }
 
-.room-setup,
+/* ── Panel Sections ─────────────────────────────────────────── */
+/* Create Room panel — violet/purple accent */
+.room-setup {
+  background: #faf5ff;
+  border-radius: 20px;
+  padding: 2rem;
+  border: 1.5px solid #ddd6fe;
+  box-shadow: 0 2px 8px rgba(124, 77, 255, 0.06);
+}
+
+/* Browse/Join panel — teal/sky accent */
 .room-browser {
-  background: #f3f5f8;
-  /* Soft gray color */
-  border-radius: 24px;
-  padding: 2.5rem;
-  border: none;
+  background: #f0f9ff;
+  border-radius: 20px;
+  padding: 2rem;
+  border: 1.5px solid #bae6fd;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.06);
 }
 
 .lobby-container h2 {
-  font-size: 1.8rem;
-  font-weight: 800;
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
   margin-bottom: 1.5rem;
   margin-top: 0;
-  color: #4facfe;
-  /* Playful blue */
+  color: #7c4dff;
 }
 
-/* Room Setup Form */
+.room-browser h2 {
+  color: #0ea5e9;
+}
+
+/* ── Form Labels ─────────────────────────────────────────────── */
 .room-setup label {
   display: flex;
   flex-direction: column;
-  margin-bottom: 1.2rem;
+  margin-bottom: 1rem;
   font-weight: 700;
-  color: #666;
-  font-size: 0.95rem;
+  color: #6d28d9;
+  font-size: 0.88rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
+.room-browser label {
+  color: #0284c7;
+}
+
+/* ── Form Inputs ─────────────────────────────────────────────── */
 .room-setup input,
 .room-setup select,
 .room-setup textarea,
 .join-row input,
 .join-row select,
 .lobby-card input {
-  margin-top: 0.6rem;
-  padding: 1rem 1.2rem;
-  border-radius: 16px;
-  border: 2px solid #e2e8f0;
+  margin-top: 0.4rem;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1.5px solid #cbd5e1;
   font-family: 'Nunito', sans-serif;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   outline: none;
-  transition: all 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
   background: #ffffff;
-  /* White embedded */
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+  color: #0f172a;
 }
 
 .room-setup input:focus,
 .room-setup select:focus,
-.room-setup textarea:focus,
+.room-setup textarea:focus {
+  border-color: #7c4dff;
+  box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.1);
+}
+
 .join-row input:focus,
 .lobby-card input:focus {
-  border-color: #4facfe;
-  box-shadow: 0 4px 15px rgba(79, 172, 254, 0.15);
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
 }
 
 .room-setup label input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   margin-right: 10px;
   cursor: pointer;
-  accent-color: #ff758c;
+  accent-color: #1a64ff;
 }
 
 .room-setup label:has(input[type="checkbox"]) {
   flex-direction: row;
   align-items: center;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
+/* ── Buttons (global in lobby-container) ─────────────────────── */
 .lobby-container button {
   font-family: 'Nunito', sans-serif;
-  padding: 1.2rem 2rem;
-  border-radius: 20px;
-  font-size: 1.15rem;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 1rem;
   font-weight: 800;
   border: none;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.btn-create,
+/* Primary CTA: Create — purple */
+.btn-create {
+  width: 100%;
+  background: linear-gradient(135deg, #7c4dff 0%, #a855f7 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(124, 77, 255, 0.32);
+  margin-top: 1rem;
+  padding: 13px 20px;
+  border-radius: 14px;
+  font-size: 1.05rem;
+}
+
+.btn-create:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 8px 22px rgba(124, 77, 255, 0.45);
+}
+
+/* Primary CTA: Join — teal/sky */
 .btn-join-main {
   width: 100%;
-  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-  /* Playful vibrant gradient */
+  background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
   color: #fff;
-  box-shadow: 0 6px 20px rgba(253, 160, 133, 0.4);
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.32);
   margin-top: 1rem;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  padding: 13px 20px;
+  border-radius: 14px;
+  font-size: 1.05rem;
 }
 
-.btn-create:hover,
 .btn-join-main:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 10px 25px rgba(253, 160, 133, 0.6);
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 8px 22px rgba(14, 165, 233, 0.45);
 }
 
-/* Join Room */
+/* ── Join Row ────────────────────────────────────────────────── */
 .join-row {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 2.5rem;
+  gap: 10px;
+  margin-bottom: 2rem;
 }
 
 .join-inputs {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
 .join-inputs input {
   flex: 1;
   text-transform: uppercase;
   text-align: center;
-  font-size: 1.2rem;
-  letter-spacing: 2px;
+  font-size: 1.15rem;
+  letter-spacing: 3px;
+  font-weight: 800;
 }
 
 .join-inputs select {
   width: auto;
 }
 
+/* ── Error ──────────────────────────────────────────────────── */
 .error-text {
-  color: #ff4757;
-  background: #ffeaa7;
-  padding: 0.8rem;
-  border-radius: 12px;
+  color: #ef4444;
+  background: #fef2f2;
+  border: 1.5px solid #fca5a5;
+  padding: 8px 12px;
+  border-radius: 10px;
   font-weight: 700;
+  font-size: 0.9rem;
   text-align: center;
 }
 
-/* Open Games List */
+/* ── Open Room List ──────────────────────────────────────────── */
 .room-list {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 10px;
 }
 
 .room-list li {
   background: #ffffff;
-  /* White embedded inside gray container */
-  border-radius: 20px;
-  padding: 1.2rem 1.5rem;
+  border-radius: 16px;
+  padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+  border: 1.5px solid #e2e8f0;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .room-list li:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 6px 18px rgba(26, 100, 255, 0.1);
+  border-color: #bfdbfe;
 }
 
 .room-info {
@@ -249,23 +326,24 @@
 }
 
 .room-code-display {
-  font-family: monospace;
-  font-size: 1.5rem;
-  font-weight: 800;
-  background: #e0f2fe;
-  color: #0284c7;
-  padding: 0.3rem 0.8rem;
-  border-radius: 12px;
+  font-family: 'Fredoka', monospace;
+  font-size: 1.3rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #eff6ff, #f0fdf4);
+  color: #0ea5e9;
+  padding: 3px 10px;
+  border-radius: 10px;
   letter-spacing: 2px;
   display: inline-block;
+  border: 1.5px solid #bae6fd;
 }
 
 .room-mode {
   text-transform: capitalize;
   font-weight: 700;
-  color: #94a3b8;
-  font-size: 0.9rem;
-  padding-left: 0.4rem;
+  color: #a855f7;
+  font-size: 0.85rem;
+  padding-left: 4px;
 }
 
 .room-actions {
@@ -274,55 +352,64 @@
 }
 
 .room-actions button {
-  padding: 0.8rem 1.2rem;
-  font-size: 1rem;
-  border-radius: 16px;
+  padding: 7px 14px;
+  font-size: 0.9rem;
+  border-radius: 999px;
 }
 
 .btn-join {
-  background: #38bdf8;
+  background: linear-gradient(135deg, #1a64ff 0%, #38bdf8 100%);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+  box-shadow: 0 3px 10px rgba(26, 100, 255, 0.28);
 }
 
 .btn-join:hover {
-  background: #0ea5e9;
   transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(26, 100, 255, 0.42);
 }
 
 .btn-spectate {
   background: #f1f5f9;
-  color: #64748b;
+  color: #475569;
+  border: 1.5px solid #cbd5e1;
 }
 
 .btn-spectate:hover {
-  background: #e2e8f0;
-  color: #334155;
+  background: #e0e7ff;
+  color: #3730a3;
+  border-color: #a5b4fc;
 }
 
+/* ── Guest Banner ─────────────────────────────────────────────── */
 .guest-restriction-banner {
-  background: #fff3cd;
-  color: #856404;
-  padding: 1rem;
-  border-radius: 16px;
-  margin-bottom: 1.5rem;
-  font-size: 0.95rem;
-  line-height: 1.4;
-  border: 1px solid #ffeeba;
+  background: #fef9c3;
+  color: #713f12;
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin-bottom: 1.2rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  border: 1.5px solid #fde68a;
+  font-weight: 600;
 }
 
+/* ── Genre Selector ──────────────────────────────────────────── */
 .genre-selector {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .genre-selector label {
-  background: #fff;
+  background: #ffffff;
   padding: 8px 12px;
-  border-radius: 12px;
+  border-radius: 10px;
   margin-bottom: 0;
-  font-size: 0.9rem;
-  border: 1px solid #eee;
+  font-size: 0.88rem;
+  border: 1.5px solid #e2e8f0;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  color: #475569;
 }

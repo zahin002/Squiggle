@@ -1,0 +1,348 @@
+/* ============================================================
+   client/src/styles/Leaderboard.css
+   Design language matching GamePage.css:
+   #f1f5f9 bg, white cards, #1a64ff primary, Nunito+Fredoka
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@600;700&display=swap');
+
+/* ── Page ───────────────────────────────────────────────────── */
+.leaderboard-container {
+  font-family: 'Nunito', sans-serif;
+  min-height: 100vh;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  padding: 2rem;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.leaderboard-card {
+  background: #ffffff;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 1100px;
+  padding: 2.5rem;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
+  border: 1.5px solid #e2e8f0;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.leaderboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.leaderboard-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.btn-back-lobby {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-back-lobby:hover {
+  background: #fee2e2;
+  color: #ef4444;
+  border-color: #fca5a5;
+  transform: translateX(-2px);
+}
+
+.leaderboard-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a64ff;
+  margin: 0;
+}
+
+/* ── Guest Register Banner ──────────────────────────────────── */
+.guest-upsell-banner {
+  background: #fef9c3;
+  border: 1.5px solid #fde68a;
+  border-radius: 16px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.12);
+}
+
+.guest-upsell-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.guest-upsell-icon {
+  font-size: 24px;
+}
+
+.guest-upsell-text h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: #713f12;
+}
+
+.guest-upsell-text p {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: #92400e;
+  font-weight: 600;
+}
+
+.btn-guest-register {
+  background: linear-gradient(135deg, #1a64ff 0%, #7c4dff 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(26, 100, 255, 0.28);
+  transition: transform 0.2s, box-shadow 0.2s;
+  white-space: nowrap;
+}
+
+.btn-guest-register:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(26, 100, 255, 0.42);
+}
+
+/* ── Filter Tabs ────────────────────────────────────────────── */
+.leaderboard-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  background: #f8fafc;
+  color: #64748b;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  background: #eff6ff;
+  color: #1a64ff;
+  border-color: #bfdbfe;
+}
+
+.tab-btn.active {
+  background: linear-gradient(135deg, #1a64ff 0%, #7c4dff 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(26, 100, 255, 0.28);
+}
+
+/* ── Top 3 Podium ───────────────────────────────────────────── */
+.podium-section {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 2rem;
+  padding: 0 8px;
+}
+
+.podium-card {
+  flex: 1;
+  max-width: 220px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 18px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  border: 1.5px solid #e2e8f0;
+  transition: transform 0.2s;
+}
+
+.podium-card:hover {
+  transform: translateY(-3px);
+}
+
+.podium-card.rank-1 {
+  border-color: #fcd34d;
+  background: #fffbeb;
+  transform: scale(1.05);
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.16);
+  order: 2;
+}
+
+.podium-card.rank-2 {
+  border-color: #cbd5e1;
+  background: #e2e8f0;
+  order: 1;
+}
+
+.podium-card.rank-3 {
+  border-color: #fed7aa;
+  background: #fff7ed;
+  order: 3;
+}
+
+.podium-crown {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.podium-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a64ff, #7c4dff);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 900;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 10px rgba(26, 100, 255, 0.25);
+}
+
+.podium-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.podium-stat {
+  font-size: 13px;
+  font-weight: 800;
+  color: #1a64ff;
+  margin-top: 4px;
+}
+
+/* ── Rankings Table ─────────────────────────────────────────── */
+.table-container {
+  overflow-x: auto;
+  border-radius: 16px;
+  border: 1.5px solid #e2e8f0;
+}
+
+.rankings-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.rankings-table th {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 12px 18px;
+  border-bottom: 1.5px solid #e2e8f0;
+}
+
+.rankings-table td {
+  padding: 12px 18px;
+  border-bottom: 1px solid #f1f5f9;
+  font-weight: 700;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.rankings-table tr:last-child td {
+  border-bottom: none;
+}
+
+.rankings-table tr:hover {
+  background: #f8fafc;
+}
+
+.rankings-table tr.row-gold {
+  background: #fef9c3;
+}
+.rankings-table tr.row-silver {
+  background: #e2e8f0;
+}
+.rankings-table tr.row-bronze {
+  background: #fed7aa;
+}
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #1a64ff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.player-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.table-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a64ff, #7c4dff);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .podium-section {
+    flex-direction: column;
+    align-items: center;
+  }
+  .podium-card {
+    width: 100%;
+    max-width: 100%;
+    order: unset !important;
+    transform: none !important;
+  }
+}
