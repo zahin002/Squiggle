@@ -32,8 +32,7 @@ export default function GamePage() {
     isForceMuted,
     remoteStreams,
     toggleMute,
-    initiateConnections,
-  } = useWebRTC(socket, roomId, requestedRole);
+  } = useWebRTC(socket, roomId, requestedRole, roomState?.players);
 
   useEffect(() => {
     if (loading) return;
@@ -78,10 +77,6 @@ export default function GamePage() {
       if (state?.chatHistory) {
         setMessages(state.chatHistory);
       }
-
-      if (state?.players) {
-        initiateConnections(state.players);
-      }
     });
 
     socket.on('connect', () => {
@@ -90,7 +85,6 @@ export default function GamePage() {
 
     socket.on('playerJoined', ({ players }) => {
       setRoomState((state) => (state ? { ...state, players } : state));
-      initiateConnections(players);
     });
 
     socket.on('playerLeft', ({ players }) => {
@@ -487,10 +481,15 @@ export default function GamePage() {
           <audio
             key={socketId}
             ref={(el) => {
-              if (el) el.srcObject = stream;
+              if (el) {
+                el.srcObject = stream;
+                el.volume = 1.0;
+              }
             }}
             autoPlay
-            style={{ display: 'none' }}
+            playsInline
+            muted={false}
+            style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
           />
         );
       })}

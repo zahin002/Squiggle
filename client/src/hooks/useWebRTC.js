@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-// Free turn servers configuration for WebRTC ICE traversal
+// Free STUN servers for WebRTC ICE traversal
 const ICE_SERVERS = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
@@ -9,53 +9,26 @@ const ICE_SERVERS = {
   ],
 };
 
-export default function useWebRTC(socket, roomId, role = 'player') {
+export default function useWebRTC(socket, roomId, role = 'player', players = []) {
   const [localStream, setLocalStream] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isForceMuted, setIsForceMuted] = useState(false);
   const [remoteStreams, setRemoteStreams] = useState({}); // { socketId: MediaStream }
 
-  // Use refs to avoid closure stale state in callbacks
-  const peerConnections = useRef({}); // { socketId: RTCPeerConnection }
+  // Refs for values that must be fresh inside callbacks
+  const peerConnections = useRef({});   // { socketId: RTCPeerConnection }
   const localStreamRef = useRef(null);
   const isMutedRef = useRef(false);
   const isForceMutedRef = useRef(false);
+  const iceCandidateQueue = useRef({}); // { socketId: RTCIceCandidate[] }
+  const pendingSignals = useRef([]);    // signals received before mic was ready
 
   // Sync ref values
   useEffect(() => { isMutedRef.current = isMuted; }, [isMuted]);
   useEffect(() => { isForceMutedRef.current = isForceMuted; }, [isForceMuted]);
 
-  // ── Helper: Get/Initialize Local Audio Stream ───────────────────────
-  const initLocalStream = useCallback(async () => {
-    // Spectators do not capture audio input (listen-only)
-    if (role === 'spectator') {
-      console.log('[WebRTC] Spectator joined in listen-only mode. No mic requested.');
-      return null;
-    }
-
-    if (localStreamRef.current) return localStreamRef.current;
-
-    try {
-      console.log('[WebRTC] Requesting microphone access...');
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-      
-      // Enforce initial mute states on tracks
-      const isMutedState = isMutedRef.current || isForceMutedRef.current;
-      stream.getAudioTracks().forEach(track => {
-        track.enabled = !isMutedState;
-      });
-
-      localStreamRef.current = stream;
-      setLocalStream(stream);
-      return stream;
-    } catch (err) {
-      console.error('[WebRTC] Microphone permission denied or failed:', err);
-      return null;
-    }
-  }, [role]);
-
   // ── Helper: Create a new RTCPeerConnection ──────────────────────────
-  const createPeerConnection = useCallback((targetSocketId, stream) => {
+  const createPeerConnection = useCallback((targetSocketId) => {
     if (peerConnections.current[targetSocketId]) {
       return peerConnections.current[targetSocketId];
     }
@@ -64,11 +37,15 @@ export default function useWebRTC(socket, roomId, role = 'player') {
     const pc = new RTCPeerConnection(ICE_SERVERS);
     peerConnections.current[targetSocketId] = pc;
 
-    // Attach local stream tracks (players only)
+    // Attach local stream tracks (players only — spectators have no stream)
+    const stream = localStreamRef.current;
     if (stream) {
       stream.getTracks().forEach(track => {
         pc.addTrack(track, stream);
+        console.log(`[WebRTC] ✅ Attached local audio track to peer: ${targetSocketId}`);
       });
+    } else {
+      console.warn(`[WebRTC] ⚠️ No local stream when creating PC for: ${targetSocketId}`);
     }
 
     // Exchange ICE Candidates
@@ -83,7 +60,7 @@ export default function useWebRTC(socket, roomId, role = 'player') {
 
     // Receive Remote Audio Tracks
     pc.ontrack = (event) => {
-      console.log(`[WebRTC] Received remote stream track from peer: ${targetSocketId}`);
+      console.log(`[WebRTC] ✅ Received remote audio track from peer: ${targetSocketId}`);
       const [remoteStream] = event.streams;
       setRemoteStreams(prev => ({
         ...prev,
@@ -91,9 +68,12 @@ export default function useWebRTC(socket, roomId, role = 'player') {
       }));
     };
 
-    // Handle Connection State Changes (cleanup on disconnect/fail)
+    // Log state changes for debugging
+    pc.oniceconnectionstatechange = () => {
+      console.log(`[WebRTC] ICE state with ${targetSocketId}: ${pc.iceConnectionState}`);
+    };
     pc.onconnectionstatechange = () => {
-      console.log(`[WebRTC] Connection state with ${targetSocketId} is: ${pc.connectionState}`);
+      console.log(`[WebRTC] Connection state with ${targetSocketId}: ${pc.connectionState}`);
       if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
         removePeer(targetSocketId);
       }
@@ -110,6 +90,7 @@ export default function useWebRTC(socket, roomId, role = 'player') {
       pc.close();
       delete peerConnections.current[socketId];
     }
+    delete iceCandidateQueue.current[socketId];
     setRemoteStreams(prev => {
       const copy = { ...prev };
       delete copy[socketId];
@@ -117,134 +98,221 @@ export default function useWebRTC(socket, roomId, role = 'player') {
     });
   }, []);
 
-  // ── 1. Initialize RTC and setup signaling handlers ──────────────────
-  useEffect(() => {
-    let streamInstance = null;
+  // ── Core signal processor (used by both listener and queue flush) ───
+  const processSignal = useCallback(async ({ senderSocketId, signal }) => {
+    try {
+      let pc = peerConnections.current[senderSocketId];
 
-    const setupSignaling = async () => {
-      streamInstance = await initLocalStream();
-
-      // Listen for signals from other peers
-      socket.on('webrtcSignal', async ({ senderSocketId, signal }) => {
-        try {
-          let pc = peerConnections.current[senderSocketId];
-
-          // Initialize peer connection if it doesn't exist yet
-          if (!pc) {
-            pc = createPeerConnection(senderSocketId, streamInstance);
-          }
-
-          if (signal.offer) {
-            console.log(`[WebRTC] Received offer from peer: ${senderSocketId}`);
-            await pc.setRemoteDescription(new RTCSessionDescription(signal.offer));
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-
-            socket.emit('webrtcSignal', {
-              targetSocketId: senderSocketId,
-              signal: { answer },
-            });
-          } 
-          else if (signal.answer) {
-            console.log(`[WebRTC] Received answer from peer: ${senderSocketId}`);
-            await pc.setRemoteDescription(new RTCSessionDescription(signal.answer));
-          } 
-          else if (signal.candidate) {
-            // Wait for remote description to be set before adding candidates
-            if (pc.remoteDescription) {
-              await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
-            }
-          }
-        } catch (err) {
-          console.error('[WebRTC] Error handling WebRTC signal:', err);
-        }
-      });
-
-      // Listen for force mute requests from the host
-      socket.on('forceMutedByHost', ({ mute }) => {
-        console.log(`[WebRTC] Host force-muted is: ${mute}`);
-        setIsForceMuted(mute);
-        
-        // Physically disable/enable the stream audio track
-        if (localStreamRef.current) {
-          localStreamRef.current.getAudioTracks().forEach(track => {
-            track.enabled = !mute;
-          });
-        }
-        
-        // Sync state back to the lobby
-        socket.emit('toggleSelfMute', { roomId, mute });
-      });
-
-      // Clean up peers on player disconnect
-      socket.on('playerLeft', ({ socketId }) => {
-        removePeer(socketId);
-      });
-    };
-
-    setupSignaling();
-
-    // Clean up all peer connections and local tracks on unmount
-    return () => {
-      console.log('[WebRTC] Cleaning up useWebRTC hook...');
-      socket.off('webrtcSignal');
-      socket.off('forceMutedByHost');
-      socket.off('playerLeft');
-
-      Object.keys(peerConnections.current).forEach(id => {
-        removePeer(id);
-      });
-
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach(track => track.stop());
-        localStreamRef.current = null;
+      // Lazily create peer connection for incoming signals
+      if (!pc) {
+        pc = createPeerConnection(senderSocketId);
       }
-    };
-  }, [socket, roomId, role, initLocalStream, createPeerConnection, removePeer]);
 
-  // ── 2. Handle outbound connections (triggered when players update) ──
-  // Existing players send offers to new player connections
-  const initiateConnections = useCallback((playersList) => {
-    // Only players initiate outbound calls
-    if (role === 'spectator') return;
-    const stream = localStreamRef.current;
+      if (signal.offer) {
+        console.log(`[WebRTC] Processing OFFER from: ${senderSocketId}`);
+        await pc.setRemoteDescription(new RTCSessionDescription(signal.offer));
 
-    playersList.forEach(p => {
-      // Don't call yourself and don't double call
-      if (p.socketId === socket.id || peerConnections.current[p.socketId]) return;
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
 
-      const pc = createPeerConnection(p.socketId, stream);
-      pc.createOffer()
-        .then(offer => pc.setLocalDescription(offer))
-        .then(() => {
-          console.log(`[WebRTC] Sending offer to peer: ${p.socketId}`);
-          socket.emit('webrtcSignal', {
-            targetSocketId: p.socketId,
-            signal: { offer: pc.localDescription },
-          });
-        })
-        .catch(err => console.error('[WebRTC] Offer creation failed:', err));
-    });
-  }, [socket, role, createPeerConnection]);
+        socket.emit('webrtcSignal', {
+          targetSocketId: senderSocketId,
+          signal: { answer },
+        });
 
-  // ── 3. Toggle Local Self-Mute ───────────────────────────────────────
-  const toggleMute = useCallback(() => {
-    if (isForceMuted) {
-      console.log('[WebRTC] Cannot unmute: Host has force-muted your mic.');
+        // Flush queued ICE candidates
+        const q = iceCandidateQueue.current[senderSocketId] || [];
+        for (const c of q) {
+          await pc.addIceCandidate(c).catch(e => console.warn('[WebRTC] queued candidate fail:', e));
+        }
+        iceCandidateQueue.current[senderSocketId] = [];
+      }
+      else if (signal.answer) {
+        console.log(`[WebRTC] Processing ANSWER from: ${senderSocketId}`);
+        await pc.setRemoteDescription(new RTCSessionDescription(signal.answer));
+
+        // Flush queued ICE candidates
+        const q = iceCandidateQueue.current[senderSocketId] || [];
+        for (const c of q) {
+          await pc.addIceCandidate(c).catch(e => console.warn('[WebRTC] queued candidate fail:', e));
+        }
+        iceCandidateQueue.current[senderSocketId] = [];
+      }
+      else if (signal.candidate) {
+        const iceCandidate = new RTCIceCandidate(signal.candidate);
+        if (pc.remoteDescription) {
+          await pc.addIceCandidate(iceCandidate).catch(e => console.warn('[WebRTC] ICE add fail:', e));
+        } else {
+          if (!iceCandidateQueue.current[senderSocketId]) {
+            iceCandidateQueue.current[senderSocketId] = [];
+          }
+          iceCandidateQueue.current[senderSocketId].push(iceCandidate);
+        }
+      }
+    } catch (err) {
+      console.error('[WebRTC] Signal processing error:', err);
+    }
+  }, [socket, createPeerConnection]);
+
+  // Keep a ref so the socket listener always calls the latest version
+  const processSignalRef = useRef(processSignal);
+  useEffect(() => { processSignalRef.current = processSignal; }, [processSignal]);
+
+  // ── 1. Request mic (async, non-blocking) ────────────────────────────
+  useEffect(() => {
+    if (role === 'spectator') {
+      console.log('[WebRTC] Spectator mode — no mic requested.');
       return;
     }
 
-    const nextMuteState = !isMuted;
-    setIsMuted(nextMuteState);
+    let cancelled = false;
 
-    if (localStreamRef.current) {
-      localStreamRef.current.getAudioTracks().forEach(track => {
-        track.enabled = !nextMuteState;
-      });
+    (async () => {
+      try {
+        console.log('[WebRTC] Requesting microphone access...');
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
+
+        const shouldMute = isMutedRef.current || isForceMutedRef.current;
+        stream.getAudioTracks().forEach(t => { t.enabled = !shouldMute; });
+
+        localStreamRef.current = stream;
+        setLocalStream(stream);
+        console.log('[WebRTC] ✅ Microphone stream acquired.');
+
+        // ── Flush any signals that arrived while waiting for the mic ──
+        const queued = [...pendingSignals.current];
+        pendingSignals.current = [];
+        if (queued.length > 0) {
+          console.log(`[WebRTC] Flushing ${queued.length} queued signal(s) now that mic is ready.`);
+          for (const sig of queued) {
+            await processSignalRef.current(sig);
+          }
+        }
+      } catch (err) {
+        console.error('[WebRTC] ❌ Microphone permission denied or failed:', err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(t => t.stop());
+        localStreamRef.current = null;
+        setLocalStream(null);
+      }
+    };
+  }, [role]);
+
+  // ── 2. Register signaling listeners (SYNCHRONOUS — never misses events) ──
+  useEffect(() => {
+    const handleSignal = async (data) => {
+      // If we're a player and our mic isn't ready yet, queue the signal
+      if (role !== 'spectator' && !localStreamRef.current) {
+        console.log(`[WebRTC] ⏳ Queuing signal from ${data.senderSocketId} — waiting for mic.`);
+        pendingSignals.current.push(data);
+        return;
+      }
+
+      // Mic is ready (or we're a spectator), process immediately
+      await processSignalRef.current(data);
+    };
+
+    const handleForceMute = ({ mute }) => {
+      console.log(`[WebRTC] Host force-mute: ${mute}`);
+      setIsForceMuted(mute);
+
+      if (localStreamRef.current) {
+        localStreamRef.current.getAudioTracks().forEach(t => { t.enabled = !mute; });
+      }
+      socket.emit('toggleSelfMute', { roomId, mute });
+    };
+
+    const handlePlayerLeft = ({ socketId }) => {
+      removePeer(socketId);
+    };
+
+    socket.on('webrtcSignal', handleSignal);
+    socket.on('forceMutedByHost', handleForceMute);
+    socket.on('playerLeft', handlePlayerLeft);
+
+    return () => {
+      socket.off('webrtcSignal', handleSignal);
+      socket.off('forceMutedByHost', handleForceMute);
+      socket.off('playerLeft', handlePlayerLeft);
+    };
+  }, [socket, roomId, role, removePeer]);
+
+  // ── 3. Outbound connection initiator ────────────────────────────────
+  const initiateConnections = useCallback((playersList) => {
+    if (!playersList || playersList.length === 0) return;
+
+    // Players must have their mic stream before initiating
+    if (role !== 'spectator' && !localStreamRef.current) {
+      console.log('[WebRTC] Deferring connections — mic stream not ready yet.');
+      return;
     }
 
-    // Sync state to other players so mic icon in the list updates
-    socket.emit('toggleSelfMute', { roomId, mute: nextMuteState });
+    playersList.forEach(p => {
+      // Skip self and already-connected peers
+      if (p.socketId === socket.id || peerConnections.current[p.socketId]) return;
+
+      // Polite Peer Pattern: only the lexicographically smaller socket ID sends the offer.
+      if (socket.id < p.socketId) {
+        const pc = createPeerConnection(p.socketId);
+        pc.createOffer()
+          .then(offer => pc.setLocalDescription(offer))
+          .then(() => {
+            console.log(`[WebRTC] Sending OFFER to: ${p.socketId}`);
+            socket.emit('webrtcSignal', {
+              targetSocketId: p.socketId,
+              signal: { offer: pc.localDescription },
+            });
+          })
+          .catch(err => console.error('[WebRTC] Offer error:', err));
+      } else {
+        console.log(`[WebRTC] Waiting for offer from: ${p.socketId}`);
+      }
+    });
+  }, [socket, role, createPeerConnection]);
+
+  // ── 4. Auto-trigger connections when stream or player list changes ──
+  useEffect(() => {
+    if (role === 'spectator') {
+      initiateConnections(players);
+    } else if (localStream && players && players.length > 0) {
+      initiateConnections(players);
+    }
+  }, [localStream, players, role, initiateConnections]);
+
+  // ── 5. Cleanup on unmount ───────────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      console.log('[WebRTC] Unmounting — cleaning up all connections.');
+      Object.keys(peerConnections.current).forEach(id => removePeer(id));
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(t => t.stop());
+        localStreamRef.current = null;
+      }
+      pendingSignals.current = [];
+    };
+  }, [removePeer]);
+
+  // ── 6. Toggle self-mute ─────────────────────────────────────────────
+  const toggleMute = useCallback(() => {
+    if (isForceMuted) {
+      console.log('[WebRTC] Cannot unmute — host force-muted.');
+      return;
+    }
+
+    const next = !isMuted;
+    setIsMuted(next);
+
+    if (localStreamRef.current) {
+      localStreamRef.current.getAudioTracks().forEach(t => { t.enabled = !next; });
+    }
+
+    socket.emit('toggleSelfMute', { roomId, mute: next });
   }, [isMuted, isForceMuted, socket, roomId]);
 
   return {
