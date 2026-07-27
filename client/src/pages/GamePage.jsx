@@ -3,6 +3,7 @@ import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import DrawingCanvas from '../components/DrawingCanvas';
 import { useAuth } from '../context/AuthContext';
+import useWebRTC from '../hooks/useWebRTC';
 import '../styles/GamePage.css';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
@@ -25,6 +26,14 @@ export default function GamePage() {
   const chatBottomRef = useRef(null);
 
   const socket = useMemo(() => io(SERVER_URL, { autoConnect: false }), []);
+
+  const {
+    isMuted,
+    isForceMuted,
+    remoteStreams,
+    toggleMute,
+    initiateConnections,
+  } = useWebRTC(socket, roomId, requestedRole);
 
   useEffect(() => {
     if (loading) return;
@@ -69,6 +78,10 @@ export default function GamePage() {
       if (state?.chatHistory) {
         setMessages(state.chatHistory);
       }
+
+      if (state?.players) {
+        initiateConnections(state.players);
+      }
     });
 
     socket.on('connect', () => {
@@ -77,6 +90,7 @@ export default function GamePage() {
 
     socket.on('playerJoined', ({ players }) => {
       setRoomState((state) => (state ? { ...state, players } : state));
+      initiateConnections(players);
     });
 
     socket.on('playerLeft', ({ players }) => {
@@ -210,7 +224,7 @@ export default function GamePage() {
           )}
         </div>
 
-        {/* Right: Room Code, Copy Link, User */}
+        {/* Right: Room Code, Copy Link, Mic, User */}
         <div className="nav-right">
           <div className="room-code-badge">
             <span>Code:</span>
@@ -220,6 +234,17 @@ export default function GamePage() {
           <button className="copy-link-btn" onClick={handleCopyInvite}>
             {copySuccess ? 'Copied! ✓' : 'Copy Link'}
           </button>
+
+          {requestedRole !== 'spectator' && (
+            <button
+              className={`nav-mic-btn ${isForceMuted ? 'force-muted' : isMuted ? 'muted' : 'active'}`}
+              onClick={toggleMute}
+              disabled={isForceMuted}
+              title={isForceMuted ? 'Muted by Host' : isMuted ? 'Unmute microphone' : 'Mute microphone'}
+            >
+              {isForceMuted ? '🔇 Muted by Host' : isMuted ? '🔇 Mic Muted' : '🎤 Mic On'}
+            </button>
+          )}
 
           <span className="user-badge">{activeUser?.username || 'Player'}</span>
         </div>
@@ -254,8 +279,27 @@ export default function GamePage() {
                   <div className="player-info-vertical">
                     <span className="player-name-small" title={player.username}>
                       {medalEmoji}{player.username} {player.isHost ? '(Host)' : ''}
+                      <span className="player-mic-status-icon" style={{ marginLeft: '6px' }}>
+                        {player.isMuted ? '🔇' : '🎤'}
+                      </span>
                     </span>
-                    <span className="player-score-small">{player.score || 0} pts</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                      <span className="player-score-small">{player.score || 0} pts</span>
+                      
+                      {/* Host controls to force mute other active players */}
+                      {isHost && player.socketId !== socket.id && (
+                        <button
+                          className="btn-force-mute"
+                          onClick={() => socket.emit('forceMuteUser', {
+                            roomId,
+                            targetSocketId: player.socketId,
+                            mute: !player.isMuted
+                          })}
+                        >
+                          {player.isMuted ? '🔊 Unmute' : '🔇 Mute'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -435,6 +479,21 @@ export default function GamePage() {
           )}
         </aside>
       </main>
+
+      {/* Hidden WebRTC Remote Audio Elements */}
+      {Object.entries(remoteStreams).map(([socketId, stream]) => {
+        if (!stream) return null;
+        return (
+          <audio
+            key={socketId}
+            ref={(el) => {
+              if (el) el.srcObject = stream;
+            }}
+            autoPlay
+            style={{ display: 'none' }}
+          />
+        );
+      })}
     </div>
   );
 }
