@@ -4,11 +4,13 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const { buildRoomState } = require('./buildRoomState');
 const drawingEvents = require('./drawingEvents');
+const voiceEvents = require('./voiceEvents');
 
 module.exports = (io) => {
   io.on('connection', (socket) => {
 
     drawingEvents(socket, io);
+    voiceEvents(socket, io);
 
     // ----- JOIN ROOM -----
     socket.on('joinRoom', async ({ roomId, token, userId, username, role, isGuest }) => {
