@@ -45,7 +45,10 @@ export default function useWebRTC(socket, roomId, role = 'player', players = [])
         console.log(`[WebRTC] ✅ Attached local audio track to peer: ${targetSocketId}`);
       });
     } else {
-      console.warn(`[WebRTC] ⚠️ No local stream when creating PC for: ${targetSocketId}`);
+      // Spectator: add a receive-only transceiver so the SDP includes
+      // an audio m-line and the remote peer knows to send us their audio
+      pc.addTransceiver('audio', { direction: 'recvonly' });
+      console.log(`[WebRTC] 👁️ Spectator: added recvonly audio transceiver for peer: ${targetSocketId}`);
     }
 
     // Exchange ICE Candidates
@@ -223,9 +226,20 @@ export default function useWebRTC(socket, roomId, role = 'player', players = [])
       setIsForceMuted(mute);
 
       if (localStreamRef.current) {
-        localStreamRef.current.getAudioTracks().forEach(t => { t.enabled = !mute; });
+        if (mute) {
+          // Host is force-muting: always disable the audio track
+          localStreamRef.current.getAudioTracks().forEach(t => { t.enabled = false; });
+        } else {
+          // Host is removing force-mute: only re-enable if the player
+          // hasn't self-muted. Never bypass the player's own decision.
+          const playerWantsMic = !isMutedRef.current;
+          localStreamRef.current.getAudioTracks().forEach(t => { t.enabled = playerWantsMic; });
+        }
       }
-      socket.emit('toggleSelfMute', { roomId, mute });
+
+      // Sync icon state: when force-muting, always show muted.
+      // When removing force-mute, show the player's own mute state.
+      socket.emit('toggleSelfMute', { roomId, mute: mute ? true : isMutedRef.current });
     };
 
     const handlePlayerLeft = ({ socketId }) => {

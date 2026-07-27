@@ -8,17 +8,27 @@ function buildRoomState(room, currentUserId, socketId) {
     ? hostUserId === currentUserId
     : hostSocketId
       ? hostSocketId === socketId
-      : // Backward compatibility if only `hostId` exists.
-        room.hostId
-          ? room.hostId === socketId
-          : false;
+      : room.hostId
+        ? room.hostId === socketId
+        : false;
+
   const isDrawer = room.currentDrawer?.socketId === socketId;
 
   return {
     roomId: room.roomId,
     settings: room.settings,
 
-    players: room.players,
+    // Annotate each player with isHost so the UI can show host badges
+    players: (room.players || []).map(p => ({
+      ...p,
+      isHost: hostUserId
+        ? p.userId === hostUserId
+        : hostSocketId
+          ? p.socketId === hostSocketId
+          : room.hostId
+            ? p.socketId === room.hostId
+            : false,
+    })),
     spectators: room.spectators,
 
     status: room.status,
@@ -35,4 +45,3 @@ function buildRoomState(room, currentUserId, socketId) {
 }
 
 module.exports = { buildRoomState };
-

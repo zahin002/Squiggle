@@ -1,6 +1,23 @@
 // server/socket/voiceEvents.js
 const { getRoom } = require('./roomStore');
 
+// Annotate players with isHost flag for the UI
+function annotatePlayersWithHost(room) {
+  const hostUserId = room.hostUserId ?? null;
+  const hostSocketId = room.hostSocketId ?? null;
+
+  return (room.players || []).map(p => ({
+    ...p,
+    isHost: hostUserId
+      ? p.userId === hostUserId
+      : hostSocketId
+        ? p.socketId === hostSocketId
+        : room.hostId
+          ? p.socketId === room.hostId
+          : false,
+  }));
+}
+
 module.exports = (socket, io) => {
   // ----- WebRTC Signaling Relay -----
   socket.on('webrtcSignal', ({ targetSocketId, signal }) => {
@@ -30,8 +47,8 @@ module.exports = (socket, io) => {
     const player = room.players.find(p => p.socketId === targetSocketId);
     if (player) {
       player.isMuted = mute;
-      // Broadcast updated players list (with isMuted status changes) to all peers in the room
-      io.to(roomId).emit('playerJoined', { players: room.players });
+      // Broadcast updated players list (with isMuted + isHost flags) to all peers
+      io.to(roomId).emit('playerJoined', { players: annotatePlayersWithHost(room) });
     }
   });
 
@@ -44,7 +61,7 @@ module.exports = (socket, io) => {
     if (player) {
       player.isMuted = mute;
       // Broadcast updated state to keep speaker indicators synchronized
-      io.to(roomId).emit('playerJoined', { players: room.players });
+      io.to(roomId).emit('playerJoined', { players: annotatePlayersWithHost(room) });
     }
   });
 };
