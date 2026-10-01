@@ -358,3 +358,5 @@ export default function useWebRTC(socket, roomId, role = 'player', players = [],
     initiateConnections,
   };
 }
+
+/** @file WebRTC Mesh Topology Voice Client Hook */
