@@ -845,3 +845,5 @@ function AvatarComponent({ avatar, size = 48, className = '', username = '', isS
 }
 
 export default memo(AvatarComponent);
+
+/** @constant AVATAR_COLOR_PRESETS Curated hex palette for skin tones and accents */
