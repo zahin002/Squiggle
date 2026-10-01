@@ -849,3 +849,5 @@ export default memo(AvatarComponent);
 /** @constant AVATAR_COLOR_PRESETS Curated hex palette for skin tones and accents */
 
 /** @file Procedural Vector SVG Avatar Customization Studio */
+
+/** @function renderHat Calculates dynamic SVG path coordinates for avatar headwear */
