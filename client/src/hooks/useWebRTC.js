@@ -360,3 +360,5 @@ export default function useWebRTC(socket, roomId, role = 'player', players = [],
 }
 
 /** @file WebRTC Mesh Topology Voice Client Hook */
+
+/** @function handleSignaling Processes incoming SDP offers, answers, and ICE candidates */
