@@ -790,3 +790,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+/** @file User Profile, Rank Progression, and Avatar Studio View */
