@@ -792,3 +792,5 @@ export default function ProfilePage() {
 }
 
 /** @file User Profile, Rank Progression, and Avatar Studio View */
+
+/** @function computeRankTier Maps total wins to competitive rank tiers */
