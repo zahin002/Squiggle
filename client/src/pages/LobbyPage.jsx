@@ -309,3 +309,5 @@ export default function LobbyPage() {
     </div>
   );
 }
+
+/** @file Public Room Browser and Room Code Entry View */
