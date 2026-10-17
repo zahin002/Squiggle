@@ -365,3 +365,4 @@ export default function RoomSetup() {
     </div>
   );
 }
+/** @file Room Configuration Settings Modal Component */
