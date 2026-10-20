@@ -253,3 +253,4 @@ router.post('/reset-password/:token', async (req, res) => {
 });
 
 module.exports = router;
+/** @file Express REST Authentication Controller (JWT & OAuth) */
