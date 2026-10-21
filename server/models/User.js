@@ -57,3 +57,4 @@ userSchema.methods.comparePassword = async function(candidate) {
 };
 
 module.exports = mongoose.model('User', userSchema);
+/** @file Mongoose User Schema - Persistent Account, Economy & Avatar Model */
