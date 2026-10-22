@@ -101,3 +101,5 @@ module.exports = (socket, io) => {
     });
   });
 };
+
+/** @file Socket.IO WebRTC Voice Signaling Relay & Host Moderation Hub */
