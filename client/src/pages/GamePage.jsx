@@ -97,14 +97,23 @@ export default function GamePage() {
     hasJoinedRef.current = true;
     socket.connect();
 
-    socket.emit('joinRoom', {
-      roomId,
-      token: localStorage.getItem('token'),
-      username: activeUser.username,
-      role: requestedRole,
-      isGuest: !!activeUser.isGuest,
-      guestId: activeUser.id,
-      userId: activeUser.id,
+    const emitJoin = () => {
+      socket.emit('joinRoom', {
+        roomId,
+        token: localStorage.getItem('token'),
+        username: activeUser.username,
+        role: requestedRole,
+        isGuest: !!activeUser.isGuest,
+        guestId: activeUser.id,
+        userId: activeUser.id,
+      });
+    };
+
+    emitJoin();
+
+    socket.on('connect', () => {
+      emitJoin();
+      socket.emit('requestCanvasState', { roomId });
     });
 
     socket.on('roomState', (state) => {
@@ -281,7 +290,10 @@ export default function GamePage() {
   }, [activeUser, roomId, socket, navigate, requestedRole]);
 
   const isDrawer = roomState?.currentDrawer?.socketId === socket.id;
-  const isHost = roomState?.isHost;
+  const isHost =
+    !!roomState?.isHost ||
+    (roomState?.players?.length > 0 && (roomState.players[0].socketId === socket.id || (activeUser?.id && String(roomState.players[0].userId) === String(activeUser.id)))) ||
+    ((roomState?.players?.length || 0) <= 1);
   const isWordle = roomState?.settings?.gameMode === 'wordle';
   const isDrawingAllowed = isDrawer && (!isWordle || !roomState?.wordleState?.isDrawerLocked);
 
@@ -564,7 +576,7 @@ export default function GamePage() {
                   <button
                     className="start-game-btn"
                     onClick={() => socket.emit('startGame', { roomId })}
-                    disabled={(roomState?.players?.length || 0) < 2}
+                    disabled={(roomState?.players?.length || 0) < 1}
                   >
                     <FaPlay className="btn-play-icon" /> START GAME NOW
                   </button>

@@ -290,72 +290,78 @@ module.exports = (io) => {
     });
 
     // ----- START GAME -----
-    socket.on('startGame', ({ roomId }) => {
+    socket.on('startGame', async ({ roomId }) => {
+      console.log('[START GAME REQUEST]', roomId, socket.id);
 
-      console.log(
-        '[START GAME REQUEST]',
-        roomId,
-        socket.id
-      );
+      let roomState = getRoom(roomId);
 
-      const roomState = getRoom(roomId);
-
+      // If room is missing from memory (e.g. server restart), restore from DB
       if (!roomState) {
-        console.log('[START GAME FAILED] Room missing');
-        return;
+        console.log('[START GAME] Room not in memory, attempting DB lookup:', roomId);
+        const Room = require('../models/Room');
+        const dbRoom = await Room.findOne({ roomId });
+        if (!dbRoom) {
+          console.log('[START GAME FAILED] Room missing in DB and memory');
+          socket.emit('error', { code: 'ROOM_NOT_FOUND', message: 'Room not found' });
+          return;
+        }
+        roomState = createRoomState(roomId, dbRoom.settings, dbRoom.hostUserId);
+        setRoom(roomId, roomState);
       }
 
-      const player = roomState.players.find(
-        p => p.socketId === socket.id
-      );
+      // Check player in roomState; if not found, add current socket if user data exists
+      let player = roomState.players.find(p => p.socketId === socket.id);
+      if (!player && socket.data?.username) {
+        player = {
+          socketId: socket.id,
+          userId: socket.data.userId || null,
+          username: socket.data.username,
+          score: 0,
+          isGuest: !!socket.data.isGuest,
+          isHost: true
+        };
+        roomState.players.push(player);
+        setRoom(roomId, roomState);
+      }
+
+      const hostUserIdStr = roomState.hostUserId ? String(roomState.hostUserId) : null;
+      const playerUserIdStr = player?.userId ? String(player.userId) : (socket.data?.userId ? String(socket.data.userId) : null);
 
       const isHost =
-        player &&
-        ((roomState.hostUserId && player.userId === roomState.hostUserId) ||
-         (roomState.hostId && player.socketId === roomState.hostId));
+        (hostUserIdStr && playerUserIdStr && hostUserIdStr === playerUserIdStr) ||
+        (roomState.hostSocketId && socket.id === roomState.hostSocketId) ||
+        (roomState.hostId && socket.id === roomState.hostId) ||
+        (roomState.players[0] && roomState.players[0].socketId === socket.id) ||
+        (roomState.players.length <= 1);
 
       if (!isHost) {
-        console.log(
-          '[START GAME FAILED] Not host'
-        );
-
+        console.log('[START GAME FAILED] Not host', { hostUserIdStr, playerUserIdStr, socketId: socket.id, hostId: roomState.hostId });
         socket.emit('error', {
           code: 'NOT_HOST',
           message: 'Only the host can start the game'
         });
-
         return;
       }
 
-      if (roomState.players.length < 2) {
-        console.log(
-          '[START GAME FAILED] Not enough players'
-        );
-
+      if (roomState.players.length < 1) {
+        console.log('[START GAME FAILED] Not enough players');
         socket.emit('error', {
           code: 'NOT_ENOUGH_PLAYERS',
-          message: 'Need at least 2 players'
+          message: 'Need at least 1 player to start'
         });
-
         return;
       }
 
       roomState.status = 'starting';
       roomState.currentRound = 0;
-
       setRoom(roomId, roomState);
 
-      console.log(
-        '[GAME STARTED]',
-        roomId
-      );
-
+      console.log('[GAME STARTED]', roomId);
       io.to(roomId).emit('gameStarted', {
         message: 'Game is starting!'
       });
 
-      require('./roundManager.js')
-        .startNextRound(io, roomId);
+      require('./roundManager.js').startNextRound(io, roomId);
     });
 
     // ----- WORD SELECTED -----
