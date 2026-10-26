@@ -1411,13 +1411,15 @@
 .chat-smile-btn {
   background: transparent;
   border: none;
-  padding: 0;
+  padding: 2px 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: #38bdf8;
   transition: all 0.15s ease;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .chat-smile-btn:hover,
@@ -1458,6 +1460,7 @@
 
 .chat-input-modern {
   flex: 1;
+  min-width: 0;
   background: transparent;
   border: none;
   outline: none;

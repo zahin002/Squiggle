@@ -944,7 +944,7 @@ export default function GamePage() {
                   className="chat-input-modern"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="💬 Type chat message..."
+                  placeholder="Type a chat message..."
                   autoComplete="off"
                 />
                 <button
