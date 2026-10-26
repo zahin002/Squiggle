@@ -413,7 +413,7 @@ export default function GamePage() {
       </header>
 
       {/* Main 3-Column Content (100vh - 48px) */}
-      <main className="game-main-content">
+      <main className={`game-main-content ${isWordle ? 'is-wordle-mode' : ''}`}>
         {error && (
           <div className="game-error-banner">
             <FaExclamationTriangle style={{ marginRight: '6px' }} />

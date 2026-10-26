@@ -367,6 +367,17 @@
   z-index: 1;
 }
 
+/* In Wordle Mode, expand right column leftward to comfortably fit the bigger board & keyboard */
+.game-main-content.is-wordle-mode {
+  grid-template-columns: 240px 1fr 430px;
+}
+
+@media (max-width: 1320px) {
+  .game-main-content.is-wordle-mode {
+    grid-template-columns: 220px 1fr 400px;
+  }
+}
+
 .game-error-banner {
   grid-column: 1 / -1;
   background: rgba(239, 68, 68, 0.18);
