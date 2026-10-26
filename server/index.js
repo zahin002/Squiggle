@@ -42,6 +42,15 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(async () => {
     console.log('MongoDB connected');
+    try {
+      const Room = require('./models/Room');
+      const result = await Room.deleteMany({ status: { $ne: 'finished' } });
+      if (result.deletedCount > 0) {
+        console.log(`Cleaned up ${result.deletedCount} orphaned room(s) from previous session`);
+      }
+    } catch (e) {
+      console.error('Error cleaning up orphaned rooms:', e);
+    }
   })
   .catch((err) => console.error('MongoDB error:', err));
 

@@ -93,10 +93,22 @@ router.get('/', async (req, res) => {
     const activeRooms = [];
     for (const r of rooms) {
       const memRoom = getRoom(r.roomId);
-      if (memRoom && memRoom.players.length === 0) {
+
+      // If room is not in memory or has 0 players
+      if (!memRoom || !memRoom.players || memRoom.players.length === 0) {
+        // If room was created in the last 15 seconds, give the host time to connect
+        const ageMs = Date.now() - new Date(r.createdAt || 0).getTime();
+        if (memRoom && ageMs < 15000) {
+          activeRooms.push(r);
+          continue;
+        }
+
+        // Dead or orphaned room -> purge from memory & MongoDB
         deleteRoom(r.roomId);
         continue;
       }
+
+      // Room has actual active players connected
       activeRooms.push(r);
     }
 
