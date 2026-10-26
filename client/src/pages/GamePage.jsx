@@ -68,8 +68,6 @@ const TEXT_EMOJIS = [
   '┬─┬ノ( º _ ºノ)'
 ];
 
-const QUICK_EMOJIS = ['😂', '🔥', '👏', '🎯', '💀', '🤔', '¯\\_(ツ)_/¯', '(•‿•)'];
-
 export default function GamePage() {
   const { roomId } = useParams();
   const location = useLocation();
@@ -532,8 +530,8 @@ export default function GamePage() {
               return (
                 <div key={player.socketId || player.userId} className={`player-card-vertical ${isPlayerHost ? 'is-host' : ''} ${isDrawing ? 'is-drawing' : ''}`}>
                   <div className="player-card-left">
-                    <div className={`player-avatar-circle rank-badge-${rank <= 3 ? rank : 'default'}`} title={`Rank #${rank} • ${player.score || 0} pts`}>
-                      <span className="player-rank-number">#{rank}</span>
+                    <div className={`player-avatar-circle rank-badge-${rank <= 3 ? rank : 'default'}`} title={`Rank ${rank} • ${player.score || 0} pts`}>
+                      <span className="player-rank-number">{rank}</span>
                     </div>
                     <div className="player-meta-box">
                       <div className="player-name-row">
@@ -883,31 +881,7 @@ export default function GamePage() {
           </div>
 
           <div className="chat-input-area" ref={emojiPickerRef}>
-            {/* Quick emoji reaction bar */}
-            <div className="chat-quick-emojis">
-              {QUICK_EMOJIS.map((em, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  className="quick-emoji-chip"
-                  onClick={() => handleInsertEmoji(em)}
-                  title={`Insert ${em}`}
-                >
-                  {em}
-                </button>
-              ))}
-              <button
-                type="button"
-                className={`quick-emoji-toggle-btn ${showEmojiPicker ? 'is-active' : ''}`}
-                onClick={() => setShowEmojiPicker((prev) => !prev)}
-                title="Open emoji & text emoji picker"
-              >
-                <FaSmile className="quick-toggle-icon" />
-                <span>{showEmojiPicker ? 'Close' : 'More'}</span>
-              </button>
-            </div>
-
-            {/* Floating popover for Full Emojis + Text Emojis */}
+            {/* Floating popover for Full Emojis + Text Emojis (opened only on clicking smile icon) */}
             {showEmojiPicker && (
               <div className="chat-emoji-popover">
                 <div className="emoji-popover-tabs">
@@ -963,14 +937,6 @@ export default function GamePage() {
 
             <form className="chat-composer-form" onSubmit={handleSendChat}>
               <div className="chat-input-box">
-                <button
-                  type="button"
-                  className={`chat-smile-btn ${showEmojiPicker ? 'active' : ''}`}
-                  onClick={() => setShowEmojiPicker((prev) => !prev)}
-                  title="Emoji & text emoji panel"
-                >
-                  <FaSmile className="chat-smile-icon" />
-                </button>
                 <input
                   ref={chatInputRef}
                   name="chatInput"
@@ -981,6 +947,14 @@ export default function GamePage() {
                   placeholder="💬 Type chat message..."
                   autoComplete="off"
                 />
+                <button
+                  type="button"
+                  className={`chat-smile-btn ${showEmojiPicker ? 'active' : ''}`}
+                  onClick={() => setShowEmojiPicker((prev) => !prev)}
+                  title="Emoji & text emoji panel"
+                >
+                  <FaSmile className="chat-smile-icon" />
+                </button>
               </div>
               <button
                 type="submit"

@@ -1279,73 +1279,7 @@
   gap: 8px;
 }
 
-/* Quick reaction emojis bar */
-.chat-quick-emojis {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-  scrollbar-width: none;
-}
 
-.chat-quick-emojis::-webkit-scrollbar {
-  display: none;
-}
-
-.quick-emoji-chip {
-  background: rgba(30, 41, 59, 0.65);
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  border-radius: 8px;
-  padding: 3px 7px;
-  font-size: 13px;
-  cursor: pointer;
-  color: #f1f5f9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
-  flex-shrink: 0;
-  user-select: none;
-}
-
-.quick-emoji-chip:hover {
-  background: rgba(56, 189, 248, 0.2);
-  border-color: rgba(56, 189, 248, 0.45);
-  transform: translateY(-1px) scale(1.08);
-}
-
-.quick-emoji-chip:active {
-  transform: translateY(0) scale(0.95);
-}
-
-.quick-emoji-toggle-btn {
-  background: rgba(14, 165, 233, 0.15);
-  border: 1px solid rgba(14, 165, 233, 0.35);
-  border-radius: 8px;
-  padding: 3px 8px;
-  font-family: 'Fredoka', 'Nunito', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  color: #38bdf8;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  flex-shrink: 0;
-}
-
-.quick-emoji-toggle-btn:hover,
-.quick-emoji-toggle-btn.is-active {
-  background: rgba(14, 165, 233, 0.3);
-  border-color: #38bdf8;
-  color: #ffffff;
-}
-
-.quick-toggle-icon {
-  font-size: 12px;
-}
 
 /* Floating Emoji Popover */
 .chat-emoji-popover {
