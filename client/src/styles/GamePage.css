@@ -536,7 +536,7 @@
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   transition: all 0.25s ease;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border: 1.5px solid rgba(99, 102, 241, 0.3);
 }
 
 .player-avatar-circle.rank-badge-1 {
@@ -551,7 +551,7 @@
   background: linear-gradient(135deg, #64748b 0%, #cbd5e1 100%);
   color: #0f172a;
   box-shadow: 0 0 12px rgba(148, 163, 184, 0.5);
-  border: 2px solid #f8fafc;
+  border: 2px solid rgba(148, 163, 184, 0.6);
   font-weight: 800;
 }
 
@@ -916,12 +916,12 @@
   background: linear-gradient(135deg, #7c4dff 0%, #38bdf8 100%);
   color: #ffffff;
   box-shadow: 0 4px 18px rgba(124, 77, 255, 0.45);
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border: 1.5px solid rgba(124, 77, 255, 0.45);
 }
 
 .canvas-word-pill.is-guesser {
   background: rgba(14, 11, 33, 0.88);
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(99, 102, 241, 0.35);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
