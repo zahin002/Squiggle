@@ -341,13 +341,13 @@ export default function GamePage() {
     <div className="game-page-modern">
       {/* Unified Compact Top Header Bar */}
       <header className="game-navbar-compact">
-        {/* Left: Logo & Leave Button */}
+        {/* Left: Leave Button (Leftest in Red Box) & Logo */}
         <div className="nav-left">
-          <button className="nav-logo" onClick={handleLeaveRoom} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-            <SquiggleLogo size={28} fontSize="1.3rem" id="gameNavGrad" />
-          </button>
-          <button className="leave-btn" onClick={handleLeaveRoom}>
+          <button className="leave-room-box-btn" onClick={handleLeaveRoom} title="Leave Game Room">
             <FaArrowLeft className="btn-icon-xs" /> Leave Room
+          </button>
+          <button className="nav-logo" onClick={handleLeaveRoom} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} title="Squiggle">
+            <SquiggleLogo size={28} fontSize="1.3rem" id="gameNavGrad" />
           </button>
         </div>
 
@@ -387,7 +387,7 @@ export default function GamePage() {
           ) : null}
         </div>
 
-        {/* Right: Room Code, Copy Link, Mic, User */}
+        {/* Right: Room Code, Copy Link, User */}
         <div className="nav-right">
           <div className="room-code-badge">
             <span className="code-label">Room Code:</span>
@@ -397,33 +397,6 @@ export default function GamePage() {
           <button className="copy-link-btn" onClick={handleCopyInvite}>
             {copySuccess ? <><FaCheck className="btn-icon-xs" /> Copied!</> : <><FaCopy className="btn-icon-xs" /> Copy Link</>}
           </button>
-
-          {requestedRole !== 'spectator' && (
-            roomState?.settings?.voiceChatEnabled ? (
-              <button
-                className={`nav-mic-btn ${isForceMuted ? 'force-muted' : isMuted ? 'muted' : 'active'}`}
-                onClick={toggleMute}
-                disabled={isForceMuted}
-                title={isForceMuted ? 'Muted by Host' : isMuted ? 'Unmute microphone' : 'Mute microphone'}
-              >
-                {isForceMuted ? (
-                  <><FaMicrophoneSlash className="mic-slash-icon" /> Muted by Host</>
-                ) : isMuted ? (
-                  <><FaMicrophoneSlash className="mic-slash-icon" /> Mic Muted</>
-                ) : (
-                  <><FaMicrophone className="mic-active-icon" /> Mic On</>
-                )}
-              </button>
-            ) : (
-              <button
-                className="nav-mic-btn nav-mic-btn--inaccessible"
-                disabled
-                title="Microphone is disabled in this room by the host"
-              >
-                <FaMicrophoneSlash className="mic-slash-icon" /> Mic Disabled
-              </button>
-            )
-          )}
 
           <div className="user-profile-pill">
             <FaUserCircle className="user-profile-avatar" />
@@ -439,8 +412,36 @@ export default function GamePage() {
         {/* LEFT SIDEBAR: Players */}
         <aside className="game-left-col">
           <div className="players-header">
-            <FaUsers className="players-header-icon" />
-            <span>PLAYERS ({(roomState?.players?.length || 0)}/{(roomState?.settings?.maxPlayers || 8)})</span>
+            <div className="players-header-title-box">
+              <FaUsers className="players-header-icon" />
+              <span>PLAYERS ({(roomState?.players?.length || 0)}/{(roomState?.settings?.maxPlayers || 8)})</span>
+            </div>
+
+            {/* Mic icon beside players(x/y) */}
+            {requestedRole !== 'spectator' && (
+              roomState?.settings?.voiceChatEnabled ? (
+                <button
+                  type="button"
+                  className={`players-header-mic-btn ${isForceMuted ? 'is-force-muted' : isMuted ? 'is-muted' : 'is-active'}`}
+                  onClick={toggleMute}
+                  disabled={isForceMuted}
+                  title={isForceMuted ? 'Muted by Host' : isMuted ? 'Mic is Muted (Click to Turn ON)' : 'Mic is ON (Click to Turn OFF)'}
+                >
+                  {isForceMuted || isMuted ? (
+                    <FaMicrophoneSlash className="header-mic-icon mic-red" />
+                  ) : (
+                    <FaMicrophone className="header-mic-icon mic-green" />
+                  )}
+                </button>
+              ) : (
+                <div
+                  className="players-header-mic-btn is-disabled"
+                  title="Voice chat disabled by host"
+                >
+                  <FaMicrophoneSlash className="header-mic-icon mic-off" />
+                </div>
+              )
+            )}
           </div>
           <div className="players-list">
             {(roomState?.players || []).map((player) => {
