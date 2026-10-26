@@ -22,6 +22,7 @@ export default function RoomSetup() {
     hints: 2,
     gameMode: 'standard',
     isPrivate: false,
+    voiceChatEnabled: false,
     customWords: '',
     selectedGenres: [],
   });
@@ -255,6 +256,17 @@ export default function RoomSetup() {
             onChange={(e) => setSettings({ ...settings, isPrivate: e.target.checked })}
           />
           <span>Private Room</span>
+        </label>
+
+        {/* Voice Chat toggle */}
+        <label className="rs-checkbox-label" title="Enable voice chat for all players in this room">
+          <input
+            className="rs-checkbox"
+            type="checkbox"
+            checked={settings.voiceChatEnabled === true}
+            onChange={(e) => setSettings({ ...settings, voiceChatEnabled: e.target.checked })}
+          />
+          <span>Enable Voice Chat</span>
         </label>
       </div>
 

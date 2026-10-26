@@ -34,11 +34,22 @@ function buildRoomState(room, currentUserId, socketId) {
     status: room.status,
     currentDrawer: room.currentDrawer,
     // The word and alternatives must never be included in another player's state.
-    // A client can inspect every Socket.IO payload even if the UI does not render it.
     currentWord: isDrawer ? room.currentWord : null,
     currentRound: room.currentRound,
     timeLeft: room.timeLeft,
     wordChoices: isDrawer ? room.wordChoices : [],
+
+    wordleState: room.settings?.gameMode === 'wordle' ? {
+      currentGuessPhase: room.wordleState?.currentGuessPhase || 1,
+      maxGuesses: 6,
+      isDrawerLocked: room.wordleState?.isDrawerLocked ?? true,
+      phase: room.wordleState?.phase || 1,
+      myGuesses: room.wordleState?.playerGuesses?.[socketId] || [],
+      isSolved: !!room.wordleState?.playerSolved?.[socketId],
+      mySolvedInfo: room.wordleState?.playerSolved?.[socketId] || null,
+      solversCount: Object.keys(room.wordleState?.playerSolved || {}).length,
+      totalGuessers: (room.players || []).filter(p => p.socketId !== room.currentDrawer?.socketId).length
+    } : null,
 
     isHost
   };

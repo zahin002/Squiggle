@@ -6,12 +6,14 @@ const jwt = require('jsonwebtoken');
 const { buildRoomState } = require('./buildRoomState');
 const drawingEvents = require('./drawingEvents');
 const voiceEvents = require('./voiceEvents');
+const voteKickEvents = require('./voteKickEvents');
 
 module.exports = (io) => {
   io.on('connection', (socket) => {
 
     drawingEvents(socket, io);
     voiceEvents(socket, io);
+    voteKickEvents(socket, io);
 
     // ----- JOIN ROOM -----
     socket.on('joinRoom', async ({ roomId, token, userId, username, role, isGuest }) => {
@@ -288,72 +290,80 @@ module.exports = (io) => {
     });
 
     // ----- START GAME -----
-    socket.on('startGame', ({ roomId }) => {
+    socket.on('startGame', async ({ roomId }) => {
+      console.log('[START GAME REQUEST]', roomId, socket.id);
 
-      console.log(
-        '[START GAME REQUEST]',
-        roomId,
-        socket.id
-      );
+      let roomState = getRoom(roomId);
 
-      const roomState = getRoom(roomId);
-
+      // If room is missing from memory (e.g. server restart), restore from DB
       if (!roomState) {
-        console.log('[START GAME FAILED] Room missing');
-        return;
+        console.log('[START GAME] Room not in memory, attempting DB lookup:', roomId);
+        const Room = require('../models/Room');
+        const dbRoom = await Room.findOne({ roomId });
+        if (!dbRoom) {
+          console.log('[START GAME FAILED] Room missing in DB and memory');
+          socket.emit('error', { code: 'ROOM_NOT_FOUND', message: 'Room not found' });
+          return;
+        }
+        roomState = createRoomState(roomId, dbRoom.settings, dbRoom.hostUserId);
+        setRoom(roomId, roomState);
       }
 
-      const player = roomState.players.find(
-        p => p.socketId === socket.id
-      );
+      // Check player in roomState; if not found, add current socket if user data exists
+      let player = roomState.players.find(p => p.socketId === socket.id);
+      if (!player && socket.data?.username) {
+        player = {
+          socketId: socket.id,
+          userId: socket.data.userId || null,
+          username: socket.data.username,
+          score: 0,
+          isGuest: !!socket.data.isGuest,
+          isHost: true
+        };
+        roomState.players.push(player);
+        setRoom(roomId, roomState);
+      }
+
+      const hostUserIdStr = roomState.hostUserId ? String(roomState.hostUserId) : null;
+      const playerUserIdStr = player?.userId ? String(player.userId) : (socket.data?.userId ? String(socket.data.userId) : null);
 
       const isHost =
-        player &&
-        ((roomState.hostUserId && player.userId === roomState.hostUserId) ||
-         (roomState.hostId && player.socketId === roomState.hostId));
+        (hostUserIdStr && playerUserIdStr && hostUserIdStr === playerUserIdStr) ||
+        (roomState.hostSocketId && socket.id === roomState.hostSocketId) ||
+        (roomState.hostId && socket.id === roomState.hostId) ||
+        (roomState.players[0] && roomState.players[0].socketId === socket.id) ||
+        (roomState.players.length <= 1);
 
       if (!isHost) {
-        console.log(
-          '[START GAME FAILED] Not host'
-        );
-
+        console.log('[START GAME FAILED] Not host', { hostUserIdStr, playerUserIdStr, socketId: socket.id, hostId: roomState.hostId });
         socket.emit('error', {
           code: 'NOT_HOST',
           message: 'Only the host can start the game'
         });
-
         return;
       }
 
-      if (roomState.players.length < 2) {
-        console.log(
-          '[START GAME FAILED] Not enough players'
-        );
-
+      if (roomState.players.length < 1) {
+        console.log('[START GAME FAILED] Not enough players');
         socket.emit('error', {
           code: 'NOT_ENOUGH_PLAYERS',
-          message: 'Need at least 2 players'
+          message: 'Need at least 1 player to start'
         });
-
         return;
       }
 
       roomState.status = 'starting';
       roomState.currentRound = 0;
-
       setRoom(roomId, roomState);
+      const { persistRoom } = require('./roomStore');
+      persistRoom(roomId, { status: 'playing' });
 
-      console.log(
-        '[GAME STARTED]',
-        roomId
-      );
-
+      console.log('[GAME STARTED]', roomId);
       io.to(roomId).emit('gameStarted', {
         message: 'Game is starting!'
       });
 
-      require('./roundManager.js')
-        .startNextRound(io, roomId);
+      require('./roundManager.js').startNextRound(io, roomId);
     });
 
     // ----- WORD SELECTED -----
@@ -362,6 +372,131 @@ module.exports = (io) => {
       if (!room || room.currentDrawer?.socketId !== socket.id) return;
 
       require('./roundManager.js').processWordSelection(io, roomId, word);
+    });
+
+    // Helper to process a Wordle guess
+    function processWordleGuess(room, targetRoomId, player, guess) {
+      const cleanGuess = (guess || '').trim().toUpperCase();
+      if (cleanGuess.length !== 5 || !/^[A-Z]{5}$/.test(cleanGuess)) {
+        return socket.emit('wordleError', { message: 'Guess must be exactly 5 letters.' });
+      }
+
+      if (!room.wordleState && room.settings?.gameMode === 'wordle') {
+        const { getWordlePhaseDuration } = require('../utils/wordleHelper');
+        room.wordleState = {
+          currentGuessPhase: 1,
+          isDrawerLocked: true,
+          phase: 1,
+          playerGuesses: {},
+          playerSolved: {},
+          submittedThisPhase: []
+        };
+      }
+
+      const ws = room.wordleState;
+      if (!ws) return;
+
+      if (ws.playerSolved && ws.playerSolved[socket.id]) {
+        return socket.emit('wordleError', { message: 'You have already solved this word!' });
+      }
+
+      const playerGuesses = ws.playerGuesses[socket.id] || [];
+      if (playerGuesses.length >= 6) {
+        return socket.emit('wordleError', { message: 'You have reached the maximum of 6 guesses.' });
+      }
+
+      if (playerGuesses.length >= ws.currentGuessPhase) {
+        return socket.emit('wordleError', { message: 'You already submitted a guess for this phase. Please wait for the next phase!' });
+      }
+
+      const { evaluateWordleGuess, getWordleScoreForGuess } = require('../utils/wordleHelper');
+      const { evaluation, isCorrect } = evaluateWordleGuess(cleanGuess, room.currentWord);
+      const guessNum = playerGuesses.length + 1;
+
+      playerGuesses.push({ guess: cleanGuess, evaluation, guessNumber: guessNum, isCorrect });
+      ws.playerGuesses[socket.id] = playerGuesses;
+      if (!ws.submittedThisPhase.includes(socket.id)) {
+        ws.submittedThisPhase.push(socket.id);
+      }
+
+      let points = 0;
+      if (isCorrect) {
+        points = getWordleScoreForGuess(guessNum);
+        player.score = (player.score || 0) + points;
+        ws.playerSolved[socket.id] = { guessNum, scoreAwarded: points };
+
+        if (!room.correctGuessers) room.correctGuessers = [];
+        room.correctGuessers.push(player.userId || socket.id);
+
+        if (player.userId && !player.isGuest) {
+          User.findByIdAndUpdate(player.userId, { $inc: { goldCoins: 1 } }).catch(() => {});
+          Reward.create({
+            userId: player.userId,
+            type: 'correct_guess',
+            amount: 1,
+            currency: 'goldCoins'
+          }).catch(() => {});
+        }
+
+        io.to(targetRoomId).emit('chatMessage', {
+          type: 'system',
+          text: `[Wordle] ${player.username} solved the Wordle on Guess ${guessNum}/6 (+${points} pts)!`
+        });
+      }
+
+      socket.emit('wordleGuessResult', {
+        guess: cleanGuess,
+        evaluation,
+        guessNumber: guessNum,
+        isCorrect,
+        scoreAwarded: points,
+        myGuesses: playerGuesses
+      });
+
+      io.to(targetRoomId).emit('playerJoined', { players: room.players });
+      io.to(targetRoomId).emit('wordleActivity', {
+        username: player.username,
+        guessNumber: guessNum,
+        isCorrect,
+        solversCount: Object.keys(ws.playerSolved).length
+      });
+
+      setRoom(targetRoomId, room);
+
+      // Check if all non-drawer players solved
+      const guessers = (room.players || []).filter(p => p.socketId !== room.currentDrawer?.socketId);
+      const allSolved = guessers.length > 0 && guessers.every(p => ws.playerSolved[p.socketId]);
+
+      if (allSolved) {
+        require('./roundManager').endRound(io, room, targetRoomId);
+        return;
+      }
+
+      // If all active unsolved guessers submitted for this phase, advance immediately
+      const activeUnsolved = guessers.filter(p => !ws.playerSolved[p.socketId]);
+      const allSubmitted = activeUnsolved.every(p => ws.submittedThisPhase.includes(p.socketId));
+
+      if (allSubmitted && activeUnsolved.length > 0) {
+        const shouldEnd = require('./roundManager').advanceWordlePhase(io, room, targetRoomId);
+        if (shouldEnd) {
+          require('./roundManager').endRound(io, room, targetRoomId);
+        }
+      }
+    }
+
+    // ----- SUBMIT WORDLE GUESS -----
+    socket.on('submitWordleGuess', ({ roomId, guess }) => {
+      const room = getRoom(roomId);
+      if (!room || room.status !== 'playing') return;
+
+      const player = room.players.find(p => p.socketId === socket.id);
+      if (!player) return;
+
+      if (room.currentDrawer?.socketId === socket.id) {
+        return socket.emit('wordleError', { message: 'Drawers cannot submit guesses.' });
+      }
+
+      processWordleGuess(room, roomId, player, guess);
     });
 
     // ----- GUESS WORD -----
@@ -374,6 +509,11 @@ module.exports = (io) => {
 
       // Drawers can't guess
       if (room.currentDrawer?.socketId === socket.id) return;
+
+      if (room.settings?.gameMode === 'wordle') {
+        processWordleGuess(room, roomId, player, guess);
+        return;
+      }
 
       const isCorrect = guess.toLowerCase() === room.currentWord?.toLowerCase();
 
@@ -405,21 +545,12 @@ module.exports = (io) => {
             currency: 'goldCoins'
           }).catch(() => {});
         }
-        if (room.currentDrawer?.userId && !room.currentDrawer?.isGuest) {
-          User.findByIdAndUpdate(room.currentDrawer.userId, { $inc: { goldCoins: 2 } }).catch(() => {});
-          Reward.create({
-            userId: room.currentDrawer.userId,
-            type: 'successful_draw',
-            amount: 2,
-            currency: 'goldCoins'
-          }).catch(() => {});
-        }
 
         setRoom(roomId, room);
 
         io.to(roomId).emit('chatMessage', {
           type: 'system',
-          text: `🎉 ${player.username} guessed the word!`
+          text: `${player.username} guessed the word!`
         });
 
         // Broadcast updated players list for scores
@@ -446,10 +577,27 @@ module.exports = (io) => {
       const player = room.players.find(p => p.socketId === socket.id);
       if (!player) return;
 
+      let cleanText = text;
+
+      // Wordle Mode spoiler protection: If player already solved, mask the secret word
+      if (room.settings?.gameMode === 'wordle' && room.currentWord) {
+        const isSolved = room.wordleState?.playerSolved?.[socket.id];
+        if (isSolved) {
+          const wordRegex = new RegExp(`\\b${room.currentWord}\\b`, 'gi');
+          if (wordRegex.test(cleanText)) {
+            cleanText = cleanText.replace(wordRegex, '*****');
+            socket.emit('chatMessage', {
+              type: 'system',
+              text: '[Wordle] Secret word masked to prevent spoilers for other players.'
+            });
+          }
+        }
+      }
+
       io.to(roomId).emit('chatMessage', {
         type: 'chat',
         username: player.username,
-        text
+        text: cleanText
       });
     });
 
@@ -492,6 +640,18 @@ module.exports = (io) => {
           text: `The drawer left! Round over.`
         });
         require('./roundManager').endRound(io, room, targetRoomId);
+      }
+
+      // If target of active vote-kick left, cancel vote
+      if (room.activeVoteKick && room.activeVoteKick.targetSocketId === disconnectedSocketId) {
+        if (room.activeVoteKick.timer) clearInterval(room.activeVoteKick.timer);
+        const targetName = room.activeVoteKick.targetUsername;
+        room.activeVoteKick = null;
+        io.to(targetRoomId).emit('voteKickEnded', {
+          passed: false,
+          targetUsername: targetName,
+          reason: 'Target player left the room.'
+        });
       }
 
       // If host left, reassign to next player

@@ -42,6 +42,20 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(async () => {
     console.log('MongoDB connected');
+    try {
+      const Room = require('./models/Room');
+      // Only delete rooms that are older than 2 hours (ghost rooms from past days)
+      const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+      const result = await Room.deleteMany({
+        status: { $ne: 'finished' },
+        createdAt: { $lt: twoHoursAgo }
+      });
+      if (result.deletedCount > 0) {
+        console.log(`Cleaned up ${result.deletedCount} stale room(s) older than 2 hours`);
+      }
+    } catch (e) {
+      console.error('Error cleaning up orphaned rooms:', e);
+    }
   })
   .catch((err) => console.error('MongoDB error:', err));
 
