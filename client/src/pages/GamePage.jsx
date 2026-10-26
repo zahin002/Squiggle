@@ -29,7 +29,9 @@ import {
   FaCommentDots,
   FaSmile,
   FaPaperPlane,
-  FaGamepad
+  FaGamepad,
+  FaPaintBrush,
+  FaArrowRight
 } from 'react-icons/fa';
 import DrawingCanvas from '../components/DrawingCanvas';
 import WordleBoard from '../components/WordleBoard';
@@ -390,7 +392,12 @@ export default function GamePage() {
 
       {/* Main 3-Column Content (100vh - 48px) */}
       <main className="game-main-content">
-        {error && <div className="game-error-banner">⚠️ {error}</div>}
+        {error && (
+          <div className="game-error-banner">
+            <FaExclamationTriangle style={{ marginRight: '6px' }} />
+            <span>{error}</span>
+          </div>
+        )}
 
         {/* LEFT SIDEBAR: Players */}
         <aside className="game-left-col">
@@ -820,7 +827,8 @@ export default function GamePage() {
                 />
               ) : isDrawer ? (
                 <div className="drawer-active-banner">
-                  🎨 You are drawing! Watch guesses above.
+                  <FaPaintBrush className="drawer-banner-icon" />
+                  <span>You are drawing! Watch guesses above.</span>
                 </div>
               ) : (
                 <form
@@ -845,7 +853,8 @@ export default function GamePage() {
                     className="guess-submit-btn"
                     disabled={!guess.trim() || isDrawer || roomState?.status !== 'playing'}
                   >
-                    Submit Guess →
+                    <span>Submit Guess</span>
+                    <FaArrowRight className="guess-btn-arrow" />
                   </button>
                 </form>
               )}

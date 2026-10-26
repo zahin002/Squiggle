@@ -243,6 +243,21 @@ export default function DrawingCanvas({ socket, roomId, isDrawer, status }) {
   return (
     <div className="canvas-container">
 
+      {/* Tools and Colors: only visible to the drawer — placed ABOVE canvas */}
+      {isDrawer && (
+        <div className="canvas-tools-panel">
+          <ColorPicker color={color} setColor={setColor} />
+          <ToolBar
+            tool={tool}
+            setTool={setTool}
+            size={size}
+            setSize={setSize}
+            onUndo={undo}
+            onClear={clearCanvas}
+          />
+        </div>
+      )}
+
       {/* The HTML5 canvas — 800x600 logical pixels, scales via CSS */}
       <canvas
         ref={canvasRef}
@@ -262,21 +277,6 @@ export default function DrawingCanvas({ socket, roomId, isDrawer, status }) {
         aria-label={isDrawer ? 'Drawing canvas — you are the drawer' : 'Drawing canvas — watch and guess'}
         role="img"
       />
-
-      {/* Tools and Colors: only visible to the drawer */}
-      {isDrawer && (
-        <div className="canvas-tools-panel">
-          <ColorPicker color={color} setColor={setColor} />
-          <ToolBar
-            tool={tool}
-            setTool={setTool}
-            size={size}
-            setSize={setSize}
-            onUndo={undo}
-            onClear={clearCanvas}
-          />
-        </div>
-      )}
 
     </div>
   );

@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { FaCheck } from 'react-icons/fa';
 
 const PALETTE = [
   // Row 1 (11 colors)
@@ -43,7 +44,7 @@ export default function ColorPicker({ color, setColor }) {
             type="button"
 
           >
-            {isActive(c) && <span className="swatch-check">✓</span>}
+            {isActive(c) && <span className="swatch-check"><FaCheck size={9} /></span>}
           </button>
         ))}
       </div>

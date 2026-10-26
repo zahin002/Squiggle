@@ -270,7 +270,13 @@ export default function WordleBoard({
             <li><strong>Guess 5:</strong> +20 Points</li>
             <li><strong>Guess 6:</strong> +10 Points</li>
           </ul>
-          <p className="rules-note">🟩 Green = Correct spot • 🟨 Yellow = Wrong spot • ⬛ Gray = Not in word</p>
+          <p className="rules-note">
+            <span><span className="wordle-color-dot green"></span>Green = Correct spot</span>
+            <span>•</span>
+            <span><span className="wordle-color-dot yellow"></span>Yellow = Wrong spot</span>
+            <span>•</span>
+            <span><span className="wordle-color-dot gray"></span>Gray = Not in word</span>
+          </p>
         </div>
       )}
 

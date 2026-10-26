@@ -54,7 +54,7 @@ export default function ResetPassword() {
       {/* Scrollable content */}
       <div className="auth-content">
         <Link to="/" className="auth-logo">
-          <span>🎨</span>
+          <FaPaintBrush className="auth-logo-icon" />
           <span>Squiggle</span>
         </Link>
 
