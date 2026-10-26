@@ -195,10 +195,32 @@
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
 }
 
+.profile-inline-icon {
+  margin-right: 6px;
+  vertical-align: -2px;
+  font-size: 0.95em;
+}
+
+.profile-inline-icon.rank-globe-icon {
+  color: #3b82f6;
+}
+
+.profile-inline-icon.palette-icon {
+  color: #ec4899;
+}
+
 .stat-icon {
   font-size: 1.8rem;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+.stat-icon--gold { color: #f59e0b; }
+.stat-icon--diamond { color: #0ea5e9; }
+.stat-icon--wins { color: #10b981; }
+.stat-icon--streak { color: #ef4444; }
 
 .stat-value {
   font-family: 'Fredoka', sans-serif;

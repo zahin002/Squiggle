@@ -41,7 +41,19 @@ const wordBank = {
              'ocean','parachute','quicksand','robot','submarine','treasure','umbrella',
              'volcano','waterfall','xylophone','yacht','zipper','bridge','compass',
              'doorbell','envelope','fountain','ghost','hammer','igloo','jigsaw',
-             'kite','ladder','magnet','nest','oven']
+             'kite','ladder','magnet','nest','oven'],
+  wordle: [
+    'apple','beach','bread','brush','camel','chair','clock','cloud','clown','crane',
+    'crown','daisy','dance','donut','drama','dress','eagle','earth','fence','flame',
+    'flash','flute','ghost','giant','globe','grape','grass','heart','horse','house',
+    'igloo','jeans','juice','koala','lemon','light','magic','mango','medal','melon',
+    'money','moose','mouse','music','ninja','nurse','oasis','ocean','onion','panda',
+    'peach','pearl','piano','pilot','pizza','plane','plant','queen','radio','rhino',
+    'robot','scale','shark','sheep','shirt','skate','skull','sloth','smile','smoke',
+    'snail','snake','solar','spoon','squid','stage','stamp','star','storm','sword',
+    'tiger','toast','torch','tower','train','trash','tulip','whale','wheat','wheel',
+    'witch','yacht','zebra'
+  ]
 };
 
 async function getWordChoices(settings) {
@@ -54,9 +66,10 @@ async function getWordChoices(settings) {
   // --- Static fallback ---
   let pool = [];
 
-  if (gameMode === 'custom') {
+  if (gameMode === 'wordle') {
+    pool = [...wordBank.wordle];
+  } else if (gameMode === 'custom') {
     pool = [...(customWords || [])];
-
   } else if (gameMode === 'genre' && selectedGenres && selectedGenres.length > 0) {
     selectedGenres.forEach(genre => {
       // "Food & Drink" → "foodanddrink", "Anime & Manga" → "animemanga"

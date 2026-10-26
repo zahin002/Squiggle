@@ -2,6 +2,22 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import {
+  FaEnvelope,
+  FaCalendarAlt,
+  FaGlobeAmericas,
+  FaCoins,
+  FaGem,
+  FaTrophy,
+  FaFire,
+  FaPalette,
+  FaExclamationTriangle,
+  FaUserSecret,
+  FaArrowLeft,
+  FaArrowRight,
+  FaCheck,
+  FaTimesCircle
+} from 'react-icons/fa';
 import '../styles/Profile.css';
 
 // Preset avatar color palette (same as GamePage gradient start color options)
@@ -107,7 +123,9 @@ export default function ProfilePage() {
       <div className="profile-container">
         <div className="profile-card">
           <div className="profile-guest-notice">
-            <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🎭</div>
+            <div style={{ fontSize: '3rem', marginBottom: '12px', color: '#6366f1' }}>
+              <FaUserSecret />
+            </div>
             <h2>Guest Account</h2>
             <p>
               You're playing as a guest. Create a free account to save your
@@ -115,7 +133,7 @@ export default function ProfilePage() {
             </p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button className="btn-go-register" onClick={() => navigate('/register')}>
-                Create Account →
+                Create Account <FaArrowRight style={{ marginLeft: '6px' }} />
               </button>
               <button
                 onClick={() => navigate('/lobby')}
@@ -129,9 +147,12 @@ export default function ProfilePage() {
                   fontSize: '1rem',
                   fontWeight: 700,
                   cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px'
                 }}
               >
-                ← Back to Lobby
+                <FaArrowLeft /> Back to Lobby
               </button>
             </div>
           </div>
@@ -146,7 +167,9 @@ export default function ProfilePage() {
       <div className="profile-container">
         <div className="profile-card">
           <div className="profile-guest-notice">
-            <div style={{ fontSize: '2rem', marginBottom: '12px' }}>⚠️</div>
+            <div style={{ fontSize: '2.5rem', marginBottom: '12px', color: '#ef4444' }}>
+              <FaExclamationTriangle />
+            </div>
             <p style={{ color: '#ef4444', fontWeight: 700 }}>{error}</p>
             <button className="btn-go-register" onClick={fetchProfile}>
               Retry
@@ -170,7 +193,7 @@ export default function ProfilePage() {
         <header className="profile-header">
           <div className="profile-header-left">
             <button className="btn-back-profile" onClick={() => navigate('/lobby')}>
-              ← Back to Lobby
+              <FaArrowLeft style={{ marginRight: '6px', verticalAlign: '-1px' }} /> Back to Lobby
             </button>
             <h1 className="profile-page-title">My Profile</h1>
           </div>
@@ -187,9 +210,13 @@ export default function ProfilePage() {
           <div className="profile-hero-info">
             <h2 className="profile-username">{profile.username}</h2>
             {profile.email && (
-              <p className="profile-email">✉️ {profile.email}</p>
+              <p className="profile-email">
+                <FaEnvelope className="profile-inline-icon" /> {profile.email}
+              </p>
             )}
-            <span className="profile-member-since">📅 Member since {memberSince}</span>
+            <span className="profile-member-since">
+              <FaCalendarAlt className="profile-inline-icon" /> Member since {memberSince}
+            </span>
           </div>
         </div>
 
@@ -197,7 +224,9 @@ export default function ProfilePage() {
         {rank !== null && (
           <div className="profile-rank-banner">
             <div>
-              <div className="profile-rank-label">🌍 Global Rank (by Gold Coins)</div>
+              <div className="profile-rank-label">
+                <FaGlobeAmericas className="profile-inline-icon rank-globe-icon" /> Global Rank (by Gold Coins)
+              </div>
               <div>
                 <span className="profile-rank-number">{ordinalSuffix(rank)}</span>
                 <span className="profile-rank-suffix"> place</span>
@@ -220,9 +249,12 @@ export default function ProfilePage() {
                   fontWeight: 800,
                   cursor: 'pointer',
                   boxShadow: '0 3px 10px rgba(26,100,255,0.25)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
                 }}
               >
-                View Leaderboard →
+                View Leaderboard <FaArrowRight />
               </button>
             </div>
           </div>
@@ -231,22 +263,22 @@ export default function ProfilePage() {
         {/* ── Stats Grid ── */}
         <div className="profile-stats-grid">
           <div className="stat-card gold-coins">
-            <div className="stat-icon">🪙</div>
+            <div className="stat-icon stat-icon--gold"><FaCoins /></div>
             <div className="stat-value">{profile.goldCoins.toLocaleString()}</div>
             <div className="stat-label">Gold Coins</div>
           </div>
           <div className="stat-card diamonds">
-            <div className="stat-icon">💎</div>
+            <div className="stat-icon stat-icon--diamond"><FaGem /></div>
             <div className="stat-value">{profile.diamonds.toLocaleString()}</div>
             <div className="stat-label">Diamonds</div>
           </div>
           <div className="stat-card wins">
-            <div className="stat-icon">🏆</div>
+            <div className="stat-icon stat-icon--wins"><FaTrophy /></div>
             <div className="stat-value">{profile.totalWins.toLocaleString()}</div>
             <div className="stat-label">Total Wins</div>
           </div>
           <div className="stat-card streak">
-            <div className="stat-icon">🔥</div>
+            <div className="stat-icon stat-icon--streak"><FaFire /></div>
             <div className="stat-value">{profile.currentWinStreak}</div>
             <div className="stat-label">Win Streak</div>
           </div>
@@ -254,7 +286,9 @@ export default function ProfilePage() {
 
         {/* ── Avatar Color Picker ── */}
         <div className="avatar-color-section">
-          <p className="avatar-color-title">🎨 Avatar Color</p>
+          <p className="avatar-color-title">
+            <FaPalette className="profile-inline-icon palette-icon" /> Avatar Color
+          </p>
           <div className="color-swatches">
             {COLOR_PRESETS.map((c) => (
               <button
@@ -307,7 +341,11 @@ export default function ProfilePage() {
 
             {colorMsg && (
               <span className={`save-color-msg ${colorMsg === 'Saved!' ? 'success' : 'error'}`}>
-                {colorMsg === 'Saved!' ? '✓ Saved!' : '✗ ' + colorMsg}
+                {colorMsg === 'Saved!' ? (
+                  <><FaCheck style={{ marginRight: '4px' }} /> Saved!</>
+                ) : (
+                  <><FaTimesCircle style={{ marginRight: '4px' }} /> {colorMsg}</>
+                )}
               </span>
             )}
           </div>
