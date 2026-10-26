@@ -1,6 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import {
+  FaPaintBrush,
+  FaBolt,
+  FaTrophy,
+  FaGamepad,
+  FaEye,
+  FaPlay,
+  FaDoorOpen,
+  FaPencilAlt,
+  FaComments,
+  FaMedal,
+  FaUser
+} from 'react-icons/fa';
 import '../styles/Home.css';
 
 export default function Home() {
@@ -29,16 +42,16 @@ export default function Home() {
 
   return (
     <div className="home-page">
-      {/* Floating decorative doodles */}
-      <div className="home-doodles">
-        <span className="doodle">✏️</span>
-        <span className="doodle">🎨</span>
-        <span className="doodle">🖌️</span>
-        <span className="doodle">⭐</span>
-        <span className="doodle">🎯</span>
-        <span className="doodle">💡</span>
-        <span className="doodle">🏆</span>
-        <span className="doodle">🎮</span>
+      {/* Subtle floating vector icons */}
+      <div className="home-doodles" aria-hidden="true">
+        <FaPencilAlt className="doodle" />
+        <FaPaintBrush className="doodle" />
+        <FaGamepad className="doodle" />
+        <FaTrophy className="doodle" />
+        <FaBolt className="doodle" />
+        <FaComments className="doodle" />
+        <FaMedal className="doodle" />
+        <FaEye className="doodle" />
       </div>
 
       {/* ── Navbar ──────────────────────────────────────────── */}
@@ -60,13 +73,13 @@ export default function Home() {
           {user && !user.isGuest ? (
             <>
               <button className="navbar-link navbar-link--ghost" onClick={() => navigate('/lobby')}>
-                🎮 Play
+                <FaGamepad className="nav-btn-icon" /> Play
               </button>
               <button className="navbar-link navbar-link--ghost" onClick={() => navigate('/leaderboard')}>
-                🏆 Leaderboard
+                <FaTrophy className="nav-btn-icon" /> Leaderboard
               </button>
               <button className="navbar-link navbar-link--profile" onClick={() => navigate('/profile')}>
-                👤 {user.username}
+                <FaUser className="nav-btn-icon" /> {user.username}
               </button>
               <button className="navbar-link navbar-link--logout" onClick={handleLogout}>
                 Logout
@@ -75,7 +88,7 @@ export default function Home() {
           ) : (
             <>
               <button className="navbar-link navbar-link--ghost" onClick={() => navigate('/leaderboard')}>
-                🏆 Leaderboard
+                <FaTrophy className="nav-btn-icon" /> Leaderboard
               </button>
               <button className="navbar-link navbar-link--signin" onClick={() => navigate('/login')}>
                 Sign In
@@ -109,20 +122,18 @@ export default function Home() {
 
         <div className="hero-actions">
           <button className="hero-btn hero-btn--primary" onClick={handlePlayNow}>
-            🚀 Play Now
+            <FaPlay className="btn-icon" /> Play Now
           </button>
           {!user || user.isGuest ? (
             <button className="hero-btn hero-btn--secondary" onClick={() => navigate('/register')}>
-              ✨ Create Account
+              Create Account
             </button>
           ) : (
             <button className="hero-btn hero-btn--secondary" onClick={() => navigate('/lobby')}>
-              🏠 Go to Lobby
+              Go to Lobby
             </button>
           )}
         </div>
-
-
       </section>
 
       {/* ── Features ───────────────────────────────────────── */}
@@ -137,14 +148,18 @@ export default function Home() {
 
         <div className="features-grid">
           <div className="feature-card" style={{ '--card-accent': '#7c4dff' }}>
-            <span className="feature-icon">🎨</span>
+            <div className="feature-icon-wrapper">
+              <FaPaintBrush />
+            </div>
             <div className="feature-title">Pro Drawing Tools</div>
             <div className="feature-desc">
               Brushes, shapes, eraser, color picker and more — everything you need to create masterpieces or hilarious stick figures.
             </div>
           </div>
           <div className="feature-card" style={{ '--card-accent': '#38bdf8' }}>
-            <span className="feature-icon">⚡</span>
+            <div className="feature-icon-wrapper">
+              <FaBolt />
+            </div>
             <div className="feature-title">Real-Time Multiplayer</div>
             <div className="feature-desc">
               See drawings appear stroke by stroke. Powered by WebSocket for instant, lag-free gameplay.
@@ -152,21 +167,27 @@ export default function Home() {
           </div>
 
           <div className="feature-card" style={{ '--card-accent': '#f59e0b' }}>
-            <span className="feature-icon">🏆</span>
+            <div className="feature-icon-wrapper">
+              <FaTrophy />
+            </div>
             <div className="feature-title">Leaderboards & Ranks</div>
             <div className="feature-desc">
               Climb the global rankings, earn gold coins and diamonds, and show off your drawing prowess.
             </div>
           </div>
           <div className="feature-card" style={{ '--card-accent': '#ff758c' }}>
-            <span className="feature-icon">🎭</span>
+            <div className="feature-icon-wrapper">
+              <FaGamepad />
+            </div>
             <div className="feature-title">Multiple Game Modes</div>
             <div className="feature-desc">
               Classic draw & guess, speed rounds, team battles — choose your style and jump right in.
             </div>
           </div>
           <div className="feature-card" style={{ '--card-accent': '#06b6d4' }}>
-            <span className="feature-icon">👀</span>
+            <div className="feature-icon-wrapper">
+              <FaEye />
+            </div>
             <div className="feature-title">Spectator Mode</div>
             <div className="feature-desc">
               Not in the mood to draw? Watch live games, learn techniques, and cheer for your favorites.
@@ -188,7 +209,9 @@ export default function Home() {
         <div className="howto-steps">
           <div className="howto-step">
             <div className="howto-number">01</div>
-            <span className="howto-icon">🚪</span>
+            <div className="howto-icon-wrapper">
+              <FaDoorOpen />
+            </div>
             <div className="howto-title">Join or Create a Room</div>
             <div className="howto-desc">
               Create a private room for friends or jump into a public game instantly.
@@ -196,7 +219,9 @@ export default function Home() {
           </div>
           <div className="howto-step">
             <div className="howto-number">02</div>
-            <span className="howto-icon">✏️</span>
+            <div className="howto-icon-wrapper">
+              <FaPencilAlt />
+            </div>
             <div className="howto-title">Draw Your Word</div>
             <div className="howto-desc">
               When it's your turn, draw the word using our powerful canvas tools.
@@ -204,7 +229,9 @@ export default function Home() {
           </div>
           <div className="howto-step">
             <div className="howto-number">03</div>
-            <span className="howto-icon">💬</span>
+            <div className="howto-icon-wrapper">
+              <FaComments />
+            </div>
             <div className="howto-title">Guess & Chat</div>
             <div className="howto-desc">
               Type your guesses in the chat. Faster guesses earn more points!
@@ -212,7 +239,9 @@ export default function Home() {
           </div>
           <div className="howto-step">
             <div className="howto-number">04</div>
-            <span className="howto-icon">🥇</span>
+            <div className="howto-icon-wrapper">
+              <FaMedal />
+            </div>
             <div className="howto-title">Win & Climb</div>
             <div className="howto-desc">
               Score the most points to win and climb the global leaderboard!
@@ -230,11 +259,11 @@ export default function Home() {
           </p>
           <div className="cta-actions">
             <button className="hero-btn hero-btn--primary" onClick={handlePlayNow}>
-              🎮 Start Playing Now
+              <FaPlay className="btn-icon" /> Start Playing Now
             </button>
             {(!user || user.isGuest) && (
               <button className="hero-btn hero-btn--secondary" onClick={() => navigate('/register')}>
-                📝 Create Free Account
+                Create Free Account
               </button>
             )}
           </div>

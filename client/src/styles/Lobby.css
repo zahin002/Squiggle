@@ -1,264 +1,468 @@
 /* ============================================================
    client/src/styles/Lobby.css
-   Unified theme matching the GamePage design language:
-   clean whites, #f1f5f9 slate bg, #1a64ff primary blue,
-   Nunito + Fredoka fonts, tight radius, no gimmicks.
+   Dark theme — matches homepage / leaderboard design language
    ============================================================ */
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@600;700&display=swap');
 
-/* ── Page Container ─────────────────────────────────────────── */
-.lobby-container {
+/* ── Page shell ─────────────────────────────────────────────── */
+.lobby-page {
   font-family: 'Nunito', sans-serif;
   min-height: 100vh;
-  background-color: #f1f5f9;
-  color: #0f172a;
-  padding: 2.5rem 2rem;
-  box-sizing: border-box;
-  width: 100%;
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  color: #f1f5f9;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ── Fixed glow background ──────────────────────────────────── */
+.lobby-bg {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 10% 50%, rgba(124, 77, 255, 0.18) 0%, transparent 50%),
+    radial-gradient(circle at 90% 15%, rgba(56, 189, 248, 0.14) 0%, transparent 50%),
+    radial-gradient(circle at 55% 90%, rgba(74, 222, 128, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Fixed floating icons ───────────────────────────────────── */
+.lobby-bg-icons {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.lobby-doodle {
+  position: absolute;
+  color: #c4b5fd;
+  opacity: 0.04;
+  animation: lobbyFloat 22s ease-in-out infinite;
+}
+
+.lobby-doodle:nth-child(1) { top: 7%;  left: 5%;   font-size: 3rem;   animation-delay: 0s;   }
+.lobby-doodle:nth-child(2) { top: 20%; right: 7%;  font-size: 2.5rem; animation-delay: -4s;  }
+.lobby-doodle:nth-child(3) { top: 55%; left: 8%;   font-size: 2.8rem; animation-delay: -8s;  }
+.lobby-doodle:nth-child(4) { top: 70%; right: 18%; font-size: 3.5rem; animation-delay: -12s; }
+.lobby-doodle:nth-child(5) { top: 35%; left: 52%;  font-size: 2.2rem; animation-delay: -6s;  }
+.lobby-doodle:nth-child(6) { top: 85%; left: 35%;  font-size: 3rem;   animation-delay: -15s; }
+.lobby-doodle:nth-child(7) { top: 28%; right: 30%; font-size: 2.6rem; animation-delay: -10s; }
+.lobby-doodle:nth-child(8) { top: 60%; left: 80%;  font-size: 2rem;   animation-delay: -2s;  }
+
+@keyframes lobbyFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25%       { transform: translateY(-28px) rotate(4deg); }
+  50%       { transform: translateY(-14px) rotate(-3deg); }
+  75%       { transform: translateY(-36px) rotate(3deg); }
+}
+
+/* ── Loading ────────────────────────────────────────────────── */
+.lobby-loading {
+  position: relative;
+  z-index: 1;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  align-items: flex-start;
-  margin: 0;
+  min-height: 100vh;
+  gap: 1rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1rem;
+  font-weight: 600;
 }
 
-/* ── Main Card ─────────────────────────────────────────────── */
-.lobby-card {
-  background: #ffffff;
-  border-radius: 24px;
-  width: 100%;
+.lobby-spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #7c4dff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Scrollable content layer ───────────────────────────────── */
+.lobby-content {
+  position: relative;
+  z-index: 1;
   max-width: 1200px;
-  padding: 2.5rem;
-  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
-  border: 1.5px solid #e2e8f0;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 4rem;
 }
 
-/* ── Header ────────────────────────────────────────────────── */
+/* ── Header ─────────────────────────────────────────────────── */
 .lobby-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 2.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 2px solid #e2e8f0;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.lobby-header a {
-  font-family: 'Fredoka', 'Nunito', sans-serif;
-  font-size: 2.2rem;
-  font-weight: 700;
+.lobby-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   text-decoration: none;
-  color: #5f6368;
-  letter-spacing: -0.5px;
-  position: relative;
-  display: inline-block;
-  padding-right: 32px;
 }
 
-.lobby-header a::after {
-  content: '';
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 36px;
-  height: 36px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%235f6368' stroke-width='8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 60 C 10 20, 50 20, 40 50 C 30 80, 70 80, 60 50 C 50 20, 90 20, 90 60' /%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: center;
-  transform: rotate(-10deg);
+.lobby-brand-icon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
 }
 
-.lobby-header-user {
+.lobby-brand-text {
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 1.9rem;
   font-weight: 700;
-  font-size: 13px;
-  color: #475569;
-  background: #f1f5f9;
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: 1.5px solid #cbd5e1;
+  background: linear-gradient(135deg, #7c4dff, #38bdf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
 }
 
-/* ── Leaderboard Header Button ─────────────────────────────── */
-.btn-leaderboard-header {
-  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
-  color: #ffffff;
-  border: none;
-  border-radius: 999px;
-  padding: 7px 16px;
+.lobby-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.lobby-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-family: 'Nunito', sans-serif;
-  font-weight: 800;
-  font-size: 13px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 9px 20px;
+  border-radius: 999px;
+  border: none;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.28);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: all 0.25s ease;
 }
 
-.btn-leaderboard-header:hover {
+.lobby-nav-btn--trophy {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fcd34d;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.lobby-nav-btn--trophy:hover {
+  background: rgba(245, 158, 11, 0.25);
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.42);
 }
 
-/* ── Lobby Grid ─────────────────────────────────────────────── */
+.lobby-nav-btn--profile {
+  background: rgba(124, 77, 255, 0.15);
+  color: #c4b5fd;
+  border: 1px solid rgba(124, 77, 255, 0.3);
+}
+
+.lobby-nav-btn--profile:hover {
+  background: rgba(124, 77, 255, 0.25);
+  color: #fff;
+}
+
+.lobby-user-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.lobby-nav-icon { font-size: 0.85rem; }
+
+/* ── Two-column grid ────────────────────────────────────────── */
 .lobby-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  gap: 1.75rem;
 }
 
-@media (max-width: 850px) {
-  .lobby-grid {
-    grid-template-columns: 1fr;
-  }
+@media (max-width: 900px) {
+  .lobby-grid { grid-template-columns: 1fr; }
 }
 
-/* ── Panel Sections ─────────────────────────────────────────── */
-/* Create Room panel — violet/purple accent */
-.room-setup {
-  background: #faf5ff;
-  border-radius: 20px;
+/* ── Panel base ─────────────────────────────────────────────── */
+.lobby-panel {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
   padding: 2rem;
-  border: 1.5px solid #ddd6fe;
-  box-shadow: 0 2px 8px rgba(124, 77, 255, 0.06);
-}
-
-/* Browse/Join panel — teal/sky accent */
-.room-browser {
-  background: #f0f9ff;
-  border-radius: 20px;
-  padding: 2rem;
-  border: 1.5px solid #bae6fd;
-  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.06);
-}
-
-.lobby-container h2 {
-  font-family: 'Fredoka', 'Nunito', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  margin-top: 0;
-  color: #7c4dff;
-}
-
-.room-browser h2 {
-  color: #0ea5e9;
-}
-
-/* ── Form Labels ─────────────────────────────────────────────── */
-.room-setup label {
+  backdrop-filter: blur(14px);
   display: flex;
   flex-direction: column;
-  margin-bottom: 1rem;
+}
+
+/* panel accent top strip */
+.lobby-panel--create {
+  border-top: 3px solid #7c4dff;
+}
+
+.lobby-panel--join {
+  border-top: 3px solid #38bdf8;
+}
+
+/* ── Panel titles ───────────────────────────────────────────── */
+.lobby-panel-title {
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 1.45rem;
   font-weight: 700;
-  color: #6d28d9;
-  font-size: 0.88rem;
+  margin: 0 0 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+}
+
+.lobby-panel-title--open {
+  margin-top: 2rem;
+}
+
+.panel-title-icon {
+  font-size: 1.05rem;
+}
+
+.panel-title-icon--purple { color: #a78bfa; }
+.panel-title-icon--sky    { color: #38bdf8; }
+.panel-title-icon--green  { color: #4ade80; }
+
+/* ── Form fields in RoomSetup ───────────────────────────────── */
+.rs-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+}
+
+.rs-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.5);
 }
 
-.room-browser label {
-  color: #0284c7;
-}
+.rs-label--full { grid-column: 1 / -1; }
 
-/* ── Form Inputs ─────────────────────────────────────────────── */
-.room-setup input,
-.room-setup select,
-.room-setup textarea,
-.join-row input,
-.join-row select,
-.lobby-card input {
-  margin-top: 0.4rem;
+.rs-input {
   padding: 10px 14px;
   border-radius: 12px;
-  border: 1.5px solid #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
   font-family: 'Nunito', sans-serif;
   font-size: 0.95rem;
   font-weight: 600;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
-  background: #ffffff;
-  color: #0f172a;
+  appearance: auto;
 }
 
-.room-setup input:focus,
-.room-setup select:focus,
-.room-setup textarea:focus {
+.rs-input option {
+  background: #1e1b4b;
+  color: #f1f5f9;
+}
+
+.rs-input:focus {
   border-color: #7c4dff;
-  box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.18);
 }
 
-.join-row input:focus,
-.lobby-card input:focus {
-  border-color: #0ea5e9;
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+.rs-textarea {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s;
+  margin-top: 4px;
 }
 
-.room-setup label input[type="checkbox"] {
+.rs-textarea:focus {
+  border-color: #7c4dff;
+  box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.18);
+}
+
+.rs-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+}
+
+.rs-checkbox {
   width: 18px;
   height: 18px;
-  margin-right: 10px;
   cursor: pointer;
-  accent-color: #1a64ff;
+  accent-color: #7c4dff;
 }
 
-.room-setup label:has(input[type="checkbox"]) {
-  flex-direction: row;
-  align-items: center;
-  font-size: 0.95rem;
-  text-transform: none;
-  letter-spacing: 0;
+/* ── Genre chips ────────────────────────────────────────────── */
+.genre-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-/* ── Buttons (global in lobby-container) ─────────────────────── */
-.lobby-container button {
-  font-family: 'Nunito', sans-serif;
-  padding: 10px 20px;
-  border-radius: 12px;
-  font-size: 1rem;
+.genre-label {
+  font-size: 0.82rem;
   font-weight: 800;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
 }
 
-/* Primary CTA: Create — purple */
+.genre-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.genre-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.genre-chip:hover {
+  background: rgba(124, 77, 255, 0.1);
+  border-color: rgba(124, 77, 255, 0.3);
+  color: #c4b5fd;
+}
+
+.genre-chip--active {
+  background: rgba(124, 77, 255, 0.2);
+  border-color: rgba(124, 77, 255, 0.45);
+  color: #ddd6fe;
+}
+
+.genre-checkbox { display: none; }
+
+/* ── Guest restriction banner ───────────────────────────────── */
+.guest-restriction-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fcd34d;
+  line-height: 1.55;
+}
+
+.guest-banner-icon {
+  font-size: 1rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+  color: #f59e0b;
+}
+
+.guest-register-link {
+  color: #a78bfa;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.guest-register-link:hover { color: #c4b5fd; }
+
+/* ── Primary buttons ────────────────────────────────────────── */
 .btn-create {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   width: 100%;
   background: linear-gradient(135deg, #7c4dff 0%, #a855f7 100%);
   color: #fff;
-  box-shadow: 0 4px 16px rgba(124, 77, 255, 0.32);
-  margin-top: 1rem;
-  padding: 13px 20px;
+  border: none;
   border-radius: 14px;
+  padding: 14px 20px;
+  font-family: 'Nunito', sans-serif;
   font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(124, 77, 255, 0.38);
+  transition: transform 0.25s, box-shadow 0.25s;
+  margin-top: 1.25rem;
 }
 
 .btn-create:hover {
   transform: translateY(-3px) scale(1.01);
-  box-shadow: 0 8px 22px rgba(124, 77, 255, 0.45);
+  box-shadow: 0 10px 28px rgba(124, 77, 255, 0.52);
 }
 
-/* Primary CTA: Join — teal/sky */
 .btn-join-main {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   width: 100%;
   background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
   color: #fff;
-  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.32);
-  margin-top: 1rem;
-  padding: 13px 20px;
+  border: none;
   border-radius: 14px;
+  padding: 14px 20px;
+  font-family: 'Nunito', sans-serif;
   font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.35);
+  transition: transform 0.25s, box-shadow 0.25s;
 }
 
 .btn-join-main:hover {
   transform: translateY(-3px) scale(1.01);
-  box-shadow: 0 8px 22px rgba(14, 165, 233, 0.45);
+  box-shadow: 0 10px 28px rgba(14, 165, 233, 0.5);
 }
 
-/* ── Join Row ────────────────────────────────────────────────── */
+.btn-icon-sm { font-size: 0.9rem; }
+
+/* ── Join row ───────────────────────────────────────────────── */
 .join-row {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 2rem;
+  margin-bottom: 0;
 }
 
 .join-inputs {
@@ -266,32 +470,104 @@
   gap: 10px;
 }
 
-.join-inputs input {
+.join-code-input {
   flex: 1;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 4px;
   text-transform: uppercase;
   text-align: center;
-  font-size: 1.15rem;
-  letter-spacing: 3px;
-  font-weight: 800;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.join-inputs select {
-  width: auto;
+.join-code-input::placeholder { letter-spacing: 3px; opacity: 0.3; }
+
+.join-code-input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+}
+
+.join-role-select {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  appearance: auto;
+}
+
+.join-role-select option { background: #1e1b4b; color: #f1f5f9; }
+
+.join-role-select:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
 }
 
 /* ── Error ──────────────────────────────────────────────────── */
+.lobby-error {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-align: center;
+  margin: 8px 0 0;
+}
+
+/* Keep the old error-text for Login/Register pages that still reference it */
 .error-text {
-  color: #ef4444;
-  background: #fef2f2;
-  border: 1.5px solid #fca5a5;
-  padding: 8px 12px;
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  padding: 10px 14px;
   border-radius: 10px;
   font-weight: 700;
   font-size: 0.9rem;
   text-align: center;
 }
 
-/* ── Open Room List ──────────────────────────────────────────── */
+/* ── Rooms empty state ──────────────────────────────────────── */
+.rooms-empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.rooms-empty-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin: 0 auto 0.75rem;
+  color: rgba(56, 189, 248, 0.3);
+}
+
+.rooms-empty p {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.rooms-empty-sub {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* ── Room list ──────────────────────────────────────────────── */
 .room-list {
   list-style: none;
   padding: 0;
@@ -301,115 +577,101 @@
   gap: 10px;
 }
 
-.room-list li {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 12px 16px;
+.room-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border: 1.5px solid #e2e8f0;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
-  transition: transform 0.2s, box-shadow 0.2s;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 12px 16px;
+  transition: all 0.2s ease;
 }
 
-.room-list li:hover {
+.room-item:hover {
+  background: rgba(56, 189, 248, 0.07);
+  border-color: rgba(56, 189, 248, 0.25);
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(26, 100, 255, 0.1);
-  border-color: #bfdbfe;
 }
 
 .room-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
 }
 
 .room-code-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-family: 'Fredoka', monospace;
-  font-size: 1.3rem;
+  font-size: 1.15rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #eff6ff, #f0fdf4);
-  color: #0ea5e9;
-  padding: 3px 10px;
-  border-radius: 10px;
+  color: #38bdf8;
   letter-spacing: 2px;
-  display: inline-block;
-  border: 1.5px solid #bae6fd;
 }
 
+.room-hash { font-size: 0.85rem; opacity: 0.6; }
+
 .room-mode {
-  text-transform: capitalize;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
   font-weight: 700;
-  color: #a855f7;
-  font-size: 0.85rem;
-  padding-left: 4px;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: capitalize;
 }
+
+.room-mode-icon { font-size: 0.75rem; }
 
 .room-actions {
   display: flex;
   gap: 8px;
 }
 
-.room-actions button {
+.btn-room-join,
+.btn-room-spectate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 7px 14px;
-  font-size: 0.9rem;
   border-radius: 999px;
-}
-
-.btn-join {
-  background: linear-gradient(135deg, #1a64ff 0%, #38bdf8 100%);
-  color: #fff;
-  box-shadow: 0 3px 10px rgba(26, 100, 255, 0.28);
-}
-
-.btn-join:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(26, 100, 255, 0.42);
-}
-
-.btn-spectate {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1.5px solid #cbd5e1;
-}
-
-.btn-spectate:hover {
-  background: #e0e7ff;
-  color: #3730a3;
-  border-color: #a5b4fc;
-}
-
-/* ── Guest Banner ─────────────────────────────────────────────── */
-.guest-restriction-banner {
-  background: #fef9c3;
-  color: #713f12;
-  padding: 10px 14px;
-  border-radius: 12px;
-  margin-bottom: 1.2rem;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  border: 1.5px solid #fde68a;
-  font-weight: 600;
-}
-
-/* ── Genre Selector ──────────────────────────────────────────── */
-.genre-selector {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.genre-selector label {
-  background: #ffffff;
-  padding: 8px 12px;
-  border-radius: 10px;
-  margin-bottom: 0;
+  font-family: 'Nunito', sans-serif;
   font-size: 0.88rem;
-  border: 1.5px solid #e2e8f0;
-  text-transform: none;
-  letter-spacing: 0;
-  font-weight: 600;
-  color: #475569;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-room-join {
+  background: linear-gradient(135deg, #7c4dff 0%, #38bdf8 100%);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(56, 189, 248, 0.25);
+}
+
+.btn-room-join:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(56, 189, 248, 0.4);
+}
+
+.btn-room-spectate {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.btn-room-spectate:hover {
+  background: rgba(255, 255, 255, 0.13);
+  color: #fff;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .lobby-content { padding: 1.5rem 1rem 3rem; }
+  .lobby-header  { flex-direction: column; align-items: flex-start; }
+  .lobby-brand-text { font-size: 1.6rem; }
+  .join-inputs { flex-direction: column; }
+  .room-item { flex-direction: column; align-items: flex-start; gap: 10px; }
 }

@@ -1,9 +1,9 @@
 // client/src/components/lobby/RoomSetup.jsx
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import { FaPlus, FaExclamationTriangle } from 'react-icons/fa';
 
 const GENRES = [
   'Animals', 'Food & Drink', 'Nature', 'Entertainment', 'Video Games',
@@ -30,16 +30,9 @@ export default function RoomSetup() {
 
   const createRoom = async () => {
     try {
-      // For guests: override to standard mode before sending, even if state drifted
       const effectiveSettings = isGuest
-        ? {
-            ...settings,
-            gameMode: 'standard',
-            customWords: '',
-            selectedGenres: [],
-          }
+        ? { ...settings, gameMode: 'standard', customWords: '', selectedGenres: [] }
         : settings;
-
       const res = await axios.post('/api/rooms/create', effectiveSettings);
       navigate(`/game/${res.data.roomId}`);
     } catch (err) {
@@ -55,126 +48,130 @@ export default function RoomSetup() {
   };
 
   return (
-    <div className="room-setup">
-      <h2>Create Room</h2>
+    <div className="lobby-panel lobby-panel--create">
+      <h2 className="lobby-panel-title">
+        <FaPlus className="panel-title-icon panel-title-icon--purple" />
+        Create Room
+      </h2>
 
-      {/* ── Guest restriction banner ───────────────────────────────────── */}
+      {/* Guest restriction notice */}
       {isGuest && (
         <div className="guest-restriction-banner">
-          🎮 <strong>Guest Mode:</strong> Only Standard gameplay is available.{' '}
-          <a href="/register">Register for free</a> to unlock Genre, Custom &amp; Wordle modes.
+          <FaExclamationTriangle className="guest-banner-icon" />
+          <div>
+            <strong>Guest Mode:</strong> Only Standard gameplay is available.{' '}
+            <a href="/register" className="guest-register-link">Register for free</a> to unlock Genre, Custom &amp; Wordle modes.
+          </div>
         </div>
       )}
 
-      {/* ── Max players ───────────────────────────────────────────────── */}
-      <label>
-        Max Players (2–20):
-        <input
-          type="number"
-          min={2}
-          max={20}
-          value={settings.maxPlayers}
-          onChange={(e) =>
-            setSettings({ ...settings, maxPlayers: +e.target.value })
-          }
-        />
-      </label>
+      <div className="rs-fields">
+        {/* Max Players */}
+        <label className="rs-label">
+          Max Players (2–20)
+          <input
+            className="rs-input"
+            type="number"
+            min={2}
+            max={20}
+            value={settings.maxPlayers}
+            onChange={(e) => setSettings({ ...settings, maxPlayers: +e.target.value })}
+          />
+        </label>
 
-      {/* ── Draw time ─────────────────────────────────────────────────── */}
-      <label>
-        Draw Time (seconds):
-        <select
-          value={settings.drawTime}
-          onChange={(e) =>
-            setSettings({ ...settings, drawTime: +e.target.value })
-          }
-        >
-          {[15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 150, 180, 210, 240].map(
-            (t) => (
-              <option key={t} value={t}>
-                {t}s
-              </option>
-            )
-          )}
-        </select>
-      </label>
+        {/* Draw Time */}
+        <label className="rs-label">
+          Draw Time (seconds)
+          <select
+            className="rs-input"
+            value={settings.drawTime}
+            onChange={(e) => setSettings({ ...settings, drawTime: +e.target.value })}
+          >
+            {[15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 150, 180, 210, 240].map((t) => (
+              <option key={t} value={t}>{t}s</option>
+            ))}
+          </select>
+        </label>
 
-      {/* ── Rounds ────────────────────────────────────────────────────── */}
-      <label>
-        Rounds:
-        <input
-          type="number"
-          min={1}
-          max={10}
-          value={settings.rounds}
-          onChange={(e) =>
-            setSettings({ ...settings, rounds: +e.target.value })
-          }
-        />
-      </label>
+        {/* Rounds */}
+        <label className="rs-label">
+          Rounds
+          <input
+            className="rs-input"
+            type="number"
+            min={1}
+            max={10}
+            value={settings.rounds}
+            onChange={(e) => setSettings({ ...settings, rounds: +e.target.value })}
+          />
+        </label>
 
-      {/* ── Game mode ─────────────────────────────────────────────────── */}
-      <label>
-        Game Mode:
-        <select
-          value={settings.gameMode}
-          onChange={(e) =>
-            setSettings({ ...settings, gameMode: e.target.value })
-          }
-          // Guests cannot change the game mode
-          disabled={isGuest}
-          title={isGuest ? 'Register to unlock additional game modes' : undefined}
-        >
-          <option value="standard">Standard</option>
-          {/* Non-standard options are only rendered for registered users */}
-          {!isGuest && <option value="genre">Genre</option>}
-          {!isGuest && <option value="custom">Custom Words</option>}
-          {!isGuest && <option value="wordle">Wordle Mode</option>}
-        </select>
-      </label>
+        {/* Game Mode */}
+        <label className="rs-label">
+          Game Mode
+          <select
+            className="rs-input"
+            value={settings.gameMode}
+            onChange={(e) => setSettings({ ...settings, gameMode: e.target.value })}
+            disabled={isGuest}
+            title={isGuest ? 'Register to unlock additional game modes' : undefined}
+          >
+            <option value="standard">Standard</option>
+            {!isGuest && <option value="genre">Genre</option>}
+            {!isGuest && <option value="custom">Custom Words</option>}
+            {!isGuest && <option value="wordle">Wordle Mode</option>}
+          </select>
+        </label>
 
-      {/* ── Genre selector (registered users only, genre mode only) ──── */}
-      {!isGuest && settings.gameMode === 'genre' && (
-        <div className="genre-selector">
-          <p>Select genres:</p>
-          {GENRES.map((g) => (
-            <label key={g}>
-              <input
-                type="checkbox"
-                checked={settings.selectedGenres.includes(g)}
-                onChange={(e) => handleGenreToggle(g, e.target.checked)}
-              />
-              {g}
-            </label>
-          ))}
-        </div>
-      )}
+        {/* Genre selector */}
+        {!isGuest && settings.gameMode === 'genre' && (
+          <div className="genre-section">
+            <p className="genre-label">Select Genres</p>
+            <div className="genre-grid">
+              {GENRES.map((g) => (
+                <label key={g} className={`genre-chip${settings.selectedGenres.includes(g) ? ' genre-chip--active' : ''}`}>
+                  <input
+                    type="checkbox"
+                    className="genre-checkbox"
+                    checked={settings.selectedGenres.includes(g)}
+                    onChange={(e) => handleGenreToggle(g, e.target.checked)}
+                  />
+                  {g}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
 
-      {/* ── Custom words (registered users only, custom mode only) ────── */}
-      {!isGuest && settings.gameMode === 'custom' && (
-        <textarea
-          placeholder="Enter words separated by commas (minimum 10 words)"
-          value={settings.customWords}
-          onChange={(e) =>
-            setSettings({ ...settings, customWords: e.target.value })
-          }
-          rows={4}
-        />
-      )}
+        {/* Custom words */}
+        {!isGuest && settings.gameMode === 'custom' && (
+          <label className="rs-label rs-label--full">
+            Custom Words
+            <textarea
+              className="rs-textarea"
+              placeholder="Enter words separated by commas (minimum 10 words)"
+              value={settings.customWords}
+              onChange={(e) => setSettings({ ...settings, customWords: e.target.value })}
+              rows={4}
+            />
+          </label>
+        )}
 
-      {/* ── Private room toggle ───────────────────────────────────────── */}
-      <label>
-        <input
-          type="checkbox"
-          checked={settings.isPrivate}
-          onChange={(e) =>
-            setSettings({ ...settings, isPrivate: e.target.checked })
-          }
-        />
-        {' '}Private Room
-      </label>
+        {/* Private toggle */}
+        <label className="rs-checkbox-label">
+          <input
+            className="rs-checkbox"
+            type="checkbox"
+            checked={settings.isPrivate}
+            onChange={(e) => setSettings({ ...settings, isPrivate: e.target.checked })}
+          />
+          <span>Private Room</span>
+        </label>
+      </div>
 
-      <button className="btn-create" onClick={createRoom}>Create Room</button>
+      <button className="btn-create" onClick={createRoom}>
+        <FaPlus className="btn-icon-sm" /> Create Room
+      </button>
     </div>
   );
 }

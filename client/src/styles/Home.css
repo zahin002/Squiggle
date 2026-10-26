@@ -44,7 +44,8 @@
 .doodle {
   position: absolute;
   font-size: 2rem;
-  opacity: 0.08;
+  color: #c4b5fd;
+  opacity: 0.05;
   animation: floatDoodle 20s ease-in-out infinite;
 }
 
@@ -186,7 +187,12 @@
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+}
+
+.nav-btn-icon {
+  font-size: 0.95rem;
+  display: inline-block;
 }
 
 .navbar-link--ghost {
@@ -351,6 +357,10 @@
   text-decoration: none;
 }
 
+.btn-icon {
+  font-size: 1rem;
+}
+
 .hero-btn--primary {
   background: linear-gradient(135deg, #7c4dff 0%, #a855f7 100%);
   color: #fff;
@@ -494,10 +504,25 @@
   opacity: 1;
 }
 
-.feature-icon {
-  font-size: 2.5rem;
+.feature-icon-wrapper {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: var(--card-accent, #7c4dff);
   margin-bottom: 1.2rem;
-  display: block;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover .feature-icon-wrapper {
+  transform: scale(1.08);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .feature-title {
@@ -541,10 +566,18 @@
   margin-bottom: 1rem;
 }
 
-.howto-icon {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-  display: block;
+.howto-icon-wrapper {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(124, 77, 255, 0.12);
+  border: 1px solid rgba(124, 77, 255, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  color: #c4b5fd;
+  margin: 0 auto 1rem;
 }
 
 .howto-title {
