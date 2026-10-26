@@ -309,8 +309,24 @@ module.exports = (io) => {
         setRoom(roomId, roomState);
       }
 
-      // Check player in roomState; if not found, add current socket if user data exists
+      // Check if room is already starting or playing to prevent duplicate trigger
+      if (roomState.status && roomState.status !== 'lobby') {
+        console.log('[START GAME IGNORED] Room status is already:', roomState.status);
+        return;
+      }
+
+      // Check player in roomState; if not found by socketId, match by userId or username
       let player = roomState.players.find(p => p.socketId === socket.id);
+      if (!player && (socket.data?.userId || socket.data?.username)) {
+        player = roomState.players.find(
+          p => (socket.data?.userId && p.userId && String(p.userId) === String(socket.data.userId)) ||
+               (socket.data?.username && p.username === socket.data.username)
+        );
+        if (player) {
+          player.socketId = socket.id;
+        }
+      }
+
       if (!player && socket.data?.username) {
         player = {
           socketId: socket.id,
@@ -332,6 +348,7 @@ module.exports = (io) => {
         (roomState.hostSocketId && socket.id === roomState.hostSocketId) ||
         (roomState.hostId && socket.id === roomState.hostId) ||
         (roomState.players[0] && roomState.players[0].socketId === socket.id) ||
+        (roomState.players[0] && playerUserIdStr && String(roomState.players[0].userId) === playerUserIdStr) ||
         (roomState.players.length <= 1);
 
       if (!isHost) {
@@ -361,6 +378,14 @@ module.exports = (io) => {
       console.log('[GAME STARTED]', roomId);
       io.to(roomId).emit('gameStarted', {
         message: 'Game is starting!'
+      });
+
+      // Broadcast roomState immediately so clients transition out of lobby instantly
+      const { buildRoomState } = require('./buildRoomState');
+      const nsp = io.of('/');
+      const sockets = await nsp.in(roomId).fetchSockets();
+      sockets.forEach((s) => {
+        s.emit('roomState', buildRoomState(roomState, s.data?.userId ?? null, s.id));
       });
 
       require('./roundManager.js').startNextRound(io, roomId);

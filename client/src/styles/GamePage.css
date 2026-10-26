@@ -1034,7 +1034,23 @@
 
 .start-game-btn .btn-play-icon {
   font-size: 14px;
+  pointer-events: none;
   transition: transform 0.2s ease;
+}
+
+.spinner-mini {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spinMini 0.7s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes spinMini {
+  to { transform: rotate(360deg); }
 }
 
 .start-game-btn:hover:not(:disabled) {
@@ -1052,10 +1068,10 @@
 }
 
 .start-game-btn:disabled {
-  opacity: 0.45;
-  background: rgba(255, 255, 255, 0.1);
+  opacity: 0.65;
+  background: rgba(255, 255, 255, 0.12);
   box-shadow: none;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.7);
   cursor: not-allowed;
 }
 
