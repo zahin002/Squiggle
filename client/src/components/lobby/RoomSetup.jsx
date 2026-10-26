@@ -7,7 +7,7 @@ import { FaPlus, FaExclamationTriangle } from 'react-icons/fa';
 
 const GENRES = [
   'Animals', 'Food & Drink', 'Nature', 'Entertainment', 'Video Games',
-  'Anime & Manga', 'Historical Figures', 'Brands & Logos', 'Space & Sci-Fi', 'Idioms',
+  'Anime & Manga', 'Historical Figures', 'Brands & Logos', 'Space & Sci-Fi', 'Idioms', 'Abstract Concepts', 'Wordle',
 ];
 
 export default function RoomSetup() {
