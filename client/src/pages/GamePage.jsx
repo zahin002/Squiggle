@@ -16,7 +16,20 @@ import {
   FaPencilAlt,
   FaArrowLeft,
   FaPlay,
-  FaTrophy
+  FaTrophy,
+  FaCopy,
+  FaMicrophone,
+  FaMicrophoneSlash,
+  FaUserCircle,
+  FaUsers,
+  FaUserPlus,
+  FaCrown,
+  FaVolumeUp,
+  FaVolumeMute,
+  FaCommentDots,
+  FaSmile,
+  FaPaperPlane,
+  FaGamepad
 } from 'react-icons/fa';
 import DrawingCanvas from '../components/DrawingCanvas';
 import WordleBoard from '../components/WordleBoard';
@@ -287,20 +300,20 @@ export default function GamePage() {
           <button className="nav-logo" onClick={handleLeaveRoom} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
             <SquiggleLogo size={28} fontSize="1.3rem" id="gameNavGrad" />
           </button>
-          <button className="leave-btn" onClick={handleLeaveRoom} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-            <FaArrowLeft style={{ fontSize: '11px' }} /> Leave
+          <button className="leave-btn" onClick={handleLeaveRoom}>
+            <FaArrowLeft className="btn-icon-xs" /> Leave Room
           </button>
         </div>
 
         {/* Center: Live Round, Timer & Word Banner */}
         <div className="nav-center">
           <span className="round-badge">
-            Round {roomState?.currentRound || 1}/{roomState?.settings?.rounds || 3}
+            ROUND {roomState?.currentRound || 1}/{roomState?.settings?.rounds || 3}
           </span>
 
           {(roomState?.status === 'playing' || roomState?.status === 'wordSelection') && (
-            <div className={`timer-bubble-compact ${timeLeft <= 10 ? 'warn' : ''}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-              <FaStopwatch style={{ fontSize: '13px' }} /> {timeLeft}s
+            <div className={`timer-bubble-compact ${timeLeft <= 10 ? 'warn' : ''}`}>
+              <FaStopwatch className="btn-icon-xs" /> {timeLeft}s
             </div>
           )}
 
@@ -331,12 +344,12 @@ export default function GamePage() {
         {/* Right: Room Code, Copy Link, Mic, User */}
         <div className="nav-right">
           <div className="room-code-badge">
-            <span>Code:</span>
-            <strong>{roomId}</strong>
+            <span className="code-label">Room Code:</span>
+            <strong className="code-value">{roomId}</strong>
           </div>
 
           <button className="copy-link-btn" onClick={handleCopyInvite}>
-            {copySuccess ? 'Copied! ✓' : 'Copy Link'}
+            {copySuccess ? <><FaCheck className="btn-icon-xs" /> Copied!</> : <><FaCopy className="btn-icon-xs" /> Copy Link</>}
           </button>
 
           {requestedRole !== 'spectator' && (
@@ -346,11 +359,20 @@ export default function GamePage() {
               disabled={isForceMuted}
               title={isForceMuted ? 'Muted by Host' : isMuted ? 'Unmute microphone' : 'Mute microphone'}
             >
-              {isForceMuted ? '🔇 Muted by Host' : isMuted ? '🔇 Mic Muted' : '🎤 Mic On'}
+              {isForceMuted ? (
+                <><FaMicrophoneSlash className="mic-slash-icon" /> Muted by Host</>
+              ) : isMuted ? (
+                <><FaMicrophoneSlash className="mic-slash-icon" /> Mic Muted</>
+              ) : (
+                <><FaMicrophone className="mic-active-icon" /> Mic On</>
+              )}
             </button>
           )}
 
-          <span className="user-badge">{activeUser?.username || 'Player'}</span>
+          <div className="user-profile-pill">
+            <FaUserCircle className="user-profile-avatar" />
+            <span className="user-profile-name">{activeUser?.username || 'Player'}</span>
+          </div>
         </div>
       </header>
 
@@ -361,40 +383,42 @@ export default function GamePage() {
         {/* LEFT SIDEBAR: Players */}
         <aside className="game-left-col">
           <div className="players-header">
-            Players ({roomState?.players?.length || 0})
+            <FaUsers className="players-header-icon" />
+            <span>PLAYERS ({(roomState?.players?.length || 0)}/{(roomState?.settings?.maxPlayers || 8)})</span>
           </div>
           <div className="players-list">
             {(roomState?.players || []).map((player) => {
               const isDrawing = player.socketId === currentDrawerId;
-              const playerRankIndex = sortedPlayers.findIndex((p) => p.socketId === player.socketId);
-              let medalEmoji = '';
-              if (player.score > 0) {
-                if (playerRankIndex === 0) medalEmoji = '🥇 ';
-                else if (playerRankIndex === 1) medalEmoji = '🥈 ';
-                else if (playerRankIndex === 2) medalEmoji = '🥉 ';
-              }
+              const isPlayerHost = player.isHost || player.socketId === roomState?.hostId || player.userId === roomState?.hostId || (roomState?.players?.[0]?.socketId === player.socketId);
 
               return (
-                <div key={player.socketId || player.userId} className={`player-card-vertical ${isDrawing ? 'is-drawing' : ''}`}>
-                  {isDrawing && <div className="player-drawing-icon" title="Drawing Now">✏️</div>}
-                  <div className="player-avatar-small">
-                    <span>{(player.username || 'P').charAt(0).toUpperCase()}</span>
+                <div key={player.socketId || player.userId} className={`player-card-vertical ${isPlayerHost ? 'is-host' : ''} ${isDrawing ? 'is-drawing' : ''}`}>
+                  <div className="player-card-left">
+                    <div className="player-avatar-circle">
+                      <span>{(player.username || 'P').charAt(0).toUpperCase()}</span>
+                    </div>
+                    <div className="player-meta-box">
+                      <div className="player-name-row">
+                        <span className="player-name-text" title={player.username}>{player.username}</span>
+                        <span className="player-mic-mini">
+                          {player.isMuted ? <FaMicrophoneSlash className="mic-muted-red" /> : <FaMicrophone className="mic-on-green" />}
+                        </span>
+                      </div>
+                      <span className="player-score-text">{player.score || 0} pts</span>
+                    </div>
                   </div>
-                  <div className="player-info-vertical">
-                    <span className="player-name-small" title={player.username}>
-                      {medalEmoji}{player.username} {player.isHost ? '(Host)' : ''}
-                      <span className="player-mic-status-icon" style={{ marginLeft: '6px' }}>
-                        {player.isMuted ? '🔇' : '🎤'}
+
+                  <div className="player-card-right">
+                    {isPlayerHost ? (
+                      <span className="host-badge-pill">
+                        <FaCrown className="crown-icon" /> Host
                       </span>
-                    </span>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: '4px', marginTop: '4px' }}>
-                      <span className="player-score-small">{player.score || 0} pts</span>
-                      
-                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                    ) : (
+                      <div className="player-mod-actions">
                         {/* Vote-kick trigger for other players */}
                         {player.socketId !== socket.id && (
                           <button
-                            className="btn-vote-kick-trigger"
+                            className="btn-player-kick"
                             title={`Call vote to kick ${player.username}`}
                             onClick={() => socket.emit('startVoteKick', { roomId, targetSocketId: player.socketId })}
                             disabled={activeVote !== null}
@@ -406,23 +430,40 @@ export default function GamePage() {
                         {/* Host controls to force mute other active players */}
                         {isHost && player.socketId !== socket.id && (
                           <button
-                            className="btn-force-mute"
+                            className="btn-player-mute"
+                            title={player.isMuted ? 'Unmute microphone' : 'Mute microphone'}
                             onClick={() => socket.emit('forceMuteUser', {
                               roomId,
                               targetSocketId: player.socketId,
                               mute: !player.isMuted
                             })}
                           >
-                            {player.isMuted ? '🔊 Unmute' : '🔇 Mute'}
+                            {player.isMuted ? <><FaVolumeUp className="btn-icon-xs" /> Unmute</> : <><FaVolumeMute className="btn-icon-xs" /> Mute</>}
                           </button>
                         )}
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
+
+          {/* Decorative floating dots/curves in empty player space */}
+          <div className="players-ambient-decor">
+            <span className="decor-dot dot-1" />
+            <span className="decor-dot dot-2" />
+            <span className="decor-dot dot-3" />
+            <svg className="decor-squiggle-curve" viewBox="0 0 160 50" fill="none">
+              <path d="M10 35 C 40 10, 80 45, 110 20 C 130 5, 150 25, 155 30" stroke="rgba(124, 77, 255, 0.18)" strokeWidth="4" strokeLinecap="round" />
+            </svg>
+          </div>
+
+          {/* Invite Friends Button at bottom */}
+          <button className="invite-friends-btn" onClick={handleCopyInvite}>
+            <FaUserPlus className="btn-icon-sm" />
+            <span>Invite Friends</span>
+          </button>
         </aside>
 
         {/* CENTER COLUMN: Canvas & Canvas Overlays (NO SCROLLING) */}
@@ -451,15 +492,8 @@ export default function GamePage() {
                     className="start-game-btn"
                     onClick={() => socket.emit('startGame', { roomId })}
                     disabled={(roomState?.players?.length || 0) < 2}
-                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                   >
-                    {(roomState?.players?.length || 0) < 2 ? (
-                      'Need 2+ players to start'
-                    ) : (
-                      <>
-                        <SquiggleLogoMark size={20} id="btnStartGrad" /> Start Game Now
-                      </>
-                    )}
+                    <FaPlay className="btn-play-icon" /> START GAME NOW
                   </button>
                 ) : (
                   <div className="waiting-host-box">
@@ -575,27 +609,41 @@ export default function GamePage() {
 
         {/* RIGHT SIDEBAR: Live Chat & Guess Input */}
         <aside className="game-right-col">
-          <div className="chat-header">LIVE CHAT</div>
+          <div className="chat-header">
+            <div className="chat-header-title">
+              <FaCommentDots className="chat-header-icon" />
+              <span>LIVE CHAT</span>
+            </div>
+            <span className="chat-online-badge">
+              <span className="online-green-dot" /> {(roomState?.players?.length || 1)} online
+            </span>
+          </div>
 
           <div className="chat-messages">
             {messages.map((message, index) => {
               const isSystem = message.type === 'system';
               const senderName = isSystem ? 'System' : message.username || message.sender || 'Unknown';
+              const msgTime = message.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
               if (isSystem) {
                 return (
-                  <div key={`${index}-${message.text}`} className="chat-message system">
-                    {message.text}
+                  <div key={`${index}-${message.text}`} className="chat-msg-card system">
+                    <div className="chat-sys-content">
+                      <FaUsers className="chat-sys-icon" />
+                      <span>{message.text}</span>
+                    </div>
+                    <span className="chat-msg-time">{msgTime}</span>
                   </div>
                 );
               }
 
               return (
-                <div key={`${index}-${message.text}-${index}`} className="chat-message">
-                  <div className="chat-message-header">
-                    <span className="chat-message-name">{senderName}</span>
+                <div key={`${index}-${message.text}-${index}`} className="chat-msg-card player">
+                  <div className="chat-msg-header">
+                    <span className="chat-sender-name">{senderName}</span>
+                    <span className="chat-msg-time">{msgTime}</span>
                   </div>
-                  <div className="chat-message-bubble">{message.text}</div>
+                  <div className="chat-msg-text">{message.text}</div>
                 </div>
               );
             })}
@@ -604,7 +652,7 @@ export default function GamePage() {
 
           <div className="chat-input-area">
             <form
-              className="chat-form-modern"
+              className="chat-composer-form"
               onSubmit={(e) => {
                 e.preventDefault();
                 const val = e.target.chatInput.value;
@@ -613,15 +661,29 @@ export default function GamePage() {
                 e.target.chatInput.value = '';
               }}
             >
-              <input name="chatInput" type="text" className="chat-input-modern" placeholder="Type a message..." />
-              <button type="submit" className="chat-send-modern">
-                Send
+              <div className="chat-input-box">
+                <FaSmile className="chat-smile-icon" />
+                <input
+                  name="chatInput"
+                  type="text"
+                  className="chat-input-modern"
+                  placeholder="Type a message..."
+                  autoComplete="off"
+                />
+              </div>
+              <button type="submit" className="chat-send-btn" title="Send message">
+                <FaPaperPlane className="send-plane-icon" />
               </button>
             </form>
           </div>
 
-          {/* Guess Section for Guessers / Info for Drawer */}
-          {requestedRole !== 'spectator' && (
+          {/* Lobby Waiting Card or Active Guess/Wordle Input */}
+          {roomState?.status === 'lobby' ? (
+            <div className="lobby-waiting-status-card">
+              <FaGamepad className="waiting-pad-icon" />
+              <span>Waiting to start...</span>
+            </div>
+          ) : requestedRole !== 'spectator' && (
             <div className="guess-section-wrapper">
               {isWordle && roomState?.status === 'playing' ? (
                 <WordleBoard
@@ -648,12 +710,16 @@ export default function GamePage() {
                   <input
                     type="text"
                     className="guess-input"
-                    placeholder={roomState?.status === 'playing' ? 'Type your guess here...' : 'Waiting to start...'}
                     value={guess}
                     onChange={(e) => setGuess(e.target.value)}
-                    disabled={roomState?.status !== 'playing'}
+                    placeholder="Type your guess here..."
+                    disabled={isDrawer || roomState?.status !== 'playing'}
                   />
-                  <button type="submit" className="guess-submit-btn" disabled={roomState?.status !== 'playing' || !guess.trim()}>
+                  <button
+                    type="submit"
+                    className="guess-submit-btn"
+                    disabled={!guess.trim() || isDrawer || roomState?.status !== 'playing'}
+                  >
                     Submit Guess →
                   </button>
                 </form>
