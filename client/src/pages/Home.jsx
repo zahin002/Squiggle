@@ -110,17 +110,12 @@ export default function Home() {
             : 'Free to play • No download required'}
         </div>
 
-        <div className="hero-logo-wrapper">
+        <h1 className="hero-logo-wrapper">
           <img
             src="/official-logo.png"
-            alt="Squiggle"
+            alt="Squiggle - Sketch. Think. Guess."
             className="hero-official-logo"
           />
-        </div>
-
-        <h1 className="hero-title">
-          <span className="hero-title-main">Draw, Guess &</span>
-          <span className="hero-title-accent">Win Together!</span>
         </h1>
 
         <p className="hero-subtitle">
@@ -282,7 +277,7 @@ export default function Home() {
       <footer className="home-footer">
         <div className="footer-brand">Squiggle</div>
         <p className="footer-text">
-          © {new Date().getFullYear()} Squiggle — Draw, Guess & Have Fun!
+          © {new Date().getFullYear()} Squiggle — Sketch, think and guess
         </p>
       </footer>
     </div>

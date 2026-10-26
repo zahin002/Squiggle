@@ -147,6 +147,31 @@
   font-size: 0.75rem;
   color: #94a3b8;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.wordle-color-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  vertical-align: -1px;
+  margin-right: 2px;
+}
+
+.wordle-color-dot.green {
+  background-color: #22c55e;
+}
+
+.wordle-color-dot.yellow {
+  background-color: #eab308;
+}
+
+.wordle-color-dot.gray {
+  background-color: #64748b;
 }
 
 /* Solved and Error Notifications */

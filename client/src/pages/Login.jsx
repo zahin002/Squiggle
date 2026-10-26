@@ -69,7 +69,7 @@ export default function Login() {
       {/* Scrollable content */}
       <div className="auth-content">
         <Link to="/" className="auth-logo">
-          <span>🎨</span>
+          <FaPaintBrush className="auth-logo-icon" />
           <span>Squiggle</span>
         </Link>
 

@@ -536,7 +536,7 @@
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   transition: all 0.25s ease;
-  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border: 1.5px solid rgba(99, 102, 241, 0.3);
 }
 
 .player-avatar-circle.rank-badge-1 {
@@ -551,7 +551,7 @@
   background: linear-gradient(135deg, #64748b 0%, #cbd5e1 100%);
   color: #0f172a;
   box-shadow: 0 0 12px rgba(148, 163, 184, 0.5);
-  border: 2px solid #f8fafc;
+  border: 2px solid rgba(148, 163, 184, 0.6);
   font-weight: 800;
 }
 
@@ -916,12 +916,12 @@
   background: linear-gradient(135deg, #7c4dff 0%, #38bdf8 100%);
   color: #ffffff;
   box-shadow: 0 4px 18px rgba(124, 77, 255, 0.45);
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border: 1.5px solid rgba(124, 77, 255, 0.45);
 }
 
 .canvas-word-pill.is-guesser {
   background: rgba(14, 11, 33, 0.88);
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(99, 102, 241, 0.35);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
@@ -1034,7 +1034,23 @@
 
 .start-game-btn .btn-play-icon {
   font-size: 14px;
+  pointer-events: none;
   transition: transform 0.2s ease;
+}
+
+.spinner-mini {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spinMini 0.7s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes spinMini {
+  to { transform: rotate(360deg); }
 }
 
 .start-game-btn:hover:not(:disabled) {
@@ -1052,10 +1068,10 @@
 }
 
 .start-game-btn:disabled {
-  opacity: 0.45;
-  background: rgba(255, 255, 255, 0.1);
+  opacity: 0.65;
+  background: rgba(255, 255, 255, 0.12);
   box-shadow: none;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.7);
   cursor: not-allowed;
 }
 
@@ -1349,7 +1365,8 @@
 
 .drawer-banner-icon {
   font-size: 14px;
-  color: #38bdf8;
+  color: #a78bfa;
+  flex-shrink: 0;
 }
 
 .guess-interactive-card {
@@ -1431,6 +1448,10 @@
 }
 
 .guess-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   background: linear-gradient(135deg, #7c4dff, #38bdf8);
   color: white;
   border: none;
@@ -1445,6 +1466,15 @@
   box-shadow: 0 2px 10px rgba(124, 77, 255, 0.35);
   flex-shrink: 0;
   white-space: nowrap;
+}
+
+.guess-btn-arrow {
+  font-size: 12px;
+  transition: transform 0.15s ease;
+}
+
+.guess-submit-btn:hover:not(:disabled) .guess-btn-arrow {
+  transform: translateX(3px);
 }
 
 .guess-submit-btn:hover:not(:disabled) {

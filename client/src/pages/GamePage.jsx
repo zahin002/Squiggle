@@ -30,7 +30,9 @@ import {
   FaSmile,
   FaPaperPlane,
   FaGamepad,
-  FaLightbulb
+  FaLightbulb,
+  FaPaintBrush,
+  FaArrowRight
 } from 'react-icons/fa';
 import DrawingCanvas from '../components/DrawingCanvas';
 import WordleBoard from '../components/WordleBoard';
@@ -59,6 +61,7 @@ export default function GamePage() {
   const [voteNotice, setVoteNotice] = useState('');
   const [kickedModal, setKickedModal] = useState(null);
   const [roundSplash, setRoundSplash] = useState(null);
+  const [isStartingGame, setIsStartingGame] = useState(false);
 
   const hasJoinedRef = useRef(false);
   const chatBottomRef = useRef(null);
@@ -123,6 +126,10 @@ export default function GamePage() {
         ...state,
       }));
 
+      if (state?.status && state.status !== 'lobby') {
+        setIsStartingGame(false);
+      }
+
       if (state?.timeLeft !== undefined) {
         setTimeLeft(state.timeLeft);
       }
@@ -146,13 +153,16 @@ export default function GamePage() {
 
     socket.on('gameStarted', ({ message }) => {
       setMessages((items) => [...items, { type: 'system', text: message }]);
+      setRoomState((prev) => (prev ? { ...prev, status: 'starting' } : prev));
     });
 
     socket.on('wordChoices', ({ choices }) => {
+      setIsStartingGame(false);
       setRoomState((s) => (s ? { ...s, wordChoices: choices, status: 'wordSelection' } : s));
     });
 
     socket.on('roundStarted', (round) => {
+      setIsStartingGame(false);
       setRoomState((state) => (state ? { ...state, status: 'playing', ...round } : state));
       if (round?.timeLeft !== undefined) setTimeLeft(round.timeLeft);
       setRoundSplash({
@@ -164,11 +174,13 @@ export default function GamePage() {
     });
 
     socket.on('roundEnded', ({ word, players }) => {
+      setIsStartingGame(false);
       setRoomState((state) => (state ? { ...state, status: 'roundEnding', revealedWord: word, players: players || state.players } : state));
       setMessages((items) => [...items, { type: 'system', text: `Round over! Word was: "${word}"` }]);
     });
 
     socket.on('gameEnded', ({ winner, players }) => {
+      setIsStartingGame(false);
       setRoomState((state) => (state ? { ...state, status: 'finished', winner, players: players || state.players } : state));
       setMessages((items) => [...items, { type: 'system', text: `Game Over! Winner: ${winner || 'Nobody'}` }]);
     });
@@ -189,6 +201,7 @@ export default function GamePage() {
     });
 
     socket.on('error', (payload) => {
+      setIsStartingGame(false);
       setError(payload.message || 'Something went wrong');
       if (payload.message && payload.message.includes('All players have left')) {
         setTimeout(() => navigate('/lobby'), 2500);
@@ -356,6 +369,12 @@ export default function GamePage() {
     });
   };
 
+  const handleStartGame = () => {
+    if (isStartingGame || roomState?.status === 'starting' || (roomState?.players?.length || 0) < 1) return;
+    setIsStartingGame(true);
+    socket.emit('startGame', { roomId });
+  };
+
   const currentWordDisplay = roomState?.currentWord || roomState?.selectedWord;
 
   return (
@@ -395,7 +414,12 @@ export default function GamePage() {
 
       {/* Main 3-Column Content (100vh - 48px) */}
       <main className="game-main-content">
-        {error && <div className="game-error-banner">⚠️ {error}</div>}
+        {error && (
+          <div className="game-error-banner">
+            <FaExclamationTriangle style={{ marginRight: '6px' }} />
+            <span>{error}</span>
+          </div>
+        )}
 
         {/* LEFT SIDEBAR: Players */}
         <aside className="game-left-col">
@@ -584,11 +608,13 @@ export default function GamePage() {
             )}
 
             {/* OVERLAY 1: Lobby Overlay (Waiting / Start Game) */}
-            {roomState?.status === 'lobby' && (
+            {(roomState?.status === 'lobby' || roomState?.status === 'starting') && (
               <div className="lobby-canvas-overlay">
-                <h2>Game Lobby</h2>
+                <h2>{roomState?.status === 'starting' ? 'Starting Game...' : 'Game Lobby'}</h2>
                 <p className="overlay-subtitle">
-                  {(roomState?.players?.length || 0)} / {roomState?.settings?.maxPlayers || 8} Players Joined
+                  {roomState?.status === 'starting'
+                    ? 'Preparing rounds and canvas...'
+                    : `${(roomState?.players?.length || 0)} / ${roomState?.settings?.maxPlayers || 8} Players Joined`}
                 </p>
 
                 <div className="lobby-voice-setting-row">
@@ -619,16 +645,24 @@ export default function GamePage() {
 
                 {isHost ? (
                   <button
-                    className="start-game-btn"
-                    onClick={() => socket.emit('startGame', { roomId })}
-                    disabled={(roomState?.players?.length || 0) < 1}
+                    className={`start-game-btn ${isStartingGame || roomState?.status === 'starting' ? 'is-loading' : ''}`}
+                    onClick={handleStartGame}
+                    disabled={isStartingGame || roomState?.status === 'starting' || (roomState?.players?.length || 0) < 1}
                   >
-                    <FaPlay className="btn-play-icon" /> START GAME NOW
+                    {isStartingGame || roomState?.status === 'starting' ? (
+                      <>
+                        <span className="spinner-mini" /> STARTING GAME...
+                      </>
+                    ) : (
+                      <>
+                        <FaPlay className="btn-play-icon" /> START GAME NOW
+                      </>
+                    )}
                   </button>
                 ) : (
                   <div className="waiting-host-box">
                     <span className="pulse-dot" />
-                    <span>Waiting for room host to start...</span>
+                    <span>{roomState?.status === 'starting' ? 'Game is starting...' : 'Waiting for room host to start...'}</span>
                   </div>
                 )}
               </div>
@@ -825,7 +859,7 @@ export default function GamePage() {
                 />
               ) : isDrawer ? (
                 <div className="drawer-active-banner">
-                  <FaPencilAlt className="drawer-banner-icon" />
+                  <FaPaintBrush className="drawer-banner-icon" />
                   <span>You are drawing! Watch guesses above.</span>
                 </div>
               ) : (
@@ -862,7 +896,8 @@ export default function GamePage() {
                         className="guess-submit-btn"
                         disabled={!guess.trim() || isDrawer || roomState?.status !== 'playing'}
                       >
-                        GUESS
+                        <span>GUESS</span>
+                        <FaArrowRight className="guess-btn-arrow" />
                       </button>
                     </div>
                   </form>

@@ -4,6 +4,15 @@
    ============================================================ */
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@600;700&display=swap');
 
+/* ── Global Page Reset ──────────────────────────────────────── */
+html,
+body {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: #0f0c29 !important;
+  overflow-x: hidden;
+}
+
 /* ── Animated Background ───────────────────────────────────── */
 .home-page {
   font-family: 'Nunito', sans-serif;
@@ -302,12 +311,13 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 1.25rem;
+  margin: 0 0 1.5rem 0;
+  padding: 0;
   animation: fadeInDown 0.8s ease-out;
 }
 
 .hero-official-logo {
-  width: clamp(200px, 26vw, 320px);
+  width: clamp(280px, 42vw, 480px);
   max-width: 100%;
   height: auto;
   object-fit: contain;
@@ -828,7 +838,7 @@
 
 @media (max-width: 480px) {
   .hero-official-logo {
-    width: 200px;
+    width: clamp(220px, 80vw, 300px);
   }
 
   .hero-title {

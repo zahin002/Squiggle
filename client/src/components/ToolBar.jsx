@@ -9,7 +9,9 @@ import {
   FaRegSquare,
   FaRegCircle,
   FaSlash,
-  FaArrowRight
+  FaArrowRight,
+  FaCheck,
+  FaTimes
 } from 'react-icons/fa';
 
 const TOOLS = [
@@ -176,11 +178,17 @@ export default function ToolBar({ tool, setTool, size, setSize, onUndo, onClear 
                 setShowClearConfirm(false);
               }}
               type="button"
+              title="Confirm clear"
             >
-              ✓
+              <FaCheck size={11} />
             </button>
-            <button className="confirm-no" onClick={() => setShowClearConfirm(false)} type="button">
-              ✕
+            <button
+              className="confirm-no"
+              onClick={() => setShowClearConfirm(false)}
+              type="button"
+              title="Cancel"
+            >
+              <FaTimes size={11} />
             </button>
           </div>
         )}
