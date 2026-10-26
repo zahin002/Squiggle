@@ -59,6 +59,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
   padding: 0 24px;
   height: 56px;
   background: rgba(14, 11, 33, 0.72);
@@ -70,10 +71,29 @@
   z-index: 20;
 }
 
-.nav-left, .nav-center, .nav-right {
+.nav-left {
   display: flex;
   align-items: center;
   gap: 12px;
+  z-index: 2;
+}
+
+.nav-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: auto;
+  z-index: 1;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 2;
 }
 
 .nav-logo {
@@ -85,6 +105,30 @@
 
 .nav-logo:hover {
   transform: scale(1.02);
+}
+
+.leave-room-box-btn {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.leave-room-box-btn:hover {
+  background: rgba(239, 68, 68, 0.32);
+  border-color: #ef4444;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
 }
 
 .leave-btn {
@@ -352,17 +396,79 @@
 }
 
 .players-header {
-  padding: 16px 18px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
   font-family: 'Fredoka', 'Nunito', sans-serif;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
   letter-spacing: 0.8px;
   text-transform: uppercase;
   color: #cbd5e1;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.players-header-title-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.players-header-mic-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+}
+
+.players-header-mic-btn:hover:not(:disabled):not(.is-disabled) {
+  background: rgba(255, 255, 255, 0.16);
+  transform: scale(1.08);
+}
+
+.players-header-mic-btn.is-active {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.45);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.25);
+}
+
+.players-header-mic-btn.is-muted,
+.players-header-mic-btn.is-force-muted {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.45);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
+}
+
+.players-header-mic-btn.is-disabled {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.header-mic-icon {
+  font-size: 14px;
+}
+
+.header-mic-icon.mic-green {
+  color: #4ade80;
+}
+
+.header-mic-icon.mic-red {
+  color: #f87171;
+}
+
+.header-mic-icon.mic-off {
+  color: #94a3b8;
 }
 
 .players-header-icon {
@@ -688,7 +794,7 @@
   font-size: 1.05rem;
   font-weight: 600;
   color: #94a3b8;
-  margin: 0 0 28px 0;
+  margin: 0 0 12px 0;
 }
 
 /* ── 6. Start Game Button ───────────────────────────────────── */
@@ -1384,8 +1490,8 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin-top: 10px;
-  margin-bottom: 6px;
+  margin-top: 0;
+  margin-bottom: 18px;
   font-size: 13px;
 }
 
