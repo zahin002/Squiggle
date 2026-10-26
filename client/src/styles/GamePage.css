@@ -1367,3 +1367,202 @@
 .btn-icon-sm {
   font-size: 14px;
 }
+
+/* ── Inaccessible Mic Button ── */
+.nav-mic-btn.nav-mic-btn--inaccessible {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: not-allowed;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* ── Lobby Voice Setting Row & Toggle ── */
+.lobby-voice-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.lobby-voice-label {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+}
+
+.lobby-voice-toggle-btn {
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lobby-voice-toggle-btn.is-enabled {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+}
+
+.lobby-voice-toggle-btn.is-enabled:hover {
+  background: rgba(34, 197, 94, 0.25);
+  transform: translateY(-1px);
+}
+
+.lobby-voice-toggle-btn.is-disabled {
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: #f87171;
+}
+
+.lobby-voice-toggle-btn.is-disabled:hover {
+  background: rgba(248, 113, 113, 0.25);
+  transform: translateY(-1px);
+}
+
+.lobby-voice-badge {
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lobby-voice-badge.is-enabled {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  color: #4ade80;
+}
+
+.lobby-voice-badge.is-disabled {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── Host Voice Chat Prompt Modal ── */
+.voice-prompt-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 8, 20, 0.82);
+  backdrop-filter: blur(12px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: voiceFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.voice-prompt-card {
+  background: linear-gradient(145deg, #181534, #0f0c24);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.7), 0 0 35px rgba(124, 77, 255, 0.25);
+  border-radius: 24px;
+  padding: 36px 32px 32px 32px;
+  max-width: 440px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: voiceSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.voice-prompt-icon-ring {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(124, 77, 255, 0.25), rgba(6, 182, 212, 0.25));
+  border: 1px solid rgba(124, 77, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  box-shadow: 0 0 24px rgba(124, 77, 255, 0.35);
+}
+
+.voice-prompt-icon {
+  font-size: 28px;
+  color: #38bdf8;
+}
+
+.voice-prompt-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 10px 0;
+  letter-spacing: -0.01em;
+}
+
+.voice-prompt-desc {
+  font-size: 0.92rem;
+  color: #94a3b8;
+  line-height: 1.55;
+  margin: 0 0 26px 0;
+}
+
+.voice-prompt-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.voice-prompt-btn {
+  flex: 1;
+  padding: 13px 18px;
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.voice-prompt-btn--yes {
+  background: linear-gradient(135deg, #7c4dff, #06b6d4);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 8px 24px rgba(124, 77, 255, 0.35);
+}
+
+.voice-prompt-btn--yes:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(6, 182, 212, 0.45);
+}
+
+.voice-prompt-btn--no {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+}
+
+.voice-prompt-btn--no:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+@keyframes voiceFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes voiceSlideUp {
+  from { opacity: 0; transform: translateY(18px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
