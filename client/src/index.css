@@ -19,7 +19,7 @@
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
-  color-scheme: light dark;
+  color-scheme: dark !important;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -28,17 +28,58 @@
   -moz-osx-font-smoothing: grayscale;
 
   margin: 0;
+  border: none;
+  outline: none;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 html,
 body {
   margin: 0;
   padding: 0;
+  border: none;
+  outline: none;
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  background: #0c0a1e;
+  background: #0c0a1e !important;
+  color-scheme: dark !important;
   font-family: 'Nunito', sans-serif;
+}
+
+/* ── Custom Dark Scrollbars (eliminates default white browser scrollbar track) ── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background-color: #0c0a1e;
+}
+
+::-webkit-scrollbar-track {
+  background: #0c0a1e !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 77, 255, 0.45) !important;
+  border-radius: 999px;
+  border: 2px solid #0c0a1e;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 77, 255, 0.75) !important;
+}
+
+::-webkit-scrollbar-corner {
+  background: #0c0a1e !important;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 77, 255, 0.45) #0c0a1e;
 }
 
 button,
