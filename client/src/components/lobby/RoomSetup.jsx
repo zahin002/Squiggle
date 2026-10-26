@@ -259,14 +259,14 @@ export default function RoomSetup() {
         </label>
 
         {/* Voice Chat toggle */}
-        <label className="rs-checkbox-label" title="Enable microphone for all players in this room">
+        <label className="rs-checkbox-label" title="Enable voice chat for all players in this room">
           <input
             className="rs-checkbox"
             type="checkbox"
             checked={settings.voiceChatEnabled === true}
             onChange={(e) => setSettings({ ...settings, voiceChatEnabled: e.target.checked })}
           />
-          <span>Enable Microphone (Voice Chat)</span>
+          <span>Enable Voice Chat</span>
         </label>
       </div>
 
