@@ -13,6 +13,7 @@ import LobbyPage from './pages/LobbyPage';
 import GamePage from './pages/GamePage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import ProfilePage from './pages/ProfilePage';
+import { Agentation } from 'agentation';
 
 // Replace with actual Client ID in production or pass via .env
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'dummy-client-id';
@@ -33,6 +34,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/game/:roomId" element={<GamePage />} />
           </Routes>
+          {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
         </BrowserRouter>
       </ThemeProvider>
     </AuthProvider>
