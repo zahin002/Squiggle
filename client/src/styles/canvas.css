@@ -3,24 +3,27 @@
    Skribbl-Style Canvas Container & Attached Toolbar
    ============================================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@600;700;800&display=swap');
+
 .canvas-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   background: #ffffff;
   border-radius: 18px;
-  border: 3px solid #0f172a;
+  border: 3px solid rgba(124, 77, 255, 0.45);
   overflow: hidden;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
   max-height: calc(100vh - 75px);
   width: auto;
   max-width: 100%;
   box-sizing: border-box;
+  font-family: 'Nunito', sans-serif;
 }
 
 .drawing-canvas {
   display: block;
-  background: #ffffff;
+  background: #ffffff !important;
   width: auto;
   max-width: 100%;
   max-height: calc(100vh - 140px);
@@ -37,11 +40,13 @@
   justify-content: space-between;
   gap: 12px;
   width: 100%;
-  background: #0f172a; /* Skribbl dark navy bottom toolbar */
+  background: #120e31; /* sleek matching dark purple-navy toolbar */
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding: 6px 12px;
   box-sizing: border-box;
   flex-shrink: 0;
   min-height: 48px;
+  font-family: 'Nunito', sans-serif;
 }
 
 /* ── Compact Color Picker ────────────────────────────────────── */
@@ -157,10 +162,10 @@
   bottom: 100%;
   left: 0;
   margin-bottom: 6px;
-  background: #ffffff;
-  border: 2px solid #0f172a;
+  background: #181436;
+  border: 2px solid rgba(124, 77, 255, 0.5);
   border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
   display: grid;
   grid-template-columns: repeat(3, 32px);
   gap: 4px;
@@ -177,20 +182,20 @@
   justify-content: center;
   border-radius: 6px;
   border: 1.5px solid transparent;
-  background: #f1f5f9;
-  color: #0f172a;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .shape-grid-item:hover {
-  background: #eff6ff;
-  color: #1a64ff;
-  border-color: #1a64ff;
+  background: rgba(124, 77, 255, 0.25);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.4);
 }
 
 .shape-grid-item.active {
-  background: #1a64ff;
+  background: linear-gradient(135deg, #7c4dff, #38bdf8);
   color: #ffffff;
 }
 

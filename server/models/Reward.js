@@ -5,7 +5,7 @@ const rewardSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: ['correct_guess', 'successful_draw', 'failed_round', 'game_win', 
-           'daily_login', 'milestone', 'win_streak', 'powerup_spend'],
+           'daily_login', 'milestone', 'win_streak', 'powerup_spend', 'vote_kick_penalty'],
     required: true
   },
   amount: { type: Number, required: true }, // positive = earn, negative = spend
