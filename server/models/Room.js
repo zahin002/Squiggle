@@ -17,7 +17,7 @@ const roomSchema = new mongoose.Schema({
       default: 'standard'
     },
     isPrivate: { type: Boolean, default: false },
-    voiceChatEnabled: { type: Boolean, default: null },
+    voiceChatEnabled: { type: Boolean, default: false },
     selectedGenres: [String],
     customWords: [String],
     spectatorMode: { type: Boolean, default: true }
