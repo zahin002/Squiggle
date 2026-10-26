@@ -110,6 +110,14 @@ export default function Home() {
             : 'Free to play • No download required'}
         </div>
 
+        <div className="hero-logo-wrapper">
+          <img
+            src="/official-logo.png"
+            alt="Squiggle"
+            className="hero-official-logo"
+          />
+        </div>
+
         <h1 className="hero-title">
           <span className="hero-title-main">Draw, Guess &</span>
           <span className="hero-title-accent">Win Together!</span>
