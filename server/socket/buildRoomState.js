@@ -1,34 +1,32 @@
 function buildRoomState(room, currentUserId, socketId) {
   if (!room) return null;
 
-  const hostUserId = room.hostUserId ?? null;
-  const hostSocketId = room.hostSocketId ?? null;
+  const hostUserId = room.hostUserId ? String(room.hostUserId) : null;
+  const hostSocketId = room.hostSocketId ? String(room.hostSocketId) : (room.hostId ? String(room.hostId) : null);
+  const currentUserIdStr = currentUserId ? String(currentUserId) : null;
 
   const isHost = hostUserId
-    ? hostUserId === currentUserId
-    : hostSocketId
-      ? hostSocketId === socketId
-      : room.hostId
-        ? room.hostId === socketId
-        : false;
+    ? (currentUserIdStr != null && hostUserId === currentUserIdStr)
+    : (hostSocketId ? (hostSocketId === socketId || room.hostId === socketId) : false);
 
   const isDrawer = room.currentDrawer?.socketId === socketId;
 
   return {
     roomId: room.roomId,
     settings: room.settings,
+    hostUserId,
+    hostId: hostSocketId || room.hostId || null,
 
     // Annotate each player with isHost so the UI can show host badges
-    players: (room.players || []).map(p => ({
-      ...p,
-      isHost: hostUserId
-        ? p.userId === hostUserId
-        : hostSocketId
-          ? p.socketId === hostSocketId
-          : room.hostId
-            ? p.socketId === room.hostId
-            : false,
-    })),
+    players: (room.players || []).map(p => {
+      const pUserIdStr = p.userId ? String(p.userId) : null;
+      return {
+        ...p,
+        isHost: hostUserId
+          ? (pUserIdStr != null && pUserIdStr === hostUserId)
+          : (hostSocketId ? (p.socketId === hostSocketId || p.socketId === room.hostId) : false),
+      };
+    }),
     spectators: room.spectators,
 
     status: room.status,

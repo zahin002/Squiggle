@@ -3,19 +3,18 @@ const { getRoom } = require('./roomStore');
 
 // Annotate players with isHost flag for the UI
 function annotatePlayersWithHost(room) {
-  const hostUserId = room.hostUserId ?? null;
-  const hostSocketId = room.hostSocketId ?? null;
+  const hostUserId = room.hostUserId ? String(room.hostUserId) : null;
+  const hostSocketId = room.hostSocketId ? String(room.hostSocketId) : (room.hostId ? String(room.hostId) : null);
 
-  return (room.players || []).map(p => ({
-    ...p,
-    isHost: hostUserId
-      ? p.userId === hostUserId
-      : hostSocketId
-        ? p.socketId === hostSocketId
-        : room.hostId
-          ? p.socketId === room.hostId
-          : false,
-  }));
+  return (room.players || []).map(p => {
+    const pUserIdStr = p.userId ? String(p.userId) : null;
+    return {
+      ...p,
+      isHost: hostUserId
+        ? (pUserIdStr != null && pUserIdStr === hostUserId)
+        : (hostSocketId ? (p.socketId === hostSocketId || p.socketId === room.hostId) : false),
+    };
+  });
 }
 
 module.exports = (socket, io) => {
@@ -33,10 +32,11 @@ module.exports = (socket, io) => {
     const room = getRoom(roomId);
     if (!room) return;
 
-    // Check if the requester is the host
-    const isHost = room.hostUserId
-      ? room.hostUserId === socket.data?.userId
-      : room.hostSocketId === socket.id || room.hostId === socket.id;
+    const hostUserIdStr = room.hostUserId ? String(room.hostUserId) : null;
+    const socketUserIdStr = socket.data?.userId ? String(socket.data.userId) : null;
+    const isHost = hostUserIdStr
+      ? (socketUserIdStr != null && hostUserIdStr === socketUserIdStr)
+      : (room.hostSocketId === socket.id || room.hostId === socket.id);
 
     if (!isHost) return;
 
@@ -71,9 +71,11 @@ module.exports = (socket, io) => {
     if (!room) return;
 
     // Check if requester is host
-    const isHost = room.hostUserId
-      ? room.hostUserId === socket.data?.userId
-      : room.hostSocketId === socket.id || room.hostId === socket.id;
+    const hostUserIdStr = room.hostUserId ? String(room.hostUserId) : null;
+    const socketUserIdStr = socket.data?.userId ? String(socket.data.userId) : null;
+    const isHost = hostUserIdStr
+      ? (socketUserIdStr != null && hostUserIdStr === socketUserIdStr)
+      : (room.hostSocketId === socket.id || room.hostId === socket.id);
 
     if (!isHost) return;
 

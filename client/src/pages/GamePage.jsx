@@ -113,12 +113,15 @@ export default function GamePage() {
       });
     };
 
-    emitJoin();
-
     socket.on('connect', () => {
       emitJoin();
       socket.emit('requestCanvasState', { roomId });
     });
+
+    if (socket.connected) {
+      emitJoin();
+      socket.emit('requestCanvasState', { roomId });
+    }
 
     socket.on('roomState', (state) => {
       setRoomState((prev) => ({
@@ -309,9 +312,11 @@ export default function GamePage() {
 
   const isDrawer = roomState?.currentDrawer?.socketId === socket.id;
   const isHost =
-    !!roomState?.isHost ||
-    (roomState?.players?.length > 0 && (roomState.players[0].socketId === socket.id || (activeUser?.id && String(roomState.players[0].userId) === String(activeUser.id)))) ||
-    ((roomState?.players?.length || 0) <= 1);
+    roomState?.isHost !== undefined
+      ? !!roomState.isHost
+      : (roomState?.hostUserId && activeUser?.id
+          ? String(roomState.hostUserId) === String(activeUser.id)
+          : (roomState?.hostId ? roomState.hostId === socket.id : false));
   const isWordle = roomState?.settings?.gameMode === 'wordle';
   const isDrawingAllowed = isDrawer && (!isWordle || !roomState?.wordleState?.isDrawerLocked);
 
@@ -458,7 +463,11 @@ export default function GamePage() {
           <div className="players-list">
             {sortedPlayers.map((player) => {
               const isDrawing = player.socketId === currentDrawerId;
-              const isPlayerHost = player.isHost || player.socketId === roomState?.hostId || player.userId === roomState?.hostId || (roomState?.players?.[0]?.socketId === player.socketId);
+              const isPlayerHost = player.isHost !== undefined
+                ? !!player.isHost
+                : (roomState?.hostUserId && player.userId
+                    ? String(roomState.hostUserId) === String(player.userId)
+                    : (roomState?.hostId ? (player.socketId === roomState.hostId || player.userId === roomState.hostId) : false));
               const rank = playerRankMap[player.socketId || player.userId] || 1;
 
               return (

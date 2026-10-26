@@ -48,12 +48,12 @@ module.exports = (io) => {
           roomState = createRoomState(
             roomId,
             dbRoom.settings,
-            null
+            dbRoom.hostUserId ? dbRoom.hostUserId.toString() : (dbRoom.hostSocketId || null)
           );
 
           setRoom(roomId, roomState);
 
-          console.log('[ROOM LOADED FROM DB]', roomId);
+          console.log('[ROOM LOADED FROM DB]', roomId, 'hostUserId:', roomState.hostUserId);
         }
 
         // Guest restriction
@@ -114,13 +114,22 @@ module.exports = (io) => {
         if (
           roomState.players.length === 0 &&
           !roomState.hostUserId &&
-          !roomState.hostId
+          !roomState.hostId &&
+          !roomState.hostSocketId
         ) {
           if (resolvedUserId != null) {
-            roomState.hostUserId = resolvedUserId;
+            roomState.hostUserId = String(resolvedUserId);
+            roomState.hostSocketId = socket.id;
           } else {
             roomState.hostId = socket.id;
+            roomState.hostSocketId = socket.id;
           }
+        } else if (
+          roomState.hostUserId &&
+          resolvedUserId &&
+          String(roomState.hostUserId) === String(resolvedUserId)
+        ) {
+          roomState.hostSocketId = socket.id;
         }
 
         if (role === 'spectator') {
@@ -204,15 +213,14 @@ module.exports = (io) => {
         // Persist host ownership across refreshes.
         // If userId is available, use it as the stable host identifier.
         // Fall back to socket.id only when userId is missing.
-        if (!roomState.hostUserId && !roomState.hostId) {
+        if (!roomState.hostUserId && !roomState.hostId && !roomState.hostSocketId) {
           if (resolvedUserId != null) {
-            roomState.hostUserId = resolvedUserId;
-            roomState.hostSocketId = null;
-            // Keep hostId in sync for older logic/UI.
+            roomState.hostUserId = String(resolvedUserId);
+            roomState.hostSocketId = socket.id;
             roomState.hostId = null;
           } else {
             roomState.hostId = socket.id;
-            roomState.hostSocketId = null;
+            roomState.hostSocketId = socket.id;
           }
 
           console.log(
@@ -220,6 +228,12 @@ module.exports = (io) => {
             username,
             roomState.hostUserId || roomState.hostId
           );
+        } else if (
+          roomState.hostUserId &&
+          resolvedUserId &&
+          String(roomState.hostUserId) === String(resolvedUserId)
+        ) {
+          roomState.hostSocketId = socket.id;
         }
 
         setRoom(roomId, roomState);
@@ -227,6 +241,7 @@ module.exports = (io) => {
         console.log('[ROOM STATE SENT]', {
           roomId,
           hostId: roomState.hostId,
+          hostUserId: roomState.hostUserId,
           playerCount: roomState.players.length,
           spectatorCount: roomState.spectators.length,
           status: roomState.status
@@ -262,11 +277,10 @@ module.exports = (io) => {
           yourIsGuest: !!isGuest
         });
 
-
         socket.to(roomId).emit('playerJoined', {
           username,
           isGuest: !!isGuest,
-          players: roomState.players
+          players: buildRoomState(roomState, null, null).players
         });
 
         console.log(
@@ -333,8 +347,7 @@ module.exports = (io) => {
           userId: socket.data.userId || null,
           username: socket.data.username,
           score: 0,
-          isGuest: !!socket.data.isGuest,
-          isHost: true
+          isGuest: !!socket.data.isGuest
         };
         roomState.players.push(player);
         setRoom(roomId, roomState);
@@ -343,13 +356,13 @@ module.exports = (io) => {
       const hostUserIdStr = roomState.hostUserId ? String(roomState.hostUserId) : null;
       const playerUserIdStr = player?.userId ? String(player.userId) : (socket.data?.userId ? String(socket.data.userId) : null);
 
-      const isHost =
-        (hostUserIdStr && playerUserIdStr && hostUserIdStr === playerUserIdStr) ||
-        (roomState.hostSocketId && socket.id === roomState.hostSocketId) ||
-        (roomState.hostId && socket.id === roomState.hostId) ||
-        (roomState.players[0] && roomState.players[0].socketId === socket.id) ||
-        (roomState.players[0] && playerUserIdStr && String(roomState.players[0].userId) === playerUserIdStr) ||
-        (roomState.players.length <= 1);
+      const isHost = hostUserIdStr
+        ? (playerUserIdStr != null && hostUserIdStr === playerUserIdStr)
+        : (roomState.hostSocketId
+            ? socket.id === roomState.hostSocketId
+            : (roomState.hostId
+                ? socket.id === roomState.hostId
+                : (roomState.players[0] && roomState.players[0].socketId === socket.id)));
 
       if (!isHost) {
         console.log('[START GAME FAILED] Not host', { hostUserIdStr, playerUserIdStr, socketId: socket.id, hostId: roomState.hostId });
@@ -682,12 +695,19 @@ module.exports = (io) => {
       }
 
       // If host left, reassign to next player
-      if (room.hostId === disconnectedSocketId || (room.hostUserId && socket.data?.userId === room.hostUserId)) {
+      const isLeavingHost = (room.hostId === disconnectedSocketId) ||
+        (room.hostSocketId === disconnectedSocketId) ||
+        (room.hostUserId && socket.data?.userId && String(room.hostUserId) === String(socket.data.userId));
+
+      if (isLeavingHost && room.players.length > 0) {
         if (room.players[0].userId != null) {
-          room.hostUserId = room.players[0].userId;
+          room.hostUserId = String(room.players[0].userId);
           room.hostSocketId = null;
+          room.hostId = null;
         } else {
+          room.hostUserId = null;
           room.hostId = room.players[0].socketId;
+          room.hostSocketId = room.players[0].socketId;
         }
         io.to(targetRoomId).emit('chatMessage', {
           type: 'system',
@@ -700,7 +720,7 @@ module.exports = (io) => {
       io.to(targetRoomId).emit('playerLeft', {
         username,
         isGuest,
-        players: room.players
+        players: buildRoomState(room, null, null).players
       });
 
       io.to(targetRoomId).emit('chatMessage', {
@@ -786,15 +806,19 @@ module.exports = (io) => {
           });
 
           // Re-apply host reassignment logic after delayed removal.
-          if (
-            room.hostId === disconnectedSocketId &&
-            room.players.length > 0
-          ) {
+          const wasHost = (room.hostId === disconnectedSocketId) ||
+            (room.hostSocketId === disconnectedSocketId) ||
+            (room.hostUserId && disconnectedUserId && String(room.hostUserId) === String(disconnectedUserId));
+
+          if (wasHost && room.players.length > 0) {
             if (room.players[0].userId != null) {
-              room.hostUserId = room.players[0].userId;
+              room.hostUserId = String(room.players[0].userId);
               room.hostSocketId = null;
+              room.hostId = null;
             } else {
+              room.hostUserId = null;
               room.hostId = room.players[0].socketId;
+              room.hostSocketId = room.players[0].socketId;
             }
 
             console.log(
@@ -807,6 +831,12 @@ module.exports = (io) => {
               text: `${room.players[0].username} is now the room owner.`
             });
           }
+
+          io.to(roomIdForCleanup).emit('playerLeft', {
+            username,
+            isGuest,
+            players: buildRoomState(room, null, null).players
+          });
 
           if (room.players.length === 0) {
             console.log('[ROOM DELETED]', roomIdForCleanup);
