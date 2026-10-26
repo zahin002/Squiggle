@@ -277,7 +277,7 @@ export default function Home() {
       <footer className="home-footer">
         <div className="footer-brand">Squiggle</div>
         <p className="footer-text">
-          © {new Date().getFullYear()} Squiggle — Draw, Guess & Have Fun!
+          © {new Date().getFullYear()} Squiggle — Sketch, think and guess
         </p>
       </footer>
     </div>
