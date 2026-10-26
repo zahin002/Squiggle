@@ -1,0 +1,526 @@
+/* ============================================================
+   client/src/styles/Leaderboard.css
+   Dark theme — matches the homepage design language
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@600;700&display=swap');
+
+/* ── Page shell ─────────────────────────────────────────────── */
+.lb-page {
+  font-family: 'Nunito', sans-serif;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  color: #f1f5f9;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ── Fixed background glow (same technique as homepage) ─────── */
+.lb-bg {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 15% 40%, rgba(124, 77, 255, 0.18) 0%, transparent 50%),
+    radial-gradient(circle at 85% 15%, rgba(56, 189, 248, 0.14) 0%, transparent 50%),
+    radial-gradient(circle at 55% 85%, rgba(245, 158, 11, 0.10) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Fixed floating icons (same technique as homepage) ──────── */
+.lb-bg-icons {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.lb-doodle {
+  position: absolute;
+  font-size: 2rem;
+  color: #c4b5fd;
+  opacity: 0.04;
+  animation: lbFloat 22s ease-in-out infinite;
+}
+
+.lb-doodle:nth-child(1) { top: 8%;  left: 6%;   font-size: 3rem;   animation-delay: 0s;   }
+.lb-doodle:nth-child(2) { top: 18%; right: 8%;  font-size: 2.6rem; animation-delay: -4s;  }
+.lb-doodle:nth-child(3) { top: 55%; left: 10%;  font-size: 2rem;   animation-delay: -8s;  }
+.lb-doodle:nth-child(4) { top: 72%; right: 15%; font-size: 3rem;   animation-delay: -12s; }
+.lb-doodle:nth-child(5) { top: 38%; left: 48%;  font-size: 3.5rem; animation-delay: -6s;  }
+.lb-doodle:nth-child(6) { top: 88%; left: 38%;  font-size: 2.2rem; animation-delay: -15s; }
+.lb-doodle:nth-child(7) { top: 28%; right: 32%; font-size: 2.4rem; animation-delay: -10s; }
+.lb-doodle:nth-child(8) { top: 62%; left: 78%;  font-size: 2.8rem; animation-delay: -2s;  }
+
+@keyframes lbFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25%       { transform: translateY(-28px) rotate(4deg); }
+  50%       { transform: translateY(-14px) rotate(-3deg); }
+  75%       { transform: translateY(-38px) rotate(3deg); }
+}
+
+/* ── Scrollable content layer ───────────────────────────────── */
+.lb-content {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 4rem;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.lb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.lb-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.75);
+  border-radius: 999px;
+  padding: 9px 20px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+}
+
+.lb-back-btn:hover {
+  background: rgba(255, 255, 255, 0.13);
+  color: #fff;
+  transform: translateX(-3px);
+}
+
+.lb-header-center {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lb-header-icon {
+  font-size: 2rem;
+  color: #f59e0b;
+  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.55));
+}
+
+.lb-title {
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(135deg, #fff 0%, #e0e7ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
+}
+
+.lb-user-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(124, 77, 255, 0.15);
+  border: 1px solid rgba(124, 77, 255, 0.3);
+  color: #c4b5fd;
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.lb-user-icon {
+  font-size: 0.9rem;
+}
+
+/* ── Guest banner ───────────────────────────────────────────── */
+.lb-guest-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  background: rgba(124, 77, 255, 0.1);
+  border: 1px solid rgba(124, 77, 255, 0.25);
+  border-radius: 18px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+}
+
+.lb-guest-banner-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #e9d5ff;
+  margin: 0 0 4px;
+}
+
+.lb-guest-banner-sub {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0;
+  font-weight: 600;
+}
+
+.lb-register-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #7c4dff 0%, #a855f7 100%);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(124, 77, 255, 0.35);
+  transition: transform 0.2s, box-shadow 0.2s;
+  white-space: nowrap;
+}
+
+.lb-register-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(124, 77, 255, 0.5);
+}
+
+/* ── Filter tabs ────────────────────────────────────────────── */
+.lb-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 2.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.lb-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 9px 22px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(8px);
+}
+
+.lb-tab:hover {
+  background: rgba(255, 255, 255, 0.11);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.lb-tab--active {
+  background: linear-gradient(135deg, #7c4dff 0%, #a855f7 100%);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 18px rgba(124, 77, 255, 0.4);
+}
+
+.lb-tab-icon {
+  font-size: 0.85rem;
+}
+
+/* ── State messages ─────────────────────────────────────────── */
+.lb-state-msg {
+  text-align: center;
+  padding: 5rem 2rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.lb-state-msg--error { color: #f87171; }
+
+.lb-spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #7c4dff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.lb-empty-icon {
+  font-size: 3rem;
+  color: rgba(124, 77, 255, 0.4);
+  display: block;
+  margin: 0 auto 1rem;
+}
+
+.lb-empty-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 6px;
+}
+
+.lb-empty-sub {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+}
+
+/* ── Podium ─────────────────────────────────────────────────── */
+.lb-podium {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  padding: 0 0.5rem;
+}
+
+.lb-podium-card {
+  flex: 1;
+  max-width: 240px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 1.75rem 1.25rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  transition: transform 0.3s, box-shadow 0.3s;
+  position: relative;
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+
+.lb-podium-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--rank-color), transparent);
+}
+
+.lb-podium-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.lb-podium-card--rank1 {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.07);
+  transform: scale(1.06);
+  box-shadow: 0 12px 36px rgba(245, 158, 11, 0.2);
+  order: 2;
+}
+
+.lb-podium-card--rank1:hover {
+  transform: scale(1.06) translateY(-5px);
+}
+
+.lb-podium-card--rank2 {
+  order: 1;
+}
+
+.lb-podium-card--rank3 {
+  order: 3;
+}
+
+.lb-podium-rank-label {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--rank-color);
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(var(--rank-color), 0.5);
+}
+
+.lb-podium-avatar {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c4dff, #38bdf8);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 900;
+  border: 3px solid var(--rank-color);
+  box-shadow: 0 0 20px rgba(124, 77, 255, 0.35);
+}
+
+.lb-podium-name {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 170px;
+}
+
+.lb-podium-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ── Stat / th icons ────────────────────────────────────────── */
+.stat-icon { font-size: 0.95rem; }
+.stat-icon--gold    { color: #f59e0b; }
+.stat-icon--trophy  { color: #a78bfa; }
+.stat-icon--fire    { color: #f97316; }
+.stat-icon--diamond { color: #38bdf8; }
+
+.th-icon { font-size: 0.8rem; margin-right: 5px; vertical-align: middle; }
+.th-icon--gold    { color: #f59e0b; }
+.th-icon--trophy  { color: #a78bfa; }
+.th-icon--fire    { color: #f97316; }
+.th-icon--diamond { color: #38bdf8; }
+
+/* ── Rankings table ─────────────────────────────────────────── */
+.lb-table-wrap {
+  overflow-x: auto;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+}
+
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.lb-table thead tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.lb-table th {
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 14px 20px;
+}
+
+.lb-table td {
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.lb-table tr:last-child td {
+  border-bottom: none;
+}
+
+.lb-table tbody tr {
+  transition: background 0.2s;
+}
+
+.lb-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.lb-table tbody tr.row-gold   { background: rgba(245, 158, 11, 0.07); }
+.lb-table tbody tr.row-silver { background: rgba(148, 163, 184, 0.07); }
+.lb-table tbody tr.row-bronze { background: rgba(205, 124, 60, 0.07); }
+.lb-table tbody tr.row-gold:hover   { background: rgba(245, 158, 11, 0.12); }
+.lb-table tbody tr.row-silver:hover { background: rgba(148, 163, 184, 0.12); }
+.lb-table tbody tr.row-bronze:hover { background: rgba(205, 124, 60, 0.12); }
+
+.lb-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--badge-color);
+  font-size: 0.88rem;
+  font-weight: 800;
+  padding: 0 8px;
+}
+
+.lb-player-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lb-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c4dff, #38bdf8);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.lb-player-name {
+  font-weight: 700;
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.lb-stat-val {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .lb-content { padding: 2rem 1.25rem 3rem; }
+  .lb-title { font-size: 1.9rem; }
+}
+
+@media (max-width: 680px) {
+  .lb-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .lb-header-center { width: 100%; justify-content: center; }
+  .lb-podium { flex-direction: column; align-items: center; }
+  .lb-podium-card { width: 100%; max-width: 100%; order: unset !important; transform: none !important; }
+  .lb-podium-card--rank1 { transform: none !important; }
+  .lb-title { font-size: 1.6rem; }
+}
+
+@media (max-width: 480px) {
+  .lb-tabs { gap: 6px; }
+  .lb-tab { padding: 8px 14px; font-size: 0.85rem; }
+}

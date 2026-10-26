@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <g stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="8">
+    <!-- Starburst (Blue) -->
+    <path d="M 80 200 L 40 210" stroke="#bde0f5" />
+    <path d="M 90 170 L 60 140" stroke="#bde0f5" />
+    <path d="M 120 150 L 110 110" stroke="#bde0f5" />
+    <path d="M 150 170 L 190 140" stroke="#bde0f5" />
+
+    <!-- Hollow Rotated Square (Blue) -->
+    <rect x="250" y="80" width="35" height="35" rx="8" transform="rotate(25 267 97)" stroke="#bde0f5" />
+
+    <!-- Solid Pink Triangle -->
+    <polygon points="550,180 580,240 520,250" fill="#fad4d4" stroke="#fad4d4" stroke-width="12" stroke-linejoin="round" />
+
+    <!-- Long Wavy Green Lines (Top Right) -->
+    <path d="M 750 -20 Q 680 80 780 180 T 700 350 T 820 500" stroke="#cdeccd" />
+    <path d="M 850 50 Q 780 150 880 250 T 800 450" stroke="#cdeccd" />
+    <path d="M 600 80 Q 680 150 620 250" stroke="#cdeccd" />
+
+    <!-- Blue Waves / Arcs (Top Right) -->
+    <path d="M 650 80 Q 720 40 760 100 T 850 60" stroke="#bde0f5" />
+    <path d="M 750 280 Q 800 250 840 320" stroke="#bde0f5" />
+    
+    <!-- Short Pink Curves -->
+    <path d="M 350 40 Q 380 10 420 50" stroke="#fad4d4" />
+    <path d="M 150 350 Q 180 320 220 360" stroke="#fad4d4" />
+    <path d="M 680 350 C 640 380, 680 450, 750 420" stroke="#fad4d4" />
+
+    <!-- Bottom Left Elements (Green squiggles, Pink loops) -->
+    <path d="M -20 550 Q 80 500 120 620 T 250 560" stroke="#cdeccd" />
+    <path d="M 50 700 Q 120 620 180 750" stroke="#cdeccd" />
+    
+    <path d="M 100 680 C 150 600, 250 650, 200 750" stroke="#fad4d4" />
+    <path d="M -10 650 Q 50 600 100 660" stroke="#bde0f5" />
+    <path d="M 300 650 Q 380 580 450 680 T 600 600" stroke="#bde0f5" />
+
+    <!-- Middle Elements -->
+    <circle cx="450" cy="350" r="20" stroke="#fad4d4" />
+    <circle cx="380" cy="250" r="8" fill="#cdeccd" stroke="none" />
+    <circle cx="280" cy="450" r="10" fill="#bde0f5" stroke="none" />
+    <path d="M 350 500 Q 420 450 400 550" stroke="#cdeccd" />
+    <path d="M 500 450 L 530 480" stroke="#bde0f5" />
+    
+    <path d="M 550 550 C 500 600, 650 650, 600 750" stroke="#cdeccd" />
+    <path d="M 650 650 Q 700 600 750 680" stroke="#fad4d4" />
+    <path d="M 700 750 L 730 720" stroke="#bde0f5" />
+    
+    <!-- Rotated hollow pink square -->
+    <rect x="150" y="500" width="25" height="25" rx="5" transform="rotate(45 162 512)" stroke="#fad4d4" />
+  </g>
+</svg>

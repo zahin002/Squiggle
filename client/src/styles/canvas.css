@@ -1,0 +1,284 @@
+/* ============================================================
+   client/src/styles/canvas.css
+   Skribbl-Style Canvas Container & Attached Toolbar
+   ============================================================ */
+
+.canvas-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 18px;
+  border: 3px solid #0f172a;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  max-height: calc(100vh - 75px);
+  width: auto;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.drawing-canvas {
+  display: block;
+  background: #ffffff;
+  width: auto;
+  max-width: 100%;
+  max-height: calc(100vh - 140px);
+  aspect-ratio: 4 / 3;
+  touch-action: none;
+  object-fit: contain;
+}
+
+/* ── Attached Bottom Toolbar Bar ─────────────────────────────── */
+.canvas-tools-panel {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  background: #0f172a; /* Skribbl dark navy bottom toolbar */
+  padding: 6px 12px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  min-height: 48px;
+}
+
+/* ── Compact Color Picker ────────────────────────────────────── */
+.color-picker-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.active-color-preview {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 2px solid #ffffff;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+.custom-color-input {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.palette-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(11, 20px);
+  grid-template-rows: repeat(2, 20px);
+  gap: 3px;
+}
+
+.color-swatch-compact {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s;
+}
+
+.color-swatch-compact:hover {
+  transform: scale(1.2);
+  z-index: 2;
+}
+
+.color-swatch-compact.active {
+  border: 2px solid #ffffff;
+  transform: scale(1.1);
+  box-shadow: 0 0 0 1px #000000;
+}
+
+.swatch-check {
+  font-size: 10px;
+  color: #ffffff;
+  text-shadow: 0 0 2px #000000;
+  line-height: 1;
+}
+
+/* ── Compact Toolbar ─────────────────────────────────────────── */
+.toolbar-compact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tool-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.tool-btn-compact {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  background: rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tool-btn-compact:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.tool-btn-compact.active {
+  background: #1a64ff;
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+/* Shapes Icon Grid Dropdown */
+.shapes-dropdown-grid {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 6px;
+  background: #ffffff;
+  border: 2px solid #0f172a;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  display: grid;
+  grid-template-columns: repeat(3, 32px);
+  gap: 4px;
+  padding: 6px;
+  z-index: 30;
+}
+
+.shape-grid-item {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1.5px solid transparent;
+  background: #f1f5f9;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.shape-grid-item:hover {
+  background: #eff6ff;
+  color: #1a64ff;
+  border-color: #1a64ff;
+}
+
+.shape-grid-item.active {
+  background: #1a64ff;
+  color: #ffffff;
+}
+
+/* Size Presets (Perfect Circles) */
+.size-preset-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.size-preset-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.size-preset-btn.active {
+  border-color: #ffffff;
+  background: #1a64ff;
+}
+
+.size-dot-preview {
+  background: #ffffff;
+  border-radius: 50%;
+  display: inline-block;
+  aspect-ratio: 1 / 1;
+  flex-shrink: 0;
+}
+
+/* Action Buttons (Undo & Clear) */
+.action-btn-compact {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.action-btn-compact.undo {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.action-btn-compact.undo:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.action-btn-compact.clear {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.action-btn-compact.clear:hover {
+  background: #dc2626;
+}
+
+.clear-confirm-inline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #ef4444;
+  padding: 2px 6px;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.confirm-yes, .confirm-no {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.confirm-yes:hover { background: #10b981; }
+.confirm-no:hover { background: #64748b; }

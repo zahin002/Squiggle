@@ -1,0 +1,354 @@
+/* ============================================================
+   client/src/styles/Profile.css
+   User Profile Page — matches GamePage & Leaderboard design system
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@600;700&display=swap');
+
+/* ── Page ───────────────────────────────────────────────────── */
+.profile-container {
+  font-family: 'Nunito', sans-serif;
+  min-height: 100vh;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  padding: 2rem;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* ── Outer Card ─────────────────────────────────────────────── */
+.profile-card {
+  background: #ffffff;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 860px;
+  padding: 2.5rem;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
+  border: 1.5px solid #e2e8f0;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.profile-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.btn-back-profile {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-back-profile:hover {
+  background: #fee2e2;
+  color: #ef4444;
+  border-color: #fca5a5;
+  transform: translateX(-2px);
+}
+
+.profile-page-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1a64ff;
+  margin: 0;
+}
+
+/* ── Hero Section: Avatar + Name ────────────────────────────── */
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 20px;
+  border: 1.5px solid #e2e8f0;
+}
+
+.profile-avatar-large {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.6rem;
+  font-weight: 900;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 6px 20px rgba(26, 100, 255, 0.25);
+  transition: box-shadow 0.2s;
+  position: relative;
+}
+
+.profile-hero-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-username {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-email {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0 0 8px 0;
+}
+
+.profile-member-since {
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+  background: #f1f5f9;
+  padding: 3px 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+/* ── Global Rank Banner ──────────────────────────────────────── */
+.profile-rank-banner {
+  background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%);
+  border: 1.5px solid #bfdbfe;
+  border-radius: 16px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.profile-rank-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.profile-rank-number {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a64ff;
+}
+
+.profile-rank-suffix {
+  font-size: 13px;
+  font-weight: 700;
+  color: #7c4dff;
+}
+
+/* ── Stats Grid ─────────────────────────────────────────────── */
+.profile-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 600px) {
+  .profile-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stat-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 18px 16px;
+  text-align: center;
+  border: 1.5px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.stat-icon {
+  font-size: 1.8rem;
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-card.gold-coins .stat-value { color: #f59e0b; }
+.stat-card.diamonds   .stat-value { color: #0ea5e9; }
+.stat-card.wins       .stat-value { color: #10b981; }
+.stat-card.streak     .stat-value { color: #ef4444; }
+
+/* ── Avatar Color Picker ─────────────────────────────────────── */
+.avatar-color-section {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1.5px solid #e2e8f0;
+}
+
+.avatar-color-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: 0 0 14px 0;
+}
+
+.color-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.color-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  flex-shrink: 0;
+}
+
+.color-swatch:hover {
+  transform: scale(1.2);
+}
+
+.color-swatch.selected {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.15);
+  transform: scale(1.15);
+}
+
+.color-swatch-custom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 6px;
+}
+
+.color-swatch-custom input[type="color"] {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid #e2e8f0;
+  cursor: pointer;
+  padding: 2px;
+  background: none;
+}
+
+.save-color-btn {
+  background: linear-gradient(135deg, #1a64ff 0%, #7c4dff 100%);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 18px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(26, 100, 255, 0.28);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.save-color-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(26, 100, 255, 0.42);
+}
+
+.save-color-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.save-color-msg {
+  font-size: 13px;
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+.save-color-msg.success { color: #10b981; }
+.save-color-msg.error   { color: #ef4444; }
+
+/* ── Loading / Guest states ──────────────────────────────────── */
+.profile-loading,
+.profile-guest-notice {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.profile-guest-notice h2 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.8rem;
+  color: #1a64ff;
+  margin-bottom: 12px;
+}
+
+.profile-guest-notice p {
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.btn-go-register {
+  background: linear-gradient(135deg, #1a64ff 0%, #7c4dff 100%);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 28px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(26, 100, 255, 0.3);
+  transition: transform 0.2s;
+}
+
+.btn-go-register:hover {
+  transform: translateY(-2px);
+}
