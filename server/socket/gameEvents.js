@@ -355,6 +355,8 @@ module.exports = (io) => {
       roomState.status = 'starting';
       roomState.currentRound = 0;
       setRoom(roomId, roomState);
+      const { persistRoom } = require('./roomStore');
+      persistRoom(roomId, { status: 'playing' });
 
       console.log('[GAME STARTED]', roomId);
       io.to(roomId).emit('gameStarted', {

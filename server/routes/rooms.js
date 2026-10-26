@@ -84,32 +84,29 @@ router.get('/:roomId', async (req, res) => {
 // ---------------------------------------------------------------------------
 router.get('/', async (req, res) => {
   try {
-    const { getRoom, deleteRoom } = require('../socket/roomStore');
+    const { getRoom } = require('../socket/roomStore');
     const rooms = await Room.find({
       'settings.isPrivate': false,
       status: { $ne: 'finished' },
     });
 
     const activeRooms = [];
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+
     for (const r of rooms) {
       const memRoom = getRoom(r.roomId);
 
-      // If room is not in memory or has 0 players
-      if (!memRoom || !memRoom.players || memRoom.players.length === 0) {
-        // If room was created in the last 15 seconds, give the host time to connect
-        const ageMs = Date.now() - new Date(r.createdAt || 0).getTime();
-        if (memRoom && ageMs < 15000) {
-          activeRooms.push(r);
-          continue;
-        }
-
-        // Dead or orphaned room -> purge from memory & MongoDB
-        deleteRoom(r.roomId);
+      // Only display in lobby if the room is currently active in memory with players
+      if (memRoom && memRoom.players && memRoom.players.length > 0) {
+        activeRooms.push(r);
         continue;
       }
 
-      // Room has actual active players connected
-      activeRooms.push(r);
+      // If room in DB is older than 1 hour and has no active players, clean it up
+      const createdTime = new Date(r.createdAt || 0).getTime();
+      if (createdTime < oneHourAgo) {
+        Room.deleteOne({ roomId: r.roomId }).catch(() => {});
+      }
     }
 
     res.json(activeRooms);
