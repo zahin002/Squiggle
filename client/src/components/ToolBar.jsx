@@ -1,35 +1,32 @@
 import { useState } from 'react';
+import {
+  FaPaintBrush,
+  FaFillDrip,
+  FaEraser,
+  FaShapes,
+  FaUndo,
+  FaTrashAlt,
+  FaRegSquare,
+  FaRegCircle,
+  FaSlash,
+  FaArrowRight
+} from 'react-icons/fa';
 
 const TOOLS = [
   {
     key: 'brush',
     label: 'Brush',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-        <path d="M3 17c0-2 4-8 9-13" />
-        <path d="M12 4c1.5 1.5 4 4.5 4 7 0 2-1.5 3.5-3 4s-3 .5-4 2c-.5 1-1 2-3 2-1.5 0-2.5-1-2.5-2.5C3.5 15 5 14 6 13" />
-      </svg>
-    ),
+    icon: <FaPaintBrush size={17} />,
   },
   {
     key: 'fill',
     label: 'Fill Area',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-        <path d="M19.2 11.4L12.6 4.8a1.5 1.5 0 0 0-2.1 0l-7 7a1.5 1.5 0 0 0 0 2.1l6.6 6.6a1.5 1.5 0 0 0 2.1 0l7-7a1.5 1.5 0 0 0 0-2.1zM11.6 19L5 12.4l7-7L18.6 12l-7 7z"/>
-        <path d="M19 16.5c-1 0-2 .8-2 2s1 2.5 2 3.5c1-1 2-2.3 2-3.5s-1-2-2-2z"/>
-      </svg>
-    ),
+    icon: <FaFillDrip size={17} />,
   },
   {
     key: 'eraser',
     label: 'Eraser',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-        <path d="M20 20H7L3 16l10-10 7 7-1.5 1.5" />
-        <path d="M6.0 11.0 L13.0 18.0" />
-      </svg>
-    ),
+    icon: <FaEraser size={17} />,
   },
 ];
 
@@ -37,35 +34,23 @@ const SHAPES = [
   {
     key: 'rect',
     label: 'Rectangle',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16">
-        <rect x="4" y="4" width="16" height="16" rx="2" />
-      </svg>
-    ),
+    icon: <FaRegSquare size={16} />,
   },
   {
     key: 'circle',
     label: 'Circle',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16">
-        <circle cx="12" cy="12" r="8" />
-      </svg>
-    ),
+    icon: <FaRegCircle size={16} />,
   },
   {
     key: 'line',
     label: 'Line',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16">
-        <line x1="4" y1="20" x2="20" y2="4" />
-      </svg>
-    ),
+    icon: <FaSlash size={15} />,
   },
   {
     key: 'oval',
     label: 'Oval',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="17" height="17">
         <ellipse cx="12" cy="12" rx="9" ry="5" />
       </svg>
     ),
@@ -73,18 +58,13 @@ const SHAPES = [
   {
     key: 'arrow_single',
     label: 'Arrow',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-        <line x1="4" y1="12" x2="20" y2="12" />
-        <polyline points="14 6 20 12 14 18" />
-      </svg>
-    ),
+    icon: <FaArrowRight size={16} />,
   },
   {
     key: 'squircle',
     label: 'Squircle',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="17" height="17">
         <rect x="4" y="4" width="16" height="16" rx="6" />
       </svg>
     ),
@@ -132,11 +112,7 @@ export default function ToolBar({ tool, setTool, size, setSize, onUndo, onClear 
             title={isShapeActive ? activeShape.label : 'Shapes'}
             type="button"
           >
-            {isShapeActive ? activeShape.icon : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" width="16" height="16">
-                <rect x="4" y="4" width="16" height="16" rx="3" />
-              </svg>
-            )}
+            {isShapeActive ? activeShape.icon : <FaShapes size={17} />}
           </button>
 
           {/* Icon-Only Shapes Dropdown Grid with Hover Tooltips */}
@@ -183,19 +159,12 @@ export default function ToolBar({ tool, setTool, size, setSize, onUndo, onClear 
       {/* 3. Action Buttons (Undo & Clear) */}
       <div className="tool-group action-group">
         <button className="action-btn-compact undo" onClick={onUndo} title="Undo stroke (Ctrl+Z)" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-            <polyline points="9 14 4 9 9 4" />
-            <path d="M20 20v-7a4 4 0 00-4-4H4" />
-          </svg>
+          <FaUndo size={16} />
         </button>
 
         {!showClearConfirm ? (
           <button className="action-btn-compact clear" onClick={() => setShowClearConfirm(true)} title="Clear Canvas" type="button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6l-1 14H6L5 6" />
-              <path d="M10 11v6M14 11v6" />
-            </svg>
+            <FaTrashAlt size={16} />
           </button>
         ) : (
           <div className="clear-confirm-inline">
