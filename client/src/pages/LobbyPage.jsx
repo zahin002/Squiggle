@@ -125,7 +125,7 @@ export default function LobbyPage() {
           <div className="lobby-panel lobby-panel--join">
             <h2 className="lobby-panel-title">
               <FaHashtag className="panel-title-icon panel-title-icon--sky" />
-              Join by Code
+              Join By Code
             </h2>
 
             <div className="join-row">
