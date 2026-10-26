@@ -1,7 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
+import {
+  FaUserSlash,
+  FaVoteYea,
+  FaStopwatch,
+  FaCheck,
+  FaTimes,
+  FaExclamationTriangle,
+  FaCheckCircle,
+  FaCoins,
+  FaBan,
+  FaInfoCircle,
+  FaLock,
+  FaPencilAlt,
+  FaArrowLeft,
+  FaPlay,
+  FaTrophy
+} from 'react-icons/fa';
 import DrawingCanvas from '../components/DrawingCanvas';
+import WordleBoard from '../components/WordleBoard';
+import SquiggleLogo, { SquiggleLogoMark } from '../components/SquiggleLogo';
 import { useAuth } from '../context/AuthContext';
 import useWebRTC from '../hooks/useWebRTC';
 import '../styles/GamePage.css';
@@ -21,6 +40,11 @@ export default function GamePage() {
   const [guess, setGuess] = useState('');
   const [timeLeft, setTimeLeft] = useState(0);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [activeVote, setActiveVote] = useState(null);
+  const [hasVoted, setHasVoted] = useState(false);
+  const [voteNotice, setVoteNotice] = useState('');
+  const [kickedModal, setKickedModal] = useState(null);
+  const [roundSplash, setRoundSplash] = useState(null);
 
   const hasJoinedRef = useRef(false);
   const chatBottomRef = useRef(null);
@@ -102,6 +126,8 @@ export default function GamePage() {
     socket.on('roundStarted', (round) => {
       setRoomState((state) => (state ? { ...state, status: 'playing', ...round } : state));
       if (round?.timeLeft !== undefined) setTimeLeft(round.timeLeft);
+      setRoundSplash({ round: round.round, totalRounds: round.totalRounds });
+      setTimeout(() => setRoundSplash(null), 2500);
     });
 
     socket.on('roundEnded', ({ word, players }) => {
@@ -111,7 +137,7 @@ export default function GamePage() {
 
     socket.on('gameEnded', ({ winner, players }) => {
       setRoomState((state) => (state ? { ...state, status: 'finished', winner, players: players || state.players } : state));
-      setMessages((items) => [...items, { type: 'system', text: `🏆 Game Over! Winner: ${winner || 'Nobody'}` }]);
+      setMessages((items) => [...items, { type: 'system', text: `Game Over! Winner: ${winner || 'Nobody'}` }]);
     });
 
     socket.on('timerTick', ({ timeLeft, wordHint }) => {
@@ -136,6 +162,65 @@ export default function GamePage() {
       }
     });
 
+    socket.on('voteKickStarted', (data) => {
+      setActiveVote(data);
+      setHasVoted(socket.id === data.initiatorSocketId);
+      setVoteNotice('');
+    });
+
+    socket.on('voteKickUpdated', (data) => {
+      setActiveVote((prev) => (prev ? { ...prev, ...data } : data));
+    });
+
+    socket.on('voteKickTick', ({ timeLeft }) => {
+      setActiveVote((prev) => (prev ? { ...prev, timeLeft } : null));
+    });
+
+    socket.on('voteKickEnded', ({ passed, targetUsername, reason }) => {
+      setActiveVote(null);
+      setHasVoted(false);
+      setVoteNotice(passed ? `${targetUsername} was kicked from the room.` : `Vote kick failed: ${reason}`);
+      setTimeout(() => setVoteNotice(''), 5000);
+    });
+
+    socket.on('voteKickError', ({ message }) => {
+      setError(message);
+      setTimeout(() => setError(''), 4000);
+    });
+
+    socket.on('kickedFromRoom', ({ reason }) => {
+      setKickedModal(reason || 'You were vote-kicked from the room (-50 Gold Coins penalty).');
+    });
+
+    socket.on('wordlePhaseStarted', ({ guessPhase, isDrawerLocked, phase, timeLeft }) => {
+      setRoomState((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          wordleState: {
+            ...(prev.wordleState || {}),
+            currentGuessPhase: guessPhase,
+            isDrawerLocked,
+            phase
+          }
+        };
+      });
+      if (timeLeft !== undefined) setTimeLeft(timeLeft);
+    });
+
+    socket.on('wordleActivity', ({ solversCount }) => {
+      setRoomState((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          wordleState: {
+            ...(prev.wordleState || {}),
+            solversCount
+          }
+        };
+      });
+    });
+
     return () => {
       socket.off('roomState');
       socket.off('playerJoined');
@@ -149,6 +234,14 @@ export default function GamePage() {
       socket.off('chatMessage');
       socket.off('timerTick');
       socket.off('error');
+      socket.off('voteKickStarted');
+      socket.off('voteKickUpdated');
+      socket.off('voteKickTick');
+      socket.off('voteKickEnded');
+      socket.off('voteKickError');
+      socket.off('kickedFromRoom');
+      socket.off('wordlePhaseStarted');
+      socket.off('wordleActivity');
 
       socket.disconnect();
     };
@@ -156,6 +249,8 @@ export default function GamePage() {
 
   const isDrawer = roomState?.currentDrawer?.socketId === socket.id;
   const isHost = roomState?.isHost;
+  const isWordle = roomState?.settings?.gameMode === 'wordle';
+  const isDrawingAllowed = isDrawer && (!isWordle || !roomState?.wordleState?.isDrawerLocked);
 
   if (loading) {
     return (
@@ -189,11 +284,11 @@ export default function GamePage() {
       <header className="game-navbar-compact">
         {/* Left: Logo & Leave Button */}
         <div className="nav-left">
-          <button className="nav-logo" onClick={handleLeaveRoom} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-            Squiggle 🎨
+          <button className="nav-logo" onClick={handleLeaveRoom} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+            <SquiggleLogo size={28} fontSize="1.3rem" id="gameNavGrad" />
           </button>
-          <button className="leave-btn" onClick={handleLeaveRoom}>
-            ← Leave
+          <button className="leave-btn" onClick={handleLeaveRoom} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+            <FaArrowLeft style={{ fontSize: '11px' }} /> Leave
           </button>
         </div>
 
@@ -204,25 +299,33 @@ export default function GamePage() {
           </span>
 
           {(roomState?.status === 'playing' || roomState?.status === 'wordSelection') && (
-            <div className={`timer-bubble-compact ${timeLeft <= 10 ? 'warn' : ''}`}>
-              ⏱️ {timeLeft}s
+            <div className={`timer-bubble-compact ${timeLeft <= 10 ? 'warn' : ''}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+              <FaStopwatch style={{ fontSize: '13px' }} /> {timeLeft}s
             </div>
           )}
 
           {/* Word / Hint Display in Navbar Center */}
-          {isDrawer && roomState?.status === 'playing' && currentWordDisplay && (
+          {isWordle ? (
+            <div className="wordle-nav-pill">
+              <span className={`wordle-nav-phase ${roomState?.wordleState?.phase === 1 ? 'blind' : 'draw'}`}>
+                {roomState?.wordleState?.phase === 1 ? <><FaLock className="btn-icon-xs" /> Blind Phase</> : <><FaPencilAlt className="btn-icon-xs" /> Drawing Phase</>}
+              </span>
+              <strong>Guess {roomState?.wordleState?.currentGuessPhase || 1}/6</strong>
+              {isDrawer && currentWordDisplay && (
+                <span className="wordle-nav-word">({currentWordDisplay})</span>
+              )}
+            </div>
+          ) : isDrawer && roomState?.status === 'playing' && currentWordDisplay ? (
             <div className="drawer-word-pill">
               <span>DRAW:</span>
               <strong>{currentWordDisplay}</strong>
             </div>
-          )}
-
-          {!isDrawer && roomState?.status === 'playing' && roomState?.wordHint && (
+          ) : !isDrawer && roomState?.status === 'playing' && roomState?.wordHint ? (
             <div className="guesser-hint-pill">
               <span>GUESS:</span>
               <strong className="hint-mask-text">{roomState.wordHint}</strong>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Right: Room Code, Copy Link, Mic, User */}
@@ -284,22 +387,36 @@ export default function GamePage() {
                         {player.isMuted ? '🔇' : '🎤'}
                       </span>
                     </span>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: '4px', marginTop: '4px' }}>
                       <span className="player-score-small">{player.score || 0} pts</span>
                       
-                      {/* Host controls to force mute other active players */}
-                      {isHost && player.socketId !== socket.id && (
-                        <button
-                          className="btn-force-mute"
-                          onClick={() => socket.emit('forceMuteUser', {
-                            roomId,
-                            targetSocketId: player.socketId,
-                            mute: !player.isMuted
-                          })}
-                        >
-                          {player.isMuted ? '🔊 Unmute' : '🔇 Mute'}
-                        </button>
-                      )}
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        {/* Vote-kick trigger for other players */}
+                        {player.socketId !== socket.id && (
+                          <button
+                            className="btn-vote-kick-trigger"
+                            title={`Call vote to kick ${player.username}`}
+                            onClick={() => socket.emit('startVoteKick', { roomId, targetSocketId: player.socketId })}
+                            disabled={activeVote !== null}
+                          >
+                            <FaUserSlash className="btn-icon-xs" /> Kick
+                          </button>
+                        )}
+
+                        {/* Host controls to force mute other active players */}
+                        {isHost && player.socketId !== socket.id && (
+                          <button
+                            className="btn-force-mute"
+                            onClick={() => socket.emit('forceMuteUser', {
+                              roomId,
+                              targetSocketId: player.socketId,
+                              mute: !player.isMuted
+                            })}
+                          >
+                            {player.isMuted ? '🔊 Unmute' : '🔇 Mute'}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -311,7 +428,16 @@ export default function GamePage() {
         {/* CENTER COLUMN: Canvas & Canvas Overlays (NO SCROLLING) */}
         <section className="game-mid-col">
           <div className="canvas-wrapper-relative">
-            <DrawingCanvas socket={socket} roomId={roomId} isDrawer={isDrawer} status={roomState?.status} />
+            <DrawingCanvas socket={socket} roomId={roomId} isDrawer={isDrawingAllowed} status={roomState?.status} />
+
+            {/* OVERLAY: Blind Phase Canvas Lock for Drawer */}
+            {isWordle && isDrawer && roomState?.status === 'playing' && roomState?.wordleState?.isDrawerLocked && (
+              <div className="canvas-blind-phase-overlay">
+                <FaLock className="blind-phase-icon" />
+                <h3>Phase 1: Blind Guessing</h3>
+                <p>Drawing is locked for Guesses 1 & 2. Players are attempting deduction blindly. Canvas unlocks in Phase 2!</p>
+              </div>
+            )}
 
             {/* OVERLAY 1: Lobby Overlay (Waiting / Start Game) */}
             {roomState?.status === 'lobby' && (
@@ -325,8 +451,15 @@ export default function GamePage() {
                     className="start-game-btn"
                     onClick={() => socket.emit('startGame', { roomId })}
                     disabled={(roomState?.players?.length || 0) < 2}
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                   >
-                    {(roomState?.players?.length || 0) < 2 ? 'Need 2+ players to start' : '🚀 Start Game Now'}
+                    {(roomState?.players?.length || 0) < 2 ? (
+                      'Need 2+ players to start'
+                    ) : (
+                      <>
+                        <SquiggleLogoMark size={20} id="btnStartGrad" /> Start Game Now
+                      </>
+                    )}
                   </button>
                 ) : (
                   <div className="waiting-host-box">
@@ -337,10 +470,51 @@ export default function GamePage() {
               </div>
             )}
 
+            {/* OVERLAY: Word Selection Waiting for Guessers */}
+            {roomState?.status === 'wordSelection' && !isDrawer && (
+              <div className="round-starting-overlay">
+                <div className="round-starting-card">
+                  <div className="round-starting-logo-box">
+                    <SquiggleLogoMark size={64} id="wsWaitGrad" />
+                  </div>
+                  <h2>Round {roomState.currentRound || 1} Starting!</h2>
+                  <p className="round-starting-drawer-text">
+                    <strong>{roomState.currentDrawer?.username || 'The drawer'}</strong> is choosing a word...
+                  </p>
+                  <p className="round-starting-sub">Get ready to deduce and sketch!</p>
+                </div>
+              </div>
+            )}
+
+            {/* OVERLAY: Round Started Splash (Active for 2.5s on roundStarted) */}
+            {roundSplash && (
+              <div className="round-started-splash-overlay">
+                <div className="round-started-splash-card">
+                  <div className="splash-logo-pulse">
+                    <SquiggleLogoMark size={70} id="roundSplashGrad" />
+                  </div>
+                  <span className="splash-round-pill">
+                    Round {roundSplash.round} of {roundSplash.totalRounds || roomState?.settings?.rounds || 3}
+                  </span>
+                  <h2>Round Started!</h2>
+                  <p className="splash-role-info">
+                    {isDrawer ? (
+                      <>You are the <strong>Drawer</strong>! Sketch the secret word.</>
+                    ) : (
+                      <><strong>{roomState?.currentDrawer?.username || 'The drawer'}</strong> is drawing. Make your deduction!</>
+                    )}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* OVERLAY 2: Word Selection Modal (Drawer only) */}
             {roomState?.wordChoices && isDrawer && roomState.status === 'wordSelection' && (
               <div className="word-selection-overlay">
                 <div className="word-selection-card">
+                  <div style={{ marginBottom: '8px' }}>
+                    <SquiggleLogoMark size={40} id="wsDrawerGrad" />
+                  </div>
                   <h3>Choose a word to draw!</h3>
                   <div className="word-choices-grid">
                     {roomState.wordChoices.map((word) => (
@@ -365,7 +539,7 @@ export default function GamePage() {
             {roomState?.status === 'roundEnding' && (
               <div className="round-ended-overlay">
                 <div className="round-ended-card">
-                  <h2>Round Completed! 🎉</h2>
+                  <h2>Round Completed! <FaCheckCircle style={{ color: '#10b981', marginLeft: '6px', verticalAlign: '-2px' }} /></h2>
                   <p className="revealed-word-label">The secret word was:</p>
                   <div className="revealed-word-box">{roomState.revealedWord || roomState.currentWord}</div>
                   <p className="next-round-countdown">Next round starting shortly...</p>
@@ -377,7 +551,7 @@ export default function GamePage() {
             {roomState?.status === 'finished' && (
               <div className="game-ended-overlay">
                 <div className="game-ended-card">
-                  <h2>🏆 Game Over!</h2>
+                  <h2><FaTrophy style={{ color: '#f59e0b', marginRight: '8px', verticalAlign: '-2px' }} /> Game Over!</h2>
                   <p className="winner-announcement">
                     Winner: <strong>{roomState.winner || sortedPlayers[0]?.username || 'Player'}</strong>!
                   </p>
@@ -449,7 +623,15 @@ export default function GamePage() {
           {/* Guess Section for Guessers / Info for Drawer */}
           {requestedRole !== 'spectator' && (
             <div className="guess-section-wrapper">
-              {isDrawer ? (
+              {isWordle && roomState?.status === 'playing' ? (
+                <WordleBoard
+                  socket={socket}
+                  roomId={roomId}
+                  isDrawer={isDrawer}
+                  roomState={roomState}
+                  currentWord={currentWordDisplay}
+                />
+              ) : isDrawer ? (
                 <div className="drawer-active-banner">
                   🎨 You are drawing! Watch guesses above.
                 </div>
@@ -500,6 +682,110 @@ export default function GamePage() {
           />
         );
       })}
+
+      {/* Vote Kick Toast Notification */}
+      {voteNotice && (
+        <div className="vote-kick-toast-notification">
+          <FaInfoCircle className="vote-toast-icon" />
+          <span>{voteNotice}</span>
+        </div>
+      )}
+
+      {/* Active Vote Kick Floating Modal */}
+      {activeVote && (
+        <div className="vote-kick-modal-overlay">
+          <div className="vote-kick-card">
+            <div className="vote-kick-card-header">
+              <span className="vote-kick-badge">
+                <FaVoteYea className="vote-badge-icon" /> VOTE KICK
+              </span>
+              <span className="vote-kick-timer">
+                <FaStopwatch className="vote-timer-icon" /> {activeVote.timeLeft}s
+              </span>
+            </div>
+
+            <div className="vote-kick-body">
+              <p className="vote-kick-title">
+                Kick <strong>{activeVote.targetUsername}</strong> from match?
+              </p>
+              <p className="vote-kick-initiator">
+                Initiated by <span>{activeVote.initiatorUsername}</span>
+              </p>
+
+              <div className="vote-kick-progress-bar-wrap">
+                <div
+                  className="vote-kick-progress-bar-fill"
+                  style={{
+                    width: `${Math.min(100, Math.round(((activeVote.currentVotes || activeVote.yesVotes || 1) / (activeVote.votesRequired || 1)) * 100))}%`
+                  }}
+                />
+              </div>
+
+              <div className="vote-kick-stats-row">
+                <span>Yes: <strong>{activeVote.currentVotes || activeVote.yesVotes || 1}</strong> / {activeVote.votesRequired} needed</span>
+                {activeVote.noVotes !== undefined && (
+                  <span>No: <strong>{activeVote.noVotes}</strong></span>
+                )}
+              </div>
+
+              {socket.id === activeVote.targetSocketId ? (
+                <div className="vote-kick-status-msg vote-kick-status-msg--warning">
+                  <FaExclamationTriangle className="vote-msg-icon" /> A vote kick has been called against you.
+                </div>
+              ) : hasVoted ? (
+                <div className="vote-kick-status-msg vote-kick-status-msg--voted">
+                  <FaCheckCircle className="vote-msg-icon" /> Your vote has been recorded!
+                </div>
+              ) : (
+                <div className="vote-kick-action-buttons">
+                  <button
+                    className="btn-vote-yes"
+                    onClick={() => {
+                      socket.emit('castVoteKick', { roomId, vote: true });
+                      setHasVoted(true);
+                    }}
+                  >
+                    <FaCheck className="btn-vote-icon" /> Vote Yes
+                  </button>
+                  <button
+                    className="btn-vote-no"
+                    onClick={() => {
+                      socket.emit('castVoteKick', { roomId, vote: false });
+                      setHasVoted(true);
+                    }}
+                  >
+                    <FaTimes className="btn-vote-icon" /> Vote No
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Kicked from room full-screen overlay */}
+      {kickedModal && (
+        <div className="kicked-overlay-backdrop">
+          <div className="kicked-modal-card">
+            <div className="kicked-icon">
+              <FaBan className="kicked-ban-icon" />
+            </div>
+            <h2 className="kicked-title">You Were Vote-Kicked</h2>
+            <p className="kicked-text">{kickedModal}</p>
+            <div className="kicked-penalty-chip">
+              <FaCoins className="penalty-coin-icon" />
+              <span>Penalty:</span>
+              <strong>-50 Gold Coins</strong>
+            </div>
+            <button
+              className="btn-kicked-home"
+              onClick={() => navigate('/')}
+            >
+              Return to Home
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

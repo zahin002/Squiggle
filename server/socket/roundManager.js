@@ -153,8 +153,23 @@ function processWordSelection(io, roomId, word) {
 
   room.currentWord = word;
   room.status = 'playing';
-  room.timeLeft = room.settings.drawTime;
   room.revealedHintIndices = [];
+
+  const isWordle = room.settings?.gameMode === 'wordle';
+  if (isWordle) {
+    const { getWordlePhaseDuration } = require('../utils/wordleHelper');
+    room.wordleState = {
+      currentGuessPhase: 1, // 1 to 6
+      isDrawerLocked: true, // true for guesses 1 and 2
+      phase: 1,             // 1 = Blind Guessing (guesses 1-2), 2 = Drawing (guesses 3-6)
+      playerGuesses: {},    // { [socketId]: [ { guess: 'APPLE', evaluation: [...] } ] }
+      playerSolved: {},     // { [socketId]: { guessNum: 1, scoreAwarded: 100 } }
+      submittedThisPhase: []
+    };
+    room.timeLeft = getWordlePhaseDuration(1); // 60s
+  } else {
+    room.timeLeft = room.settings.drawTime;
+  }
   
   // Calculate dynamic max hints for the round based on word length
   const len = word.length;
@@ -182,12 +197,23 @@ function processWordSelection(io, roomId, word) {
     wordLength: word.length,
     round: room.currentRound,
     totalRounds: room.settings.rounds,
-    timeLeft: room.timeLeft
+    timeLeft: room.timeLeft,
+    isWordle,
+    wordleState: room.wordleState ? {
+      currentGuessPhase: room.wordleState.currentGuessPhase,
+      maxGuesses: 6,
+      isDrawerLocked: room.wordleState.isDrawerLocked,
+      phase: room.wordleState.phase
+    } : null
   });
+
+  const startMsg = isWordle
+    ? `Wordle Mode started! Phase 1: Blind Guessing (Guess 1 of 6). Drawer is locked.`
+    : `${room.currentDrawer.username} started drawing`;
 
   io.to(roomId).emit('chatMessage', {
     type: 'system',
-    text: `${room.currentDrawer.username} started drawing`
+    text: startMsg
   });
 
   io.to(room.currentDrawer.socketId).emit('yourWord', { word });
@@ -259,20 +285,69 @@ function updateWordHint(room) {
   }
 }
 
-function startRoundTimer(io, room, roomId) {
+function advanceWordlePhase(io, room, roomId) {
+  const { getWordlePhaseDuration } = require('../utils/wordleHelper');
+  const ws = room.wordleState;
+  if (!ws) return true;
+
+  const guessers = (room.players || []).filter(p => p.socketId !== room.currentDrawer?.socketId);
+  const allSolved = guessers.length > 0 && guessers.every(p => ws.playerSolved && ws.playerSolved[p.socketId]);
+
+  if (ws.currentGuessPhase >= 6 || allSolved) {
+    return true; // signal that round should end
+  }
+
+  ws.currentGuessPhase += 1;
+  ws.isDrawerLocked = ws.currentGuessPhase <= 2;
+  ws.phase = ws.currentGuessPhase <= 2 ? 1 : 2;
+  ws.submittedThisPhase = [];
+  room.timeLeft = getWordlePhaseDuration(ws.currentGuessPhase);
+
+  const phaseMsg = ws.phase === 1
+    ? `Phase 1 (Blind Guessing): Guess ${ws.currentGuessPhase} of 6 (60s). Drawer locked!`
+    : `Phase 2 (Drawing Active): Guess ${ws.currentGuessPhase} of 6 (30s). Drawer unlocked!`;
+
+  io.to(roomId).emit('wordlePhaseStarted', {
+    guessPhase: ws.currentGuessPhase,
+    isDrawerLocked: ws.isDrawerLocked,
+    phase: ws.phase,
+    timeLeft: room.timeLeft
+  });
+
+  io.to(roomId).emit('chatMessage', {
+    type: 'system',
+    text: `[Wordle] ${phaseMsg}`
+  });
+
   const { setRoom } = require('./roomStore');
+  setRoom(roomId, room);
+  return false;
+}
+
+function startRoundTimer(io, room, roomId) {
+  const { setRoom, getRoom } = require('./roomStore');
 
   room.roundTimer = setInterval(async () => {
-    const current = require('./roomStore').getRoom(roomId);
+    const current = getRoom(roomId);
     if (!current) { clearInterval(room.roundTimer); return; }
 
     current.timeLeft -= 1;
-    updateWordHint(current);
+    if (current.settings?.gameMode !== 'wordle') {
+      updateWordHint(current);
+    }
     io.to(roomId).emit('timerTick', { timeLeft: current.timeLeft, wordHint: current.wordHint });
 
     if (current.timeLeft <= 0) {
-      clearInterval(current.roundTimer);
-      await endRound(io, current, roomId);
+      if (current.settings?.gameMode === 'wordle') {
+        const shouldEnd = advanceWordlePhase(io, current, roomId);
+        if (shouldEnd) {
+          clearInterval(current.roundTimer);
+          await endRound(io, current, roomId);
+        }
+      } else {
+        clearInterval(current.roundTimer);
+        await endRound(io, current, roomId);
+      }
     }
 
     setRoom(roomId, current);
@@ -288,7 +363,26 @@ async function endRound(io, room, roomId) {
   room.wordSelectionTimer = null;
   room.status = 'roundEnding';
 
+  const isWordle = room.settings?.gameMode === 'wordle';
   const isFailedRound = !room.correctGuessers || room.correctGuessers.length === 0;
+
+  // Award Wordle Drawer points based on solver count
+  if (isWordle && room.currentDrawer) {
+    const { getDrawerWordlePoints } = require('../utils/wordleHelper');
+    const guessers = (room.players || []).filter(p => p.socketId !== room.currentDrawer.socketId);
+    const solversCount = Object.keys(room.wordleState?.playerSolved || {}).length;
+    const drawerReward = getDrawerWordlePoints(guessers.length, solversCount);
+
+    const drawerPlayer = room.players.find(p => p.socketId === room.currentDrawer.socketId || p.userId === room.currentDrawer.userId);
+    if (drawerPlayer) {
+      drawerPlayer.score = (drawerPlayer.score || 0) + drawerReward.points;
+    }
+
+    io.to(roomId).emit('chatMessage', {
+      type: 'system',
+      text: `[Wordle] Drawer ${room.currentDrawer.username} earned +${drawerReward.points} pts (${drawerReward.reason}).`
+    });
+  }
 
   if (isFailedRound && room.currentDrawer?.userId && !room.currentDrawer?.isGuest) {
     const User = require('../models/User');
@@ -313,6 +407,26 @@ async function endRound(io, room, roomId) {
       type: 'system',
       text: `❌ Round failed! Nobody guessed the word (-1 coin for drawer).`
     });
+  } else if (!isFailedRound && room.currentDrawer?.userId && !room.currentDrawer?.isGuest) {
+    const User = require('../models/User');
+    const Reward = require('../models/Reward');
+
+    User.findByIdAndUpdate(
+      room.currentDrawer.userId,
+      { $inc: { goldCoins: 2 } }
+    ).catch(() => {});
+
+    Reward.create({
+      userId: room.currentDrawer.userId,
+      type: 'successful_draw',
+      amount: 2,
+      currency: 'goldCoins'
+    }).catch(() => {});
+
+    io.to(roomId).emit('chatMessage', {
+      type: 'system',
+      text: `Drawing successful! ${room.currentDrawer.username} earned +2 Gold Coins.`
+    });
   }
 
   io.to(roomId).emit('roundEnded', {
@@ -331,4 +445,4 @@ async function endRound(io, room, roomId) {
   setRoom(roomId, room);
 }
 
-module.exports = { startNextRound, startRoundTimer, endRound, processWordSelection };
+module.exports = { startNextRound, startRoundTimer, endRound, processWordSelection, advanceWordlePhase };
