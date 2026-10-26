@@ -306,7 +306,23 @@ export default function GamePage() {
   }
 
   const currentDrawerId = roomState?.currentDrawer?.socketId;
-  const sortedPlayers = [...(roomState?.players || [])].sort((a, b) => (b.score || 0) - (a.score || 0));
+  const sortedPlayers = useMemo(() => {
+    const list = [...(roomState?.players || [])];
+    return list.sort((a, b) => (b.score || 0) - (a.score || 0));
+  }, [roomState?.players]);
+
+  const playerRankMap = useMemo(() => {
+    const ranks = {};
+    let currentRank = 1;
+    sortedPlayers.forEach((p, idx) => {
+      if (idx > 0 && (p.score || 0) < (sortedPlayers[idx - 1].score || 0)) {
+        currentRank = idx + 1;
+      }
+      const id = p.socketId || p.userId;
+      ranks[id] = currentRank;
+    });
+    return ranks;
+  }, [sortedPlayers]);
 
   const handleCopyInvite = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -351,40 +367,11 @@ export default function GamePage() {
           </button>
         </div>
 
-        {/* Center: Live Round, Timer & Word Banner */}
+        {/* Center: Live Round */}
         <div className="nav-center">
           <span className="round-badge">
             ROUND {roomState?.currentRound || 1}/{roomState?.settings?.rounds || 3}
           </span>
-
-          {(roomState?.status === 'playing' || roomState?.status === 'wordSelection') && (
-            <div className={`timer-bubble-compact ${timeLeft <= 10 ? 'warn' : ''}`}>
-              <FaStopwatch className="btn-icon-xs" /> {timeLeft}s
-            </div>
-          )}
-
-          {/* Word / Hint Display in Navbar Center */}
-          {isWordle ? (
-            <div className="wordle-nav-pill">
-              <span className={`wordle-nav-phase ${roomState?.wordleState?.phase === 1 ? 'blind' : 'draw'}`}>
-                {roomState?.wordleState?.phase === 1 ? <><FaLock className="btn-icon-xs" /> Blind Phase</> : <><FaPencilAlt className="btn-icon-xs" /> Drawing Phase</>}
-              </span>
-              <strong>Guess {roomState?.wordleState?.currentGuessPhase || 1}/6</strong>
-              {isDrawer && currentWordDisplay && (
-                <span className="wordle-nav-word">({currentWordDisplay})</span>
-              )}
-            </div>
-          ) : isDrawer && roomState?.status === 'playing' && currentWordDisplay ? (
-            <div className="drawer-word-pill">
-              <span>DRAW:</span>
-              <strong>{currentWordDisplay}</strong>
-            </div>
-          ) : !isDrawer && roomState?.status === 'playing' && roomState?.wordHint ? (
-            <div className="guesser-hint-pill">
-              <span>GUESS:</span>
-              <strong className="hint-mask-text">{roomState.wordHint}</strong>
-            </div>
-          ) : null}
         </div>
 
         {/* Right: Room Code, User */}
@@ -440,15 +427,16 @@ export default function GamePage() {
             )}
           </div>
           <div className="players-list">
-            {(roomState?.players || []).map((player) => {
+            {sortedPlayers.map((player) => {
               const isDrawing = player.socketId === currentDrawerId;
               const isPlayerHost = player.isHost || player.socketId === roomState?.hostId || player.userId === roomState?.hostId || (roomState?.players?.[0]?.socketId === player.socketId);
+              const rank = playerRankMap[player.socketId || player.userId] || 1;
 
               return (
                 <div key={player.socketId || player.userId} className={`player-card-vertical ${isPlayerHost ? 'is-host' : ''} ${isDrawing ? 'is-drawing' : ''}`}>
                   <div className="player-card-left">
-                    <div className="player-avatar-circle">
-                      <span>{(player.username || 'P').charAt(0).toUpperCase()}</span>
+                    <div className={`player-avatar-circle rank-badge-${rank <= 3 ? rank : 'default'}`} title={`Rank #${rank} • ${player.score || 0} pts`}>
+                      <span className="player-rank-number">#{rank}</span>
                     </div>
                     <div className="player-meta-box">
                       <div className="player-name-row">
@@ -544,6 +532,40 @@ export default function GamePage() {
 
         {/* CENTER COLUMN: Canvas & Canvas Overlays (NO SCROLLING) */}
         <section className="game-mid-col">
+          {/* Top Bar above Canvas: Clock/Timer + Word Display */}
+          {(roomState?.status === 'playing' || roomState?.status === 'wordSelection') && (
+            <div className="canvas-header-bar">
+              {/* Clock Timer - big and prominent */}
+              <div className={`canvas-timer-pill ${timeLeft <= 10 ? 'warn' : ''}`}>
+                <FaStopwatch className="canvas-timer-icon" />
+                <span className="canvas-timer-text">{timeLeft}s</span>
+              </div>
+
+              {/* Word Display (Draw / Guess / Wordle Phase) */}
+              {isWordle ? (
+                <div className="canvas-word-pill wordle-phase">
+                  <span className={`wordle-nav-phase ${roomState?.wordleState?.phase === 1 ? 'blind' : 'draw'}`}>
+                    {roomState?.wordleState?.phase === 1 ? <><FaLock className="btn-icon-xs" /> Blind Phase</> : <><FaPencilAlt className="btn-icon-xs" /> Drawing Phase</>}
+                  </span>
+                  <span className="canvas-word-tag">Guess {roomState?.wordleState?.currentGuessPhase || 1}/6</span>
+                  {isDrawer && currentWordDisplay && (
+                    <span className="canvas-word-value">({currentWordDisplay})</span>
+                  )}
+                </div>
+              ) : isDrawer && roomState?.status === 'playing' && currentWordDisplay ? (
+                <div className="canvas-word-pill is-drawer">
+                  <span className="canvas-word-tag">DRAW:</span>
+                  <strong className="canvas-word-value">{currentWordDisplay}</strong>
+                </div>
+              ) : !isDrawer && roomState?.status === 'playing' && roomState?.wordHint ? (
+                <div className="canvas-word-pill is-guesser">
+                  <span className="canvas-word-tag">GUESS:</span>
+                  <strong className="canvas-hint-mask">{roomState.wordHint}</strong>
+                </div>
+              ) : null}
+            </div>
+          )}
+
           <div className="canvas-wrapper-relative">
             <DrawingCanvas socket={socket} roomId={roomId} isDrawer={isDrawingAllowed} status={roomState?.status} />
 
