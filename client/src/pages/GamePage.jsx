@@ -43,6 +43,33 @@ import '../styles/GamePage.css';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
 
+const POPULAR_EMOJIS = [
+  '😂', '🤣', '😭', '💀', '🔥', '👏', '💯', '🥳',
+  '😍', '🤔', '💡', '🎨', '🖌️', '🎯', '👑', '🏆',
+  '👍', '👎', '❤️', '😱', '💩', '✨', '⚡', '🎉',
+  '🤩', '🤯', '🤫', '👀', '👋', '🙌', '😎', '🎮'
+];
+
+const TEXT_EMOJIS = [
+  '¯\\_(ツ)_/¯',
+  '(•‿•)',
+  '(づ｡◕‿‿◕｡)づ',
+  '(╯°□°)╯︵ ┻━┻',
+  '(✿◠‿◠)',
+  '(¬_¬)',
+  '(╥﹏╥)',
+  '(ง\'̀-\'́)ง',
+  'ദ്ദി(˵ •̀ ᴗ - ˵ ) ✧',
+  '(UwU)',
+  'ʕ•ᴥ•ʔ',
+  '(•_•)',
+  '(>_<)',
+  '(*^▽^*)',
+  '┬─┬ノ( º _ ºノ)'
+];
+
+const QUICK_EMOJIS = ['😂', '🔥', '👏', '🎯', '💀', '🤔', '¯\\_(ツ)_/¯', '(•‿•)'];
+
 export default function GamePage() {
   const { roomId } = useParams();
   const location = useLocation();
@@ -62,9 +89,41 @@ export default function GamePage() {
   const [kickedModal, setKickedModal] = useState(null);
   const [roundSplash, setRoundSplash] = useState(null);
   const [isStartingGame, setIsStartingGame] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [emojiTab, setEmojiTab] = useState('emojis');
 
   const hasJoinedRef = useRef(false);
   const chatBottomRef = useRef(null);
+  const chatInputRef = useRef(null);
+  const emojiPickerRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    if (showEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
+  const handleInsertEmoji = (emojiStr) => {
+    setChatInput((prev) => (prev ? `${prev} ${emojiStr}` : emojiStr));
+    chatInputRef.current?.focus();
+  };
+
+  const handleSendChat = (e) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+    socket.emit('chatMessage', { roomId, text: chatInput.trim() });
+    setChatInput('');
+    setShowEmojiPicker(false);
+  };
 
   const socket = useMemo(() => io(SERVER_URL, { autoConnect: false }), []);
 
@@ -823,28 +882,112 @@ export default function GamePage() {
             <div ref={chatBottomRef} />
           </div>
 
-          <div className="chat-input-area">
-            <form
-              className="chat-composer-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const val = e.target.chatInput.value;
-                if (!val.trim()) return;
-                socket.emit('chatMessage', { roomId, text: val.trim() });
-                e.target.chatInput.value = '';
-              }}
-            >
+          <div className="chat-input-area" ref={emojiPickerRef}>
+            {/* Quick emoji reaction bar */}
+            <div className="chat-quick-emojis">
+              {QUICK_EMOJIS.map((em, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className="quick-emoji-chip"
+                  onClick={() => handleInsertEmoji(em)}
+                  title={`Insert ${em}`}
+                >
+                  {em}
+                </button>
+              ))}
+              <button
+                type="button"
+                className={`quick-emoji-toggle-btn ${showEmojiPicker ? 'is-active' : ''}`}
+                onClick={() => setShowEmojiPicker((prev) => !prev)}
+                title="Open emoji & text emoji picker"
+              >
+                <FaSmile className="quick-toggle-icon" />
+                <span>{showEmojiPicker ? 'Close' : 'More'}</span>
+              </button>
+            </div>
+
+            {/* Floating popover for Full Emojis + Text Emojis */}
+            {showEmojiPicker && (
+              <div className="chat-emoji-popover">
+                <div className="emoji-popover-tabs">
+                  <button
+                    type="button"
+                    className={`emoji-tab-btn ${emojiTab === 'emojis' ? 'active' : ''}`}
+                    onClick={() => setEmojiTab('emojis')}
+                  >
+                    😀 Emojis
+                  </button>
+                  <button
+                    type="button"
+                    className={`emoji-tab-btn ${emojiTab === 'text' ? 'active' : ''}`}
+                    onClick={() => setEmojiTab('text')}
+                  >
+                    (•‿•) Text Emojis
+                  </button>
+                </div>
+
+                <div className="emoji-popover-body">
+                  {emojiTab === 'emojis' ? (
+                    <div className="emoji-grid">
+                      {POPULAR_EMOJIS.map((em, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          className="emoji-grid-item"
+                          onClick={() => handleInsertEmoji(em)}
+                          title={`Insert ${em}`}
+                        >
+                          {em}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-emoji-grid">
+                      {TEXT_EMOJIS.map((tem, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          className="text-emoji-item"
+                          onClick={() => handleInsertEmoji(tem)}
+                          title={`Insert ${tem}`}
+                        >
+                          {tem}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <form className="chat-composer-form" onSubmit={handleSendChat}>
               <div className="chat-input-box">
-                <FaSmile className="chat-smile-icon" />
+                <button
+                  type="button"
+                  className={`chat-smile-btn ${showEmojiPicker ? 'active' : ''}`}
+                  onClick={() => setShowEmojiPicker((prev) => !prev)}
+                  title="Emoji & text emoji panel"
+                >
+                  <FaSmile className="chat-smile-icon" />
+                </button>
                 <input
+                  ref={chatInputRef}
                   name="chatInput"
                   type="text"
                   className="chat-input-modern"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
                   placeholder="💬 Type chat message..."
                   autoComplete="off"
                 />
               </div>
-              <button type="submit" className="chat-send-btn" title="Send message">
+              <button
+                type="submit"
+                className="chat-send-btn"
+                title="Send message"
+                disabled={!chatInput.trim()}
+              >
                 <FaPaperPlane className="send-plane-icon" />
               </button>
             </form>
