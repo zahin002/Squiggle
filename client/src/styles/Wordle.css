@@ -280,6 +280,19 @@
   animation: flipTile 0.35s ease-out;
 }
 
+.wordle-tile--skipped {
+  background: rgba(239, 68, 68, 0.08);
+  border: 2px dashed rgba(239, 68, 68, 0.45);
+  color: #f87171;
+  font-size: 1.1rem;
+  font-weight: 800;
+  opacity: 0.75;
+}
+
+.wordle-row--skipped {
+  opacity: 0.65;
+}
+
 @keyframes flipTile {
   0% { transform: rotateX(0deg); }
   50% { transform: rotateX(90deg); }

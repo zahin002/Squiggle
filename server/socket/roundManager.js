@@ -325,6 +325,44 @@ function advanceWordlePhase(io, room, roomId) {
   const guessers = (room.players || []).filter(p => p.socketId !== room.currentDrawer?.socketId);
   const allSolved = guessers.length > 0 && guessers.every(p => ws.playerSolved && ws.playerSolved[p.socketId]);
 
+  // For any unsolved guesser who didn't submit a guess for the phase that just completed,
+  // automatically block that row as skipped/missed.
+  const completedPhase = ws.currentGuessPhase;
+  if (!ws.playerGuesses) ws.playerGuesses = {};
+
+  guessers.forEach(p => {
+    if (ws.playerSolved && ws.playerSolved[p.socketId]) return;
+
+    if (!ws.playerGuesses[p.socketId]) {
+      ws.playerGuesses[p.socketId] = [];
+    }
+
+    const pGuesses = ws.playerGuesses[p.socketId];
+    while (pGuesses.length < completedPhase && pGuesses.length < 6) {
+      const skippedGuessNum = pGuesses.length + 1;
+      pGuesses.push({
+        guess: '-----',
+        evaluation: [
+          { letter: '—', status: 'skipped' },
+          { letter: '—', status: 'skipped' },
+          { letter: '—', status: 'skipped' },
+          { letter: '—', status: 'skipped' },
+          { letter: '—', status: 'skipped' }
+        ],
+        guessNumber: skippedGuessNum,
+        isCorrect: false,
+        isSkipped: true
+      });
+    }
+
+    // Emit updated guesses to player so their board reflects the blocked row immediately
+    io.to(p.socketId).emit('wordleGuessResult', {
+      myGuesses: pGuesses,
+      isCorrect: !!(ws.playerSolved && ws.playerSolved[p.socketId]),
+      solversCount: Object.keys(ws.playerSolved || {}).length
+    });
+  });
+
   if (ws.currentGuessPhase >= 6 || allSolved) {
     return true; // signal that round should end
   }

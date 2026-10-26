@@ -90,12 +90,35 @@ export default function WordleBoard({
     setErrorMessage('');
   }, [roomState?.currentRound]);
 
-  // Calculate keyboard letter colors based on previous guesses
+  // Clear unsubmitted input when phase advances
+  useEffect(() => {
+    setCurrentInput('');
+    setErrorMessage('');
+  }, [currentGuessPhase]);
+
+  // Compute effective guesses by padding any missed phases as skipped rows
+  const effectiveGuesses = useMemo(() => {
+    if (isSolved) return guesses;
+    const list = [...guesses];
+    while (list.length < currentGuessPhase - 1 && list.length < 6) {
+      list.push({
+        guess: '-----',
+        evaluation: Array.from({ length: 5 }, () => ({ letter: '—', status: 'skipped' })),
+        guessNumber: list.length + 1,
+        isCorrect: false,
+        isSkipped: true
+      });
+    }
+    return list;
+  }, [guesses, currentGuessPhase, isSolved]);
+
+  // Calculate keyboard letter colors based on previous guesses (ignoring skipped rows)
   const keyboardLetterStatus = useMemo(() => {
     const statuses = {};
-    guesses.forEach(({ evaluation }) => {
-      if (!evaluation) return;
+    effectiveGuesses.forEach(({ evaluation, isSkipped }) => {
+      if (!evaluation || isSkipped) return;
       evaluation.forEach(({ letter, status }) => {
+        if (!letter || letter === '—') return;
         const current = statuses[letter];
         if (status === 'correct') {
           statuses[letter] = 'correct';
@@ -107,17 +130,17 @@ export default function WordleBoard({
       });
     });
     return statuses;
-  }, [guesses]);
+  }, [effectiveGuesses]);
 
   // Handle submitting guess
   const handleSubmit = useCallback(() => {
     if (isDrawer) return;
     if (isSolved) return;
-    if (guesses.length >= 6) {
+    if (effectiveGuesses.length >= 6) {
       setErrorMessage('Maximum 6 guesses reached.');
       return;
     }
-    if (guesses.length >= currentGuessPhase) {
+    if (effectiveGuesses.length >= currentGuessPhase) {
       setErrorMessage(`Guess submitted for Phase ${currentGuessPhase}! Please wait for next phase.`);
       return;
     }
@@ -127,7 +150,7 @@ export default function WordleBoard({
     }
 
     socket.emit('submitWordleGuess', { roomId, guess: currentInput });
-  }, [isDrawer, isSolved, guesses.length, currentGuessPhase, currentInput, socket, roomId]);
+  }, [isDrawer, isSolved, effectiveGuesses.length, currentGuessPhase, currentInput, socket, roomId]);
 
   // Physical keyboard handling
   useEffect(() => {
@@ -169,7 +192,7 @@ export default function WordleBoard({
     }
   };
 
-  const potentialPoints = GUESS_POINTS[guesses.length] || 10;
+  const potentialPoints = GUESS_POINTS[effectiveGuesses.length] || 10;
 
   // ── Render Drawer View ────────────────────────────────────────────────────────
   if (isDrawer) {
@@ -237,12 +260,12 @@ export default function WordleBoard({
             {phase === 1 ? <><FaLock /> Phase 1: Blind Guessing</> : <><FaPencilAlt /> Phase 2: Drawing Active</>}
           </span>
           <span className="guess-count-badge">
-            Guess {guesses.length + 1 <= 6 ? guesses.length + 1 : 6} / 6
+            Guess {effectiveGuesses.length + 1 <= 6 ? effectiveGuesses.length + 1 : 6} / 6
           </span>
         </div>
 
         <div className="wordle-reward-potential">
-          {!isSolved && guesses.length < 6 && (
+          {!isSolved && effectiveGuesses.length < 6 && (
             <span className="potential-badge">
               <FaTrophy className="potential-icon" /> Solve for <strong>+{potentialPoints} pts</strong>
             </span>
@@ -298,18 +321,21 @@ export default function WordleBoard({
       {/* 6x5 Wordle Tiles Grid */}
       <div className="wordle-grid">
         {Array.from({ length: 6 }).map((_, rowIndex) => {
-          const guessData = guesses[rowIndex];
-          const isCurrentRow = rowIndex === guesses.length && !isSolved;
+          const guessData = effectiveGuesses[rowIndex];
+          const isCurrentRow = rowIndex === effectiveGuesses.length && !isSolved && rowIndex < 6;
 
           return (
-            <div key={rowIndex} className={`wordle-row ${isCurrentRow ? 'wordle-row--active' : ''}`}>
+            <div
+              key={rowIndex}
+              className={`wordle-row ${isCurrentRow ? 'wordle-row--active' : ''} ${guessData?.isSkipped ? 'wordle-row--skipped' : ''}`}
+            >
               {Array.from({ length: 5 }).map((_, colIndex) => {
                 let letter = '';
                 let status = 'empty';
 
                 if (guessData) {
                   letter = guessData.evaluation?.[colIndex]?.letter || guessData.guess?.[colIndex] || '';
-                  status = guessData.evaluation?.[colIndex]?.status || 'absent';
+                  status = guessData.isSkipped ? 'skipped' : (guessData.evaluation?.[colIndex]?.status || 'absent');
                 } else if (isCurrentRow) {
                   letter = currentInput[colIndex] || '';
                   status = letter ? 'filled' : 'empty';
@@ -318,7 +344,7 @@ export default function WordleBoard({
                 return (
                   <div
                     key={colIndex}
-                    className={`wordle-tile wordle-tile--${status} ${letter ? 'wordle-tile--pop' : ''}`}
+                    className={`wordle-tile wordle-tile--${status} ${letter && !guessData?.isSkipped ? 'wordle-tile--pop' : ''}`}
                   >
                     {letter}
                   </div>
@@ -343,7 +369,7 @@ export default function WordleBoard({
                   type="button"
                   className={`wordle-key ${isSpecial ? 'wordle-key--special' : ''} ${status ? `wordle-key--${status}` : ''}`}
                   onClick={() => handleKeyClick(key)}
-                  disabled={isSolved || guesses.length >= 6}
+                  disabled={isSolved || effectiveGuesses.length >= 6}
                 >
                   {key === 'BACKSPACE' ? '⌫' : key}
                 </button>
