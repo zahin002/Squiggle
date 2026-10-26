@@ -32,7 +32,7 @@
   object-fit: contain;
 }
 
-/* ── Attached Bottom Toolbar Bar ─────────────────────────────── */
+/* ── Attached Top Toolbar Bar ─────────────────────────────── */
 .canvas-tools-panel {
   display: flex;
   flex-direction: row;
@@ -41,7 +41,7 @@
   gap: 12px;
   width: 100%;
   background: #120e31; /* sleek matching dark purple-navy toolbar */
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding: 6px 12px;
   box-sizing: border-box;
   flex-shrink: 0;
