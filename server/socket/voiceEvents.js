@@ -64,4 +64,38 @@ module.exports = (socket, io) => {
       io.to(roomId).emit('playerJoined', { players: annotatePlayersWithHost(room) });
     }
   });
+
+  // ----- Host Setting: Enable / Disable Voice Chat for Everyone -----
+  socket.on('setVoiceChatEnabled', ({ roomId, enabled }) => {
+    const room = getRoom(roomId);
+    if (!room) return;
+
+    // Check if requester is host
+    const isHost = room.hostUserId
+      ? room.hostUserId === socket.data?.userId
+      : room.hostSocketId === socket.id || room.hostId === socket.id;
+
+    if (!isHost) return;
+
+    if (!room.settings) room.settings = {};
+    room.settings.voiceChatEnabled = !!enabled;
+
+    const { persistRoom } = require('./roomStore');
+    const { buildRoomState } = require('./buildRoomState');
+
+    persistRoom(roomId, { 'settings.voiceChatEnabled': !!enabled });
+
+    // Broadcast status change event to all peers
+    io.to(roomId).emit('voiceChatStatusChanged', { voiceChatEnabled: !!enabled });
+
+    // Also push fresh roomState to all connected sockets in this room
+    (room.players || []).forEach(p => {
+      const s = io.sockets.sockets.get(p.socketId);
+      if (s) s.emit('roomState', buildRoomState(room, p.userId, p.socketId));
+    });
+    (room.spectators || []).forEach(sp => {
+      const s = io.sockets.sockets.get(sp.socketId);
+      if (s) s.emit('roomState', buildRoomState(room, sp.userId, sp.socketId));
+    });
+  });
 };

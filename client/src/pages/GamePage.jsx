@@ -69,7 +69,13 @@ export default function GamePage() {
     isForceMuted,
     remoteStreams,
     toggleMute,
-  } = useWebRTC(socket, roomId, requestedRole, roomState?.players);
+  } = useWebRTC(
+    socket,
+    roomId,
+    requestedRole,
+    roomState?.players,
+    roomState?.settings?.voiceChatEnabled === true
+  );
 
   useEffect(() => {
     if (loading) return;
@@ -234,6 +240,19 @@ export default function GamePage() {
       });
     });
 
+    socket.on('voiceChatStatusChanged', ({ voiceChatEnabled }) => {
+      setRoomState((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          settings: {
+            ...(prev.settings || {}),
+            voiceChatEnabled
+          }
+        };
+      });
+    });
+
     return () => {
       socket.off('roomState');
       socket.off('playerJoined');
@@ -255,6 +274,7 @@ export default function GamePage() {
       socket.off('kickedFromRoom');
       socket.off('wordlePhaseStarted');
       socket.off('wordleActivity');
+      socket.off('voiceChatStatusChanged');
 
       socket.disconnect();
     };
@@ -287,6 +307,20 @@ export default function GamePage() {
       socket.emit('leaveRoom', { roomId });
     } catch {}
     navigate('/lobby');
+  };
+
+  const handleSetVoiceChat = (enabled) => {
+    socket.emit('setVoiceChatEnabled', { roomId, enabled });
+    setRoomState((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        settings: {
+          ...(prev.settings || {}),
+          voiceChatEnabled: enabled
+        }
+      };
+    });
   };
 
   const currentWordDisplay = roomState?.currentWord || roomState?.selectedWord;
@@ -353,20 +387,30 @@ export default function GamePage() {
           </button>
 
           {requestedRole !== 'spectator' && (
-            <button
-              className={`nav-mic-btn ${isForceMuted ? 'force-muted' : isMuted ? 'muted' : 'active'}`}
-              onClick={toggleMute}
-              disabled={isForceMuted}
-              title={isForceMuted ? 'Muted by Host' : isMuted ? 'Unmute microphone' : 'Mute microphone'}
-            >
-              {isForceMuted ? (
-                <><FaMicrophoneSlash className="mic-slash-icon" /> Muted by Host</>
-              ) : isMuted ? (
-                <><FaMicrophoneSlash className="mic-slash-icon" /> Mic Muted</>
-              ) : (
-                <><FaMicrophone className="mic-active-icon" /> Mic On</>
-              )}
-            </button>
+            roomState?.settings?.voiceChatEnabled ? (
+              <button
+                className={`nav-mic-btn ${isForceMuted ? 'force-muted' : isMuted ? 'muted' : 'active'}`}
+                onClick={toggleMute}
+                disabled={isForceMuted}
+                title={isForceMuted ? 'Muted by Host' : isMuted ? 'Unmute microphone' : 'Mute microphone'}
+              >
+                {isForceMuted ? (
+                  <><FaMicrophoneSlash className="mic-slash-icon" /> Muted by Host</>
+                ) : isMuted ? (
+                  <><FaMicrophoneSlash className="mic-slash-icon" /> Mic Muted</>
+                ) : (
+                  <><FaMicrophone className="mic-active-icon" /> Mic On</>
+                )}
+              </button>
+            ) : (
+              <button
+                className="nav-mic-btn nav-mic-btn--inaccessible"
+                disabled
+                title="Microphone is disabled in this room by the host"
+              >
+                <FaMicrophoneSlash className="mic-slash-icon" /> Mic Disabled
+              </button>
+            )
           )}
 
           <div className="user-profile-pill">
@@ -400,9 +444,11 @@ export default function GamePage() {
                     <div className="player-meta-box">
                       <div className="player-name-row">
                         <span className="player-name-text" title={player.username}>{player.username}</span>
-                        <span className="player-mic-mini">
-                          {player.isMuted ? <FaMicrophoneSlash className="mic-muted-red" /> : <FaMicrophone className="mic-on-green" />}
-                        </span>
+                        {roomState?.settings?.voiceChatEnabled && (
+                          <span className="player-mic-mini">
+                            {player.isMuted ? <FaMicrophoneSlash className="mic-muted-red" /> : <FaMicrophone className="mic-on-green" />}
+                          </span>
+                        )}
                       </div>
                       <span className="player-score-text">{player.score || 0} pts</span>
                     </div>
@@ -428,7 +474,7 @@ export default function GamePage() {
                         )}
 
                         {/* Host controls to force mute other active players */}
-                        {isHost && player.socketId !== socket.id && (
+                        {isHost && roomState?.settings?.voiceChatEnabled && player.socketId !== socket.id && (
                           <button
                             className="btn-player-mute"
                             title={player.isMuted ? 'Unmute microphone' : 'Mute microphone'}
@@ -487,6 +533,33 @@ export default function GamePage() {
                 <p className="overlay-subtitle">
                   {(roomState?.players?.length || 0)} / {roomState?.settings?.maxPlayers || 8} Players Joined
                 </p>
+
+                <div className="lobby-voice-setting-row">
+                  <span className="lobby-voice-label">Voice Chat:</span>
+                  {isHost ? (
+                    <button
+                      type="button"
+                      className={`lobby-voice-toggle-btn ${roomState?.settings?.voiceChatEnabled ? 'is-enabled' : 'is-disabled'}`}
+                      onClick={() => handleSetVoiceChat(!roomState?.settings?.voiceChatEnabled)}
+                      title="Click to toggle microphone access for all players"
+                    >
+                      {roomState?.settings?.voiceChatEnabled ? (
+                        <><FaMicrophone className="btn-icon-xs" /> Mic: Enabled (Click to Disable)</>
+                      ) : (
+                        <><FaMicrophoneSlash className="btn-icon-xs" /> Mic: Disabled (Click to Enable)</>
+                      )}
+                    </button>
+                  ) : (
+                    <span className={`lobby-voice-badge ${roomState?.settings?.voiceChatEnabled ? 'is-enabled' : 'is-disabled'}`}>
+                      {roomState?.settings?.voiceChatEnabled ? (
+                        <><FaMicrophone className="btn-icon-xs" /> Mic Enabled</>
+                      ) : (
+                        <><FaMicrophoneSlash className="btn-icon-xs" /> Mic Disabled by Host</>
+                      )}
+                    </span>
+                  )}
+                </div>
+
                 {isHost ? (
                   <button
                     className="start-game-btn"
@@ -849,6 +922,35 @@ export default function GamePage() {
             >
               Return to Home
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Host Voice Chat Prompt Modal: asks host if mic should be enabled for everyone */}
+      {isHost && (roomState?.settings?.voiceChatEnabled === undefined || roomState?.settings?.voiceChatEnabled === null) && (
+        <div className="voice-prompt-backdrop">
+          <div className="voice-prompt-card">
+            <div className="voice-prompt-icon-ring">
+              <FaMicrophone className="voice-prompt-icon" />
+            </div>
+            <h2 className="voice-prompt-title">Enable Microphone for Everyone?</h2>
+            <p className="voice-prompt-desc">
+              Should voice chat be enabled for all players in this game room?
+            </p>
+            <div className="voice-prompt-actions">
+              <button
+                className="voice-prompt-btn voice-prompt-btn--yes"
+                onClick={() => handleSetVoiceChat(true)}
+              >
+                <FaMicrophone className="btn-icon-xs" /> Yes, Enable Mic
+              </button>
+              <button
+                className="voice-prompt-btn voice-prompt-btn--no"
+                onClick={() => handleSetVoiceChat(false)}
+              >
+                <FaMicrophoneSlash className="btn-icon-xs" /> No, Disable Mic
+              </button>
+            </div>
           </div>
         </div>
       )}

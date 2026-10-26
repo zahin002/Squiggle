@@ -9,7 +9,7 @@ const ICE_SERVERS = {
   ],
 };
 
-export default function useWebRTC(socket, roomId, role = 'player', players = []) {
+export default function useWebRTC(socket, roomId, role = 'player', players = [], voiceChatEnabled = false) {
   const [localStream, setLocalStream] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isForceMuted, setIsForceMuted] = useState(false);
@@ -163,8 +163,18 @@ export default function useWebRTC(socket, roomId, role = 'player', players = [])
 
   // ── 1. Request mic (async, non-blocking) ────────────────────────────
   useEffect(() => {
-    if (role === 'spectator') {
-      console.log('[WebRTC] Spectator mode — no mic requested.');
+    if (role === 'spectator' || !voiceChatEnabled) {
+      if (!voiceChatEnabled) {
+        console.log('[WebRTC] Voice chat is disabled for this room — no mic requested.');
+      } else {
+        console.log('[WebRTC] Spectator mode — no mic requested.');
+      }
+      // If we previously had a stream and voice chat got turned off, clean it up!
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(t => t.stop());
+        localStreamRef.current = null;
+        setLocalStream(null);
+      }
       return;
     }
 
@@ -205,11 +215,13 @@ export default function useWebRTC(socket, roomId, role = 'player', players = [])
         setLocalStream(null);
       }
     };
-  }, [role]);
+  }, [role, voiceChatEnabled]);
 
   // ── 2. Register signaling listeners (SYNCHRONOUS — never misses events) ──
   useEffect(() => {
     const handleSignal = async (data) => {
+      if (!voiceChatEnabled) return;
+
       // If we're a player and our mic isn't ready yet, queue the signal
       if (role !== 'spectator' && !localStreamRef.current) {
         console.log(`[WebRTC] ⏳ Queuing signal from ${data.senderSocketId} — waiting for mic.`);
@@ -255,10 +267,11 @@ export default function useWebRTC(socket, roomId, role = 'player', players = [])
       socket.off('forceMutedByHost', handleForceMute);
       socket.off('playerLeft', handlePlayerLeft);
     };
-  }, [socket, roomId, role, removePeer]);
+  }, [socket, roomId, role, voiceChatEnabled, removePeer]);
 
   // ── 3. Outbound connection initiator ────────────────────────────────
   const initiateConnections = useCallback((playersList) => {
+    if (!voiceChatEnabled) return;
     if (!playersList || playersList.length === 0) return;
 
     // Players must have their mic stream before initiating
@@ -288,16 +301,17 @@ export default function useWebRTC(socket, roomId, role = 'player', players = [])
         console.log(`[WebRTC] Waiting for offer from: ${p.socketId}`);
       }
     });
-  }, [socket, role, createPeerConnection]);
+  }, [socket, role, voiceChatEnabled, createPeerConnection]);
 
   // ── 4. Auto-trigger connections when stream or player list changes ──
   useEffect(() => {
+    if (!voiceChatEnabled) return;
     if (role === 'spectator') {
       initiateConnections(players);
     } else if (localStream && players && players.length > 0) {
       initiateConnections(players);
     }
-  }, [localStream, players, role, initiateConnections]);
+  }, [localStream, players, role, voiceChatEnabled, initiateConnections]);
 
   // ── 5. Cleanup on unmount ───────────────────────────────────────────
   useEffect(() => {
@@ -314,6 +328,11 @@ export default function useWebRTC(socket, roomId, role = 'player', players = [])
 
   // ── 6. Toggle self-mute ─────────────────────────────────────────────
   const toggleMute = useCallback(() => {
+    if (!voiceChatEnabled) {
+      console.log('[WebRTC] Cannot unmute — voice chat is disabled for this room.');
+      return;
+    }
+
     if (isForceMuted) {
       console.log('[WebRTC] Cannot unmute — host force-muted.');
       return;
@@ -327,12 +346,13 @@ export default function useWebRTC(socket, roomId, role = 'player', players = [])
     }
 
     socket.emit('toggleSelfMute', { roomId, mute: next });
-  }, [isMuted, isForceMuted, socket, roomId]);
+  }, [voiceChatEnabled, isMuted, isForceMuted, socket, roomId]);
 
   return {
     localStream,
     isMuted,
     isForceMuted,
+    voiceChatEnabled,
     remoteStreams,
     toggleMute,
     initiateConnections,
