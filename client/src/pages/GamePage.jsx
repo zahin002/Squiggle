@@ -387,16 +387,12 @@ export default function GamePage() {
           ) : null}
         </div>
 
-        {/* Right: Room Code, Copy Link, User */}
+        {/* Right: Room Code, User */}
         <div className="nav-right">
           <div className="room-code-badge">
             <span className="code-label">Room Code:</span>
             <strong className="code-value">{roomId}</strong>
           </div>
-
-          <button className="copy-link-btn" onClick={handleCopyInvite}>
-            {copySuccess ? <><FaCheck className="btn-icon-xs" /> Copied!</> : <><FaCopy className="btn-icon-xs" /> Copy Link</>}
-          </button>
 
           <div className="user-profile-pill">
             <FaUserCircle className="user-profile-avatar" />
@@ -518,11 +514,32 @@ export default function GamePage() {
             </svg>
           </div>
 
-          {/* Invite Friends Button at bottom */}
-          <button className="invite-friends-btn" onClick={handleCopyInvite}>
-            <FaUserPlus className="btn-icon-sm" />
-            <span>Invite Friends</span>
-          </button>
+          {/* Invite Friends Button at bottom with copied popup toast */}
+          <div className="invite-friends-wrapper">
+            {copySuccess && (
+              <div className="invite-copied-toast">
+                <FaCheckCircle className="toast-check-icon" />
+                <span>Room link copied to clipboard!</span>
+              </div>
+            )}
+            <button
+              className={`invite-friends-btn ${copySuccess ? 'is-copied' : ''}`}
+              onClick={handleCopyInvite}
+              title="Copy room link to invite friends"
+            >
+              {copySuccess ? (
+                <>
+                  <FaCheck className="btn-icon-sm" />
+                  <span>Link Copied!</span>
+                </>
+              ) : (
+                <>
+                  <FaUserPlus className="btn-icon-sm" />
+                  <span>Invite Friends</span>
+                </>
+              )}
+            </button>
+          </div>
         </aside>
 
         {/* CENTER COLUMN: Canvas & Canvas Overlays (NO SCROLLING) */}

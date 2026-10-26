@@ -709,9 +709,55 @@
   100% { transform: translateX(10px) scaleY(1.2); }
 }
 
-/* ── 4. Invite Friends Button ───────────────────────────────── */
-.invite-friends-btn {
+/* ── 4. Invite Friends Button & Copied Toast ─────────────────── */
+.invite-friends-wrapper {
+  position: relative;
   margin: auto 14px 14px 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.invite-copied-toast {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45), 0 0 10px rgba(16, 185, 129, 0.3);
+  z-index: 50;
+  pointer-events: none;
+  animation: toastPopUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.invite-copied-toast::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: #059669 transparent transparent transparent;
+}
+
+.toast-check-icon {
+  font-size: 13px;
+  color: #ffffff;
+}
+
+.invite-friends-btn {
+  width: 100%;
+  margin: 0;
   padding: 12px 18px;
   background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
   border: 1px solid rgba(99, 102, 241, 0.4);
@@ -737,6 +783,23 @@
 
 .invite-friends-btn:active {
   transform: translateY(0) scale(0.98);
+}
+
+.invite-friends-btn.is-copied {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4);
+}
+
+@keyframes toastPopUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 6px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
 }
 
 /* ── 5. Center Column: Canvas & Lobby Overlay ────────────────── */
