@@ -367,15 +367,34 @@
   z-index: 1;
 }
 
-/* In Wordle Mode, expand right column leftward to comfortably fit the bigger board & keyboard */
+/* In Wordle Mode, expand right column significantly leftward to comfortably fit the bigger board & keyboard */
 .game-main-content.is-wordle-mode {
-  grid-template-columns: 240px 1fr 430px;
+  grid-template-columns: 220px 1fr 490px;
+}
+
+@media (min-width: 1500px) {
+  .game-main-content.is-wordle-mode {
+    grid-template-columns: 240px 1fr 510px;
+  }
 }
 
 @media (max-width: 1320px) {
   .game-main-content.is-wordle-mode {
-    grid-template-columns: 220px 1fr 400px;
+    grid-template-columns: 200px 1fr 440px;
   }
+}
+
+/* In Wordle mode, ensure chat adapts so the large Wordle guesser board is never compressed */
+.is-wordle-mode .chat-messages {
+  max-height: 140px;
+  min-height: 50px;
+  padding: 10px 14px;
+}
+
+.is-wordle-mode .guess-section-wrapper {
+  margin: 6px 12px 10px 12px;
+  flex-shrink: 0;
+  overflow: visible;
 }
 
 .game-error-banner {

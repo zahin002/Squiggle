@@ -220,8 +220,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 14px;
+  gap: 5px;
+  margin-bottom: 12px;
 }
 
 .wordle-row {
@@ -304,15 +304,15 @@
 
 .wordle-key {
   height: 42px;
-  min-width: 28px;
+  min-width: 32px;
   flex: 1;
-  max-width: 38px;
+  max-width: 44px;
   background: rgba(255, 255, 255, 0.1);
   color: #f1f5f9;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 7px;
+  border-radius: 8px;
   font-family: 'Fredoka', 'Nunito', sans-serif;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
   display: flex;
   justify-content: center;
@@ -334,9 +334,9 @@
 }
 
 .wordle-key--special {
-  min-width: 50px;
-  max-width: 60px;
-  font-size: 0.78rem;
+  min-width: 58px;
+  max-width: 68px;
+  font-size: 0.82rem;
   font-weight: 800;
   background: rgba(255, 255, 255, 0.18);
   color: #ffffff;
