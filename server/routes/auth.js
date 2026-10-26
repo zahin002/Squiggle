@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
+const Reward = require('../models/Reward');
 
 const router = express.Router();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -81,6 +82,12 @@ router.post('/login', async (req, res) => {
       user.goldCoins += 2; // +2 daily coins
       user.lastLoginDate = new Date();
       await user.save();
+      Reward.create({
+        userId: user._id,
+        type: 'daily_login',
+        amount: 2,
+        currency: 'goldCoins'
+      }).catch(() => {});
     }
 
     const token = jwt.sign(
@@ -143,6 +150,21 @@ router.post('/google', async (req, res) => {
         });
         await user.save();
       }
+    }
+
+    // Daily login reward for Google Auth
+    const today = new Date().toDateString();
+    const lastLogin = user.lastLoginDate?.toDateString();
+    if (lastLogin !== today) {
+      user.goldCoins = (user.goldCoins || 0) + 2;
+      user.lastLoginDate = new Date();
+      await user.save();
+      Reward.create({
+        userId: user._id,
+        type: 'daily_login',
+        amount: 2,
+        currency: 'goldCoins'
+      }).catch(() => {});
     }
 
     const jwtToken = jwt.sign(

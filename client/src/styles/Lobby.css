@@ -285,6 +285,63 @@
   box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.18);
 }
 
+.rs-input--invalid {
+  border-color: #f87171 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.22) !important;
+}
+
+.rs-field-warning {
+  color: #fca5a5;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: normal;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rs-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.guest-restriction-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fde68a;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  margin-bottom: 1.2rem;
+}
+
+.guest-banner-icon {
+  color: #f59e0b;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.guest-register-link {
+  color: #38bdf8;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
 .rs-textarea {
   padding: 10px 14px;
   border-radius: 12px;

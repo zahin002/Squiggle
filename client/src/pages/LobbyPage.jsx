@@ -25,9 +25,15 @@ export default function LobbyPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('/api/rooms')
-      .then((res) => setRooms(res.data))
-      .catch(() => setRooms([]));
+    const fetchRooms = () => {
+      axios.get('/api/rooms')
+        .then((res) => setRooms(res.data))
+        .catch(() => setRooms([]));
+    };
+
+    fetchRooms();
+    const interval = setInterval(fetchRooms, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   const ensureUser = () => {

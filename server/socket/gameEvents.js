@@ -1,6 +1,7 @@
 const { createRoomState, getRoom, setRoom, deleteRoom } = require('./roomStore');
 const Room = require('../models/Room');
 const User = require('../models/User');
+const Reward = require('../models/Reward');
 const jwt = require('jsonwebtoken');
 const { buildRoomState } = require('./buildRoomState');
 const drawingEvents = require('./drawingEvents');
@@ -394,12 +395,24 @@ module.exports = (io) => {
           if (drawerPlayer) drawerPlayer.score += 50;
         }
 
-        // Persist Gold Coins to MongoDB for registered users
+        // Persist Gold Coins to MongoDB for registered users & record audit in Reward
         if (player.userId && !player.isGuest) {
           User.findByIdAndUpdate(player.userId, { $inc: { goldCoins: 1 } }).catch(() => {});
+          Reward.create({
+            userId: player.userId,
+            type: 'correct_guess',
+            amount: 1,
+            currency: 'goldCoins'
+          }).catch(() => {});
         }
         if (room.currentDrawer?.userId && !room.currentDrawer?.isGuest) {
           User.findByIdAndUpdate(room.currentDrawer.userId, { $inc: { goldCoins: 2 } }).catch(() => {});
+          Reward.create({
+            userId: room.currentDrawer.userId,
+            type: 'successful_draw',
+            amount: 2,
+            currency: 'goldCoins'
+          }).catch(() => {});
         }
 
         setRoom(roomId, room);
@@ -440,8 +453,82 @@ module.exports = (io) => {
       });
     });
 
+    // ----- LEAVE ROOM (Instant Exit) -----
+    socket.on('leaveRoom', ({ roomId }) => {
+      const targetRoomId = roomId || socket.data?.roomId;
+      if (!targetRoomId) return;
+
+      const room = getRoom(targetRoomId);
+      if (!room) return;
+
+      const disconnectedSocketId = socket.id;
+      const username = socket.data?.username;
+      const isGuest = socket.data?.isGuest;
+
+      socket.data = { ...(socket.data || {}), hasLeftExplicitly: true };
+      socket.leave(targetRoomId);
+
+      // Remove player immediately (0ms delay)
+      room.players = (room.players || []).filter(p => p.socketId !== disconnectedSocketId);
+      room.spectators = (room.spectators || []).filter(s => s.socketId !== disconnectedSocketId);
+
+      console.log('[EXPLICIT LEAVE]', username, targetRoomId, 'Remaining players:', room.players.length);
+
+      // If room is empty, delete immediately from memory AND MongoDB
+      if (room.players.length === 0) {
+        console.log('[ROOM INSTANTLY DELETED]', targetRoomId);
+        if (room.roundTimer) clearInterval(room.roundTimer);
+        if (room.wordSelectionTimer) clearInterval(room.wordSelectionTimer);
+        if (room.nextRoundTimeout) clearTimeout(room.nextRoundTimeout);
+        deleteRoom(targetRoomId);
+        return;
+      }
+
+      // If drawer left during a round, end the round
+      const wasDrawer = room.currentDrawer && room.currentDrawer.socketId === disconnectedSocketId;
+      if (wasDrawer && (room.status === 'playing' || room.status === 'wordSelection')) {
+        io.to(targetRoomId).emit('chatMessage', {
+          type: 'system',
+          text: `The drawer left! Round over.`
+        });
+        require('./roundManager').endRound(io, room, targetRoomId);
+      }
+
+      // If host left, reassign to next player
+      if (room.hostId === disconnectedSocketId || (room.hostUserId && socket.data?.userId === room.hostUserId)) {
+        if (room.players[0].userId != null) {
+          room.hostUserId = room.players[0].userId;
+          room.hostSocketId = null;
+        } else {
+          room.hostId = room.players[0].socketId;
+        }
+        io.to(targetRoomId).emit('chatMessage', {
+          type: 'system',
+          text: `${room.players[0].username} is now the room owner.`
+        });
+      }
+
+      setRoom(targetRoomId, room);
+
+      io.to(targetRoomId).emit('playerLeft', {
+        username,
+        isGuest,
+        players: room.players
+      });
+
+      io.to(targetRoomId).emit('chatMessage', {
+        type: 'system',
+        text: `${username}${isGuest ? ' (Guest)' : ''} left the room.`
+      });
+    });
+
     // ----- DISCONNECT -----
     socket.on('disconnect', () => {
+
+      if (socket.data?.hasLeftExplicitly) {
+        console.log('[DISCONNECT SKIPPED - ALREADY LEFT EXPLICITLY]', socket.id);
+        return;
+      }
 
       console.log(
         '[DISCONNECT]',

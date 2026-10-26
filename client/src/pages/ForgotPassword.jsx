@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import '../styles/Lobby.css';
+import {
+  FaPaintBrush,
+  FaGamepad,
+  FaTrophy,
+  FaBolt,
+  FaPencilAlt,
+  FaComments,
+} from 'react-icons/fa';
+import '../styles/Auth.css';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -19,38 +27,64 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="lobby-container" style={{ alignItems: 'center' }}>
-      <div className="lobby-card room-setup" style={{ maxWidth: '500px', width: '100%' }}>
-        <h2 style={{ textAlign: 'center', fontSize: '2.2rem' }}>Reset Password</h2>
-        <p style={{ textAlign: 'center', color: '#666', marginBottom: '2rem' }}>
-          Enter your registered email address and we'll send you a link to reset your password.
-        </p>
-        
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <label>
-            Email Address
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-            />
-          </label>
-          
-          {status.message && (
-            <p className={status.type === 'error' ? 'error-text' : ''} style={status.type === 'success' ? { color: '#2ed573', fontWeight: 600, textAlign: 'center' } : {}}>
-              {status.message}
-            </p>
-          )}
-          
-          <button type="submit" className="btn-join-main" style={{ marginTop: '0.5rem' }} disabled={status.type === 'loading'}>
-            {status.type === 'loading' ? 'Sending...' : 'Send Reset Link'}
-          </button>
-        </form>
+    <div className="auth-page">
+      {/* Fixed background layers that never shift on scroll */}
+      <div className="auth-bg" aria-hidden="true" />
+      <div className="auth-bg-icons" aria-hidden="true">
+        <FaPaintBrush className="auth-doodle" />
+        <FaGamepad className="auth-doodle" />
+        <FaTrophy className="auth-doodle" />
+        <FaBolt className="auth-doodle" />
+        <FaPencilAlt className="auth-doodle" />
+        <FaComments className="auth-doodle" />
+      </div>
 
-        <div style={{ textAlign: 'center', fontWeight: 600, color: '#555', marginTop: '2rem' }}>
-          <p>Remember your password? <Link to="/login" style={{ color: '#4facfe', textDecoration: 'none' }}>Log In</Link></p>
+      {/* Scrollable content */}
+      <div className="auth-content">
+        <Link to="/" className="auth-logo">
+          <span>🎨</span>
+          <span>Squiggle</span>
+        </Link>
+
+        <div className="auth-card">
+          <h1 className="auth-title">Reset Password</h1>
+          <p className="auth-subtitle">
+            Enter your registered email address and we'll send you a password reset link
+          </p>
+
+          {status.message && (
+            <div className={status.type === 'error' ? 'auth-error-banner' : 'auth-success-banner'} style={{ marginBottom: '1.2rem' }}>
+              {status.message}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="auth-form">
+            <label className="auth-label">
+              Email Address
+              <input
+                type="email"
+                className="auth-input"
+                placeholder="Enter your registered email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoFocus
+              />
+            </label>
+
+            <button type="submit" className="auth-submit-btn" disabled={status.type === 'loading'}>
+              {status.type === 'loading' ? 'Sending...' : 'Send Reset Link'}
+            </button>
+          </form>
+
+          <div className="auth-switch" style={{ marginTop: '1.8rem' }}>
+            <span>
+              Remember your password?{' '}
+              <Link to="/login" className="auth-switch-link">
+                Log in here
+              </Link>
+            </span>
+          </div>
         </div>
       </div>
     </div>

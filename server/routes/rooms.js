@@ -84,11 +84,23 @@ router.get('/:roomId', async (req, res) => {
 // ---------------------------------------------------------------------------
 router.get('/', async (req, res) => {
   try {
+    const { getRoom, deleteRoom } = require('../socket/roomStore');
     const rooms = await Room.find({
       'settings.isPrivate': false,
       status: { $ne: 'finished' },
     });
-    res.json(rooms);
+
+    const activeRooms = [];
+    for (const r of rooms) {
+      const memRoom = getRoom(r.roomId);
+      if (memRoom && memRoom.players.length === 0) {
+        deleteRoom(r.roomId);
+        continue;
+      }
+      activeRooms.push(r);
+    }
+
+    res.json(activeRooms);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }

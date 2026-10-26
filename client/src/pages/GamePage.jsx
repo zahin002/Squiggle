@@ -174,6 +174,13 @@ export default function GamePage() {
     setTimeout(() => setCopySuccess(false), 2500);
   };
 
+  const handleLeaveRoom = () => {
+    try {
+      socket.emit('leaveRoom', { roomId });
+    } catch {}
+    navigate('/lobby');
+  };
+
   const currentWordDisplay = roomState?.currentWord || roomState?.selectedWord;
 
   return (
@@ -182,10 +189,10 @@ export default function GamePage() {
       <header className="game-navbar-compact">
         {/* Left: Logo & Leave Button */}
         <div className="nav-left">
-          <Link to="/lobby" className="nav-logo">
+          <button className="nav-logo" onClick={handleLeaveRoom} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
             Squiggle 🎨
-          </Link>
-          <button className="leave-btn" onClick={() => navigate('/lobby')}>
+          </button>
+          <button className="leave-btn" onClick={handleLeaveRoom}>
             ← Leave
           </button>
         </div>
@@ -383,7 +390,7 @@ export default function GamePage() {
                       </div>
                     ))}
                   </div>
-                  <button className="start-game-btn" onClick={() => navigate('/lobby')} style={{ marginTop: '12px' }}>
+                  <button className="start-game-btn" onClick={handleLeaveRoom} style={{ marginTop: '12px' }}>
                     Return to Lobby
                   </button>
                 </div>

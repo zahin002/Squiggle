@@ -17,14 +17,64 @@ async function startNextRound(io, roomId) {
   room.currentRound += 1;
 
   if (room.currentRound > room.settings.rounds) {
-    const winner = [...room.players].sort((a, b) => b.score - a.score)[0];
+    const sortedPlayers = [...room.players].sort((a, b) => (b.score || 0) - (a.score || 0));
+    const winner = sortedPlayers[0];
     
     // Award win bonuses to MongoDB for registered winner
     if (winner?.userId && !winner?.isGuest) {
       const User = require('../models/User');
-      User.findByIdAndUpdate(winner.userId, {
-        $inc: { goldCoins: 20, totalWins: 1, currentWinStreak: 1 }
-      }).catch(() => {});
+      const Reward = require('../models/Reward');
+
+      try {
+        const user = await User.findById(winner.userId);
+        if (user) {
+          const newStreak = (user.currentWinStreak || 0) + 1;
+          const earnsDiamond = (newStreak % 2 === 0); // Every 2 consecutive wins awards 1 diamond
+          const diamondBonus = earnsDiamond ? 1 : 0;
+
+          user.goldCoins = (user.goldCoins || 0) + 20;
+          user.totalWins = (user.totalWins || 0) + 1;
+          user.currentWinStreak = newStreak;
+          if (diamondBonus > 0) {
+            user.diamonds = (user.diamonds || 0) + diamondBonus;
+          }
+          await user.save();
+
+          // Audit log in Reward collection
+          Reward.create({
+            userId: user._id,
+            type: 'game_win',
+            amount: 20,
+            currency: 'goldCoins'
+          }).catch(() => {});
+
+          if (diamondBonus > 0) {
+            Reward.create({
+              userId: user._id,
+              type: 'win_streak',
+              amount: diamondBonus,
+              currency: 'diamonds'
+            }).catch(() => {});
+
+            io.to(roomId).emit('chatMessage', {
+              type: 'system',
+              text: `💎 WIN STREAK BONUS! ${winner.username} reached a ${newStreak}-win streak and earned +1 Diamond!`
+            });
+          }
+        }
+      } catch (err) {
+        console.error('[WIN BONUS ERROR]', err);
+      }
+
+      // Reset win streaks for other registered players who lost
+      const otherUserIds = room.players
+        .filter(p => p.userId && !p.isGuest && p.userId.toString() !== winner.userId.toString())
+        .map(p => p.userId);
+
+      if (otherUserIds.length > 0) {
+        const User = require('../models/User');
+        User.updateMany({ _id: { $in: otherUserIds } }, { $set: { currentWinStreak: 0 } }).catch(() => {});
+      }
     }
 
     io.to(roomId).emit('gameEnded', {
@@ -237,6 +287,33 @@ async function endRound(io, room, roomId) {
   room.roundTimer = null;
   room.wordSelectionTimer = null;
   room.status = 'roundEnding';
+
+  const isFailedRound = !room.correctGuessers || room.correctGuessers.length === 0;
+
+  if (isFailedRound && room.currentDrawer?.userId && !room.currentDrawer?.isGuest) {
+    const User = require('../models/User');
+    const Reward = require('../models/Reward');
+
+    User.findOneAndUpdate(
+      { _id: room.currentDrawer.userId, goldCoins: { $gt: 0 } },
+      { $inc: { goldCoins: -1 } },
+      { new: true }
+    ).then((updated) => {
+      if (updated) {
+        Reward.create({
+          userId: room.currentDrawer.userId,
+          type: 'failed_round',
+          amount: -1,
+          currency: 'goldCoins'
+        }).catch(() => {});
+      }
+    }).catch(() => {});
+
+    io.to(roomId).emit('chatMessage', {
+      type: 'system',
+      text: `❌ Round failed! Nobody guessed the word (-1 coin for drawer).`
+    });
+  }
 
   io.to(roomId).emit('roundEnded', {
     word: room.currentWord,

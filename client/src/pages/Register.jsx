@@ -3,12 +3,23 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
-import '../styles/Lobby.css';
+import {
+  FaEye,
+  FaEyeSlash,
+  FaPaintBrush,
+  FaGamepad,
+  FaTrophy,
+  FaBolt,
+  FaPencilAlt,
+  FaComments,
+} from 'react-icons/fa';
+import '../styles/Auth.css';
 
 export default function Register() {
   const [form, setForm] = useState({ username: '', email: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { setUser } = useAuth();
 
@@ -18,13 +29,14 @@ export default function Register() {
       setError('Passwords do not match');
       return;
     }
+    setLoading(true);
+    setError('');
     try {
       await axios.post('/api/auth/register', {
         username: form.username,
         email: form.email,
         password: form.password
       });
-      // Optionally auto-login, but we'll redirect to login page for now
       navigate('/login');
     } catch (err) {
       if (err.response?.data?.message) {
@@ -32,6 +44,8 @@ export default function Register() {
       } else {
         setError(`Error: ${err.message}`);
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,92 +62,130 @@ export default function Register() {
   };
 
   return (
-    <div className="lobby-container" style={{ alignItems: 'center' }}>
-      <div className="lobby-card room-setup" style={{ maxWidth: '500px', width: '100%' }}>
-        <h2 style={{ textAlign: 'center', fontSize: '2.2rem' }}>Join Squiggle</h2>
-        
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <label>
-            Username
-            <input
-              placeholder="Choose a playful username"
-              value={form.username}
-              onChange={e => setForm({ ...form, username: e.target.value })}
-              required
-              style={{ width: '100%', boxSizing: 'border-box' }}
-            />
-          </label>
-          <label>
-            Email Address
-            <input
-              type="email"
-              placeholder="name@example.com"
-              value={form.email}
-              onChange={e => setForm({ ...form, email: e.target.value })}
-              required
-              style={{ width: '100%', boxSizing: 'border-box' }}
-            />
-          </label>
-          <label style={{ position: 'relative' }}>
-            Password
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Create a password"
-              value={form.password}
-              onChange={e => setForm({ ...form, password: e.target.value })}
-              required
-              minLength={6}
-              style={{ paddingRight: '5rem', width: '100%', boxSizing: 'border-box' }}
-            />
-            <button 
-              type="button" 
-              onClick={() => setShowPassword(!showPassword)}
-              style={{ position: 'absolute', right: '12px', bottom: '15px', background: 'none', border: 'none', cursor: 'pointer', color: '#888', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem', fontWeight: 700, padding: 0 }}
-              title={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? (
-                <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg> Hide</>
-              ) : (
-                <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg> Show</>
-              )}
+    <div className="auth-page">
+      {/* Fixed background layers that never shift on scroll */}
+      <div className="auth-bg" aria-hidden="true" />
+      <div className="auth-bg-icons" aria-hidden="true">
+        <FaPaintBrush className="auth-doodle" />
+        <FaGamepad className="auth-doodle" />
+        <FaTrophy className="auth-doodle" />
+        <FaBolt className="auth-doodle" />
+        <FaPencilAlt className="auth-doodle" />
+        <FaComments className="auth-doodle" />
+      </div>
+
+      {/* Scrollable content */}
+      <div className="auth-content">
+        <Link to="/" className="auth-logo">
+          <span>🎨</span>
+          <span>Squiggle</span>
+        </Link>
+
+        <div className="auth-card">
+          <h1 className="auth-title">Join Squiggle</h1>
+          <p className="auth-subtitle">Create an account to save wins, customize avatars, and climb ranks</p>
+
+          {error && <div className="auth-error-banner">{error}</div>}
+
+          <form onSubmit={handleSubmit} className="auth-form" style={{ marginTop: error ? '1rem' : '0' }}>
+            <label className="auth-label">
+              Username
+              <input
+                type="text"
+                className="auth-input"
+                placeholder="Choose a playful username"
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+                required
+                minLength={3}
+                maxLength={20}
+                autoFocus
+              />
+            </label>
+
+            <label className="auth-label">
+              Email Address
+              <input
+                type="email"
+                className="auth-input"
+                placeholder="name@example.com"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
+              />
+            </label>
+
+            <label className="auth-label">
+              Password
+              <div className="auth-input-wrapper">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="auth-input"
+                  placeholder="Create a password (min 6 chars)"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  required
+                  minLength={6}
+                  style={{ paddingRight: '4.5rem' }}
+                />
+                <button
+                  type="button"
+                  className="auth-pwd-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  <span>{showPassword ? 'Hide' : 'Show'}</span>
+                </button>
+              </div>
+            </label>
+
+            <label className="auth-label">
+              Confirm Password
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="auth-input"
+                placeholder="Re-enter your password"
+                value={form.confirmPassword}
+                onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                required
+              />
+            </label>
+
+            <button type="submit" className="auth-submit-btn" disabled={loading}>
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
-          </label>
-          <label style={{ position: 'relative' }}>
-            Confirm Password
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Confirm your password"
-              value={form.confirmPassword}
-              onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
-              required
-              style={{ width: '100%', boxSizing: 'border-box' }}
+          </form>
+
+          <div className="auth-divider">
+            <span>OR</span>
+          </div>
+
+          <div className="auth-google-wrapper">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError('Google Sign-In failed')}
+              shape="pill"
+              theme="filled_blue"
+              size="large"
+              text="signup_with"
             />
-          </label>
-          
-          {error && <p className="error-text">{error}</p>}
-          
-          <button type="submit" className="btn-join-main" style={{ marginTop: '0.5rem' }}>Create Account</button>
-        </form>
+          </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', margin: '2rem 0', color: '#999', fontWeight: 600 }}>
-          <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
-          <span style={{ padding: '0 1rem' }}>OR</span>
-          <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => setError('Google Sign-In failed')}
-            shape="pill"
-            theme="filled_blue"
-            size="large"
-            text="signup_with"
-          />
-        </div>
-
-        <div style={{ textAlign: 'center', fontWeight: 600, color: '#555' }}>
-          <p>Already have an account? <Link to="/login" style={{ color: '#4facfe', textDecoration: 'none' }}>Log In</Link></p>
+          <div className="auth-switch">
+            <span>
+              Already have an account?{' '}
+              <Link to="/login" className="auth-switch-link">
+                Log in here
+              </Link>
+            </span>
+            <span>
+              Just browsing?{' '}
+              <Link to="/lobby" className="auth-guest-link">
+                Play as Guest →
+              </Link>
+            </span>
+          </div>
         </div>
       </div>
     </div>

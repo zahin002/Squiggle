@@ -1,5 +1,6 @@
 const express = require('express');
 const User = require('../models/User');
+const Reward = require('../models/Reward');
 const authMiddleware = require('../utils/authMiddleware');
 
 const router = express.Router();
@@ -130,6 +131,19 @@ router.patch('/me/avatar', authMiddleware, async (req, res) => {
     res.json({ avatar: user.avatar });
   } catch (error) {
     console.error('Avatar update error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /api/users/me/rewards — get user reward transaction history
+router.get('/me/rewards', authMiddleware, async (req, res) => {
+  try {
+    const rewards = await Reward.find({ userId: req.user.id })
+      .sort({ createdAt: -1 })
+      .limit(30);
+    res.json(rewards);
+  } catch (error) {
+    console.error('Rewards fetch error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

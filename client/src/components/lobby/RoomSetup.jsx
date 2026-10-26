@@ -26,21 +26,65 @@ export default function RoomSetup() {
     selectedGenres: [],
   });
 
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
   const isGuest = !!user?.isGuest;
 
+  // Boundary validation checks
+  const isPlayersInvalid = settings.maxPlayers !== '' && (settings.maxPlayers < 2 || settings.maxPlayers > 20);
+  const isRoundsInvalid = settings.rounds !== '' && (settings.rounds < 1 || settings.rounds > 10);
+  
+  const customWordsCount = settings.customWords
+    .split(',')
+    .map((w) => w.trim())
+    .filter(Boolean).length;
+  
+  const isCustomWordsInvalid = !isGuest && settings.gameMode === 'custom' && customWordsCount < 10;
+  const isGenreInvalid = !isGuest && settings.gameMode === 'genre' && settings.selectedGenres.length === 0;
+
   const createRoom = async () => {
+    setError('');
+
+    // Pre-flight boundary checks with user-friendly errors
+    if (settings.maxPlayers === '' || settings.maxPlayers < 2 || settings.maxPlayers > 20) {
+      setError('Max Players must be between 2 and 20.');
+      return;
+    }
+
+    if (settings.rounds === '' || settings.rounds < 1 || settings.rounds > 10) {
+      setError('Rounds must be between 1 and 10.');
+      return;
+    }
+
+    if (!isGuest && settings.gameMode === 'genre' && settings.selectedGenres.length === 0) {
+      setError('Please select at least one genre for Genre Mode.');
+      return;
+    }
+
+    if (!isGuest && settings.gameMode === 'custom' && customWordsCount < 10) {
+      setError(`Custom Mode requires at least 10 words (currently ${customWordsCount}).`);
+      return;
+    }
+
+    setLoading(true);
     try {
       const effectiveSettings = isGuest
         ? { ...settings, gameMode: 'standard', customWords: '', selectedGenres: [] }
         : settings;
+
       const res = await axios.post('/api/rooms/create', effectiveSettings);
       navigate(`/game/${res.data.roomId}`);
     } catch (err) {
       console.error('Failed to create room:', err);
+      setError(err.response?.data?.message || 'Failed to create room. Please check your settings.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGenreToggle = (genre, checked) => {
+    setError('');
     const updated = checked
       ? [...settings.selectedGenres, genre]
       : settings.selectedGenres.filter((g) => g !== genre);
@@ -65,18 +109,35 @@ export default function RoomSetup() {
         </div>
       )}
 
+      {/* Form Error Notice */}
+      {error && (
+        <div className="rs-error-banner">
+          <FaExclamationTriangle />
+          <span>{error}</span>
+        </div>
+      )}
+
       <div className="rs-fields">
         {/* Max Players */}
         <label className="rs-label">
           Max Players (2–20)
           <input
-            className="rs-input"
+            className={`rs-input ${isPlayersInvalid ? 'rs-input--invalid' : ''}`}
             type="number"
             min={2}
             max={20}
             value={settings.maxPlayers}
-            onChange={(e) => setSettings({ ...settings, maxPlayers: +e.target.value })}
+            onChange={(e) => {
+              setError('');
+              const val = e.target.value;
+              setSettings({ ...settings, maxPlayers: val === '' ? '' : Number(val) });
+            }}
           />
+          {isPlayersInvalid && (
+            <span className="rs-field-warning">
+              ⚠️ Must be between 2 and 20 players
+            </span>
+          )}
         </label>
 
         {/* Draw Time */}
@@ -95,15 +156,24 @@ export default function RoomSetup() {
 
         {/* Rounds */}
         <label className="rs-label">
-          Rounds
+          Rounds (1–10)
           <input
-            className="rs-input"
+            className={`rs-input ${isRoundsInvalid ? 'rs-input--invalid' : ''}`}
             type="number"
             min={1}
             max={10}
             value={settings.rounds}
-            onChange={(e) => setSettings({ ...settings, rounds: +e.target.value })}
+            onChange={(e) => {
+              setError('');
+              const val = e.target.value;
+              setSettings({ ...settings, rounds: val === '' ? '' : Number(val) });
+            }}
           />
+          {isRoundsInvalid && (
+            <span className="rs-field-warning">
+              ⚠️ Must be between 1 and 10 rounds
+            </span>
+          )}
         </label>
 
         {/* Game Mode */}
@@ -112,7 +182,10 @@ export default function RoomSetup() {
           <select
             className="rs-input"
             value={settings.gameMode}
-            onChange={(e) => setSettings({ ...settings, gameMode: e.target.value })}
+            onChange={(e) => {
+              setError('');
+              setSettings({ ...settings, gameMode: e.target.value });
+            }}
             disabled={isGuest}
             title={isGuest ? 'Register to unlock additional game modes' : undefined}
           >
@@ -140,20 +213,36 @@ export default function RoomSetup() {
                 </label>
               ))}
             </div>
+            {isGenreInvalid && (
+              <span className="rs-field-warning" style={{ marginTop: '4px' }}>
+                ⚠️ Select at least one genre to continue
+              </span>
+            )}
           </div>
         )}
 
         {/* Custom words */}
         {!isGuest && settings.gameMode === 'custom' && (
           <label className="rs-label rs-label--full">
-            Custom Words
+            Custom Words (minimum 10)
             <textarea
-              className="rs-textarea"
-              placeholder="Enter words separated by commas (minimum 10 words)"
+              className={`rs-textarea ${isCustomWordsInvalid ? 'rs-input--invalid' : ''}`}
+              placeholder="Enter words separated by commas (minimum 10 words, e.g. laptop, guitar, ocean, volcano...)"
               value={settings.customWords}
-              onChange={(e) => setSettings({ ...settings, customWords: e.target.value })}
+              onChange={(e) => {
+                setError('');
+                setSettings({ ...settings, customWords: e.target.value });
+              }}
               rows={4}
             />
+            <span
+              className="rs-field-warning"
+              style={{ color: customWordsCount >= 10 ? '#86efac' : '#fca5a5' }}
+            >
+              {customWordsCount >= 10
+                ? `✓ ${customWordsCount} words added (ready)`
+                : `⚠️ ${customWordsCount}/10 words added (need at least 10)`}
+            </span>
           </label>
         )}
 
@@ -169,8 +258,16 @@ export default function RoomSetup() {
         </label>
       </div>
 
-      <button className="btn-create" onClick={createRoom}>
-        <FaPlus className="btn-icon-sm" /> Create Room
+      <button
+        className="btn-create"
+        onClick={createRoom}
+        disabled={loading || isPlayersInvalid || isRoundsInvalid || isCustomWordsInvalid || isGenreInvalid}
+        style={{
+          opacity: loading || isPlayersInvalid || isRoundsInvalid || isCustomWordsInvalid || isGenreInvalid ? 0.6 : 1,
+          cursor: loading || isPlayersInvalid || isRoundsInvalid || isCustomWordsInvalid || isGenreInvalid ? 'not-allowed' : 'pointer'
+        }}
+      >
+        <FaPlus className="btn-icon-sm" /> {loading ? 'Creating Room...' : 'Create Room'}
       </button>
     </div>
   );
