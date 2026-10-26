@@ -840,7 +840,7 @@ export default function GamePage() {
                   name="chatInput"
                   type="text"
                   className="chat-input-modern"
-                  placeholder="Type a message..."
+                  placeholder="💬 Type chat message..."
                   autoComplete="off"
                 />
               </div>
@@ -896,7 +896,7 @@ export default function GamePage() {
                         className="guess-input"
                         value={guess}
                         onChange={(e) => setGuess(e.target.value)}
-                        placeholder="Type your guess here..."
+                        placeholder="🎯 Enter your guess here..."
                         disabled={isDrawer || roomState?.status !== 'playing'}
                         autoComplete="off"
                       />
