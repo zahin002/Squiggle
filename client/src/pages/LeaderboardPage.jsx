@@ -155,7 +155,7 @@ export default function LeaderboardPage() {
                     className={`lb-podium-card lb-podium-card--rank${rank}`}
                     style={{ '--rank-color': RANK_COLORS[rank - 1] }}
                   >
-                    <div className="lb-podium-rank-label">#{rank}</div>
+                    <div className="lb-podium-rank-label">{rank}</div>
                     <div className="lb-podium-avatar">
                       {(player.username || 'P').charAt(0).toUpperCase()}
                     </div>
@@ -203,7 +203,7 @@ export default function LeaderboardPage() {
                               '#6366f1'
                           }}
                         >
-                          #{p.rank}
+                          {p.rank}
                         </span>
                       </td>
                       <td>
