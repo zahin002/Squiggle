@@ -955,35 +955,6 @@ export default function GamePage() {
           </div>
         </div>
       )}
-
-      {/* Host Voice Chat Prompt Modal: asks host if mic should be enabled for everyone */}
-      {isHost && (roomState?.settings?.voiceChatEnabled === undefined || roomState?.settings?.voiceChatEnabled === null) && (
-        <div className="voice-prompt-backdrop">
-          <div className="voice-prompt-card">
-            <div className="voice-prompt-icon-ring">
-              <FaMicrophone className="voice-prompt-icon" />
-            </div>
-            <h2 className="voice-prompt-title">Enable Microphone for Everyone?</h2>
-            <p className="voice-prompt-desc">
-              Should voice chat be enabled for all players in this game room?
-            </p>
-            <div className="voice-prompt-actions">
-              <button
-                className="voice-prompt-btn voice-prompt-btn--yes"
-                onClick={() => handleSetVoiceChat(true)}
-              >
-                <FaMicrophone className="btn-icon-xs" /> Yes, Enable Mic
-              </button>
-              <button
-                className="voice-prompt-btn voice-prompt-btn--no"
-                onClick={() => handleSetVoiceChat(false)}
-              >
-                <FaMicrophoneSlash className="btn-icon-xs" /> No, Disable Mic
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

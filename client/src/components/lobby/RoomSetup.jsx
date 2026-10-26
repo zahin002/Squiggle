@@ -22,7 +22,7 @@ export default function RoomSetup() {
     hints: 2,
     gameMode: 'standard',
     isPrivate: false,
-    voiceChatEnabled: null,
+    voiceChatEnabled: false,
     customWords: '',
     selectedGenres: [],
   });
