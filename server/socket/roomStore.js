@@ -18,6 +18,8 @@ function createRoomState(roomId, settings, hostUserIdOrSocketId) {
     players: [],
     spectators: [],
     currentDrawer: null,
+    currentDrawerIndex: 0,
+    drawersDrawnThisRound: 0,
     currentWord: null,
     wordChoices: [],
     correctGuessers: [],

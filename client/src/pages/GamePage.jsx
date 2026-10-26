@@ -29,7 +29,8 @@ import {
   FaCommentDots,
   FaSmile,
   FaPaperPlane,
-  FaGamepad
+  FaGamepad,
+  FaLightbulb
 } from 'react-icons/fa';
 import DrawingCanvas from '../components/DrawingCanvas';
 import WordleBoard from '../components/WordleBoard';
@@ -154,7 +155,11 @@ export default function GamePage() {
     socket.on('roundStarted', (round) => {
       setRoomState((state) => (state ? { ...state, status: 'playing', ...round } : state));
       if (round?.timeLeft !== undefined) setTimeLeft(round.timeLeft);
-      setRoundSplash({ round: round.round, totalRounds: round.totalRounds });
+      setRoundSplash({
+        round: round.round,
+        totalRounds: round.totalRounds,
+        drawerName: round.drawer?.username
+      });
       setTimeout(() => setRoundSplash(null), 2500);
     });
 
@@ -655,7 +660,7 @@ export default function GamePage() {
                   <span className="splash-round-pill">
                     Round {roundSplash.round} of {roundSplash.totalRounds || roomState?.settings?.rounds || 3}
                   </span>
-                  <h2>Round Started!</h2>
+                  <h2>{roundSplash.drawerName ? `${roundSplash.drawerName}'s Turn!` : 'Round Started!'}</h2>
                   <p className="splash-role-info">
                     {isDrawer ? (
                       <>You are the <strong>Drawer</strong>! Sketch the secret word.</>
@@ -820,34 +825,48 @@ export default function GamePage() {
                 />
               ) : isDrawer ? (
                 <div className="drawer-active-banner">
-                  🎨 You are drawing! Watch guesses above.
+                  <FaPencilAlt className="drawer-banner-icon" />
+                  <span>You are drawing! Watch guesses above.</span>
                 </div>
               ) : (
-                <form
-                  className="guess-section"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (!guess.trim()) return;
-                    socket.emit('guessWord', { roomId, guess: guess.trim() });
-                    setGuess('');
-                  }}
-                >
-                  <input
-                    type="text"
-                    className="guess-input"
-                    value={guess}
-                    onChange={(e) => setGuess(e.target.value)}
-                    placeholder="Type your guess here..."
-                    disabled={isDrawer || roomState?.status !== 'playing'}
-                  />
-                  <button
-                    type="submit"
-                    className="guess-submit-btn"
-                    disabled={!guess.trim() || isDrawer || roomState?.status !== 'playing'}
+                <div className="guess-interactive-card">
+                  <div className="guess-card-header">
+                    <span className="guess-badge-tag">
+                      <FaLightbulb className="guess-tag-icon" /> GUESS THE WORD
+                    </span>
+                    {roomState?.wordHint && (
+                      <span className="guess-hint-mini">{roomState.wordHint}</span>
+                    )}
+                  </div>
+                  <form
+                    className="guess-section"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!guess.trim()) return;
+                      socket.emit('guessWord', { roomId, guess: guess.trim() });
+                      setGuess('');
+                    }}
                   >
-                    Submit Guess →
-                  </button>
-                </form>
+                    <div className="guess-input-box">
+                      <input
+                        type="text"
+                        className="guess-input"
+                        value={guess}
+                        onChange={(e) => setGuess(e.target.value)}
+                        placeholder="Type your guess here..."
+                        disabled={isDrawer || roomState?.status !== 'playing'}
+                        autoComplete="off"
+                      />
+                      <button
+                        type="submit"
+                        className="guess-submit-btn"
+                        disabled={!guess.trim() || isDrawer || roomState?.status !== 'playing'}
+                      >
+                        GUESS
+                      </button>
+                    </div>
+                  </form>
+                </div>
               )}
             </div>
           )}

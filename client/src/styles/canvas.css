@@ -14,19 +14,24 @@
   border: 3px solid rgba(124, 77, 255, 0.45);
   overflow: hidden;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
-  max-height: calc(100vh - 75px);
+  height: 100%;
+  max-height: 100%;
   width: auto;
   max-width: 100%;
   box-sizing: border-box;
   font-family: 'Nunito', sans-serif;
+  position: relative;
 }
 
 .drawing-canvas {
   display: block;
   background: #ffffff !important;
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
   width: auto;
   max-width: 100%;
-  max-height: calc(100vh - 140px);
+  max-height: 100%;
   aspect-ratio: 4 / 3;
   touch-action: none;
   object-fit: contain;
@@ -38,7 +43,7 @@
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
   background: #120e31; /* sleek matching dark purple-navy toolbar */
   border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -47,6 +52,7 @@
   flex-shrink: 0;
   min-height: 48px;
   font-family: 'Nunito', sans-serif;
+  z-index: 5;
 }
 
 /* ── Compact Color Picker ────────────────────────────────────── */
@@ -57,8 +63,8 @@
 }
 
 .active-color-preview {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 6px;
   border: 2px solid #ffffff;
   position: relative;
@@ -76,14 +82,14 @@
 
 .palette-grid-compact {
   display: grid;
-  grid-template-columns: repeat(11, 20px);
-  grid-template-rows: repeat(2, 20px);
-  gap: 3px;
+  grid-template-columns: repeat(11, 18px);
+  grid-template-rows: repeat(2, 18px);
+  gap: 2.5px;
 }
 
 .color-swatch-compact {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 4px;
   border: 1px solid rgba(0, 0, 0, 0.2);
   cursor: pointer;
@@ -116,7 +122,7 @@
 .toolbar-compact {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .tool-group {
@@ -132,9 +138,9 @@
 }
 
 .tool-btn-compact {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   border: 1.5px solid transparent;
   background: rgba(255, 255, 255, 0.12);
   color: #e2e8f0;
@@ -203,8 +209,8 @@
 
 /* Size Presets (Perfect Circles) */
 .size-preset-btn {
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   border: 1.5px solid transparent;
   background: rgba(255, 255, 255, 0.1);
@@ -237,9 +243,9 @@
 
 /* Action Buttons (Undo & Clear) */
 .action-btn-compact {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   border: none;
   display: flex;
   align-items: center;

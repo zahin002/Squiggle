@@ -9,12 +9,33 @@ async function startNextRound(io, roomId) {
   // Only those two lifecycle states are allowed to create a new round.
   if (!['starting', 'roundEnding'].includes(room.status)) return;
 
-  if (room.nextRoundTimeout) {
-    clearTimeout(room.nextRoundTimeout);
-    room.nextRoundTimeout = null;
-  }
+  if (room.players.length === 0) return;
 
-  room.currentRound += 1;
+  // Handle round & turn progression:
+  // Each round consists of EVERY player getting 1 turn to draw.
+  // The round only advances to the next round after all players have drawn.
+  let isNewRoundStarting = false;
+
+  if (room.status === 'starting') {
+    room.currentRound = 1;
+    room.currentDrawerIndex = 0;
+    room.drawersDrawnThisRound = 0;
+    isNewRoundStarting = true;
+  } else {
+    // Coming from roundEnding (a player's drawing turn just concluded)
+    room.drawersDrawnThisRound = (room.drawersDrawnThisRound || 0) + 1;
+
+    // If every player has had their turn to draw in the current round:
+    if (room.drawersDrawnThisRound >= room.players.length) {
+      room.currentRound += 1;
+      room.drawersDrawnThisRound = 0;
+      room.currentDrawerIndex = 0;
+      isNewRoundStarting = true;
+    } else {
+      // Advance to the next player's turn in the same round
+      room.currentDrawerIndex = (room.currentDrawerIndex + 1) % room.players.length;
+    }
+  }
 
   if (room.currentRound > room.settings.rounds) {
     const sortedPlayers = [...room.players].sort((a, b) => (b.score || 0) - (a.score || 0));
@@ -87,9 +108,20 @@ async function startNextRound(io, roomId) {
     return;
   }
 
-  // Rotate drawer by round index
-  const drawerIndex = (room.currentRound - 1) % room.players.length;
-  room.currentDrawer = room.players[drawerIndex];
+  // If a brand new round started (e.g. Round 2 or 3), notify the room
+  if (isNewRoundStarting && room.currentRound > 1) {
+    io.to(roomId).emit('chatMessage', {
+      type: 'system',
+      text: `🔔 Round ${room.currentRound} of ${room.settings.rounds} has started!`
+    });
+  }
+
+  // Ensure current drawer index is valid
+  if (room.currentDrawerIndex >= room.players.length || room.currentDrawerIndex < 0) {
+    room.currentDrawerIndex = 0;
+  }
+
+  room.currentDrawer = room.players[room.currentDrawerIndex];
   room.correctGuessers = [];
   room.currentWord = null;
   room.status = 'wordSelection';

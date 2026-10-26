@@ -354,6 +354,8 @@ module.exports = (io) => {
 
       roomState.status = 'starting';
       roomState.currentRound = 0;
+      roomState.currentDrawerIndex = 0;
+      roomState.drawersDrawnThisRound = 0;
       setRoom(roomId, roomState);
       const { persistRoom } = require('./roomStore');
       persistRoom(roomId, { status: 'playing' });

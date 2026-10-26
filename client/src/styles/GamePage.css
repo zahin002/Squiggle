@@ -1222,7 +1222,10 @@
 
 /* ── 8. Chat Input & Composer ───────────────────────────────── */
 .chat-input-area {
-  padding: 10px 14px;
+  padding: 10px 14px 12px 14px;
+  background: rgba(12, 9, 30, 0.45);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
 }
 
 .chat-composer-form {
@@ -1302,11 +1305,11 @@
 
 /* ── 9. Lobby Waiting Status Card ───────────────────────────── */
 .lobby-waiting-status-card {
-  margin: 0 14px 14px 14px;
+  margin: 12px 14px 14px 14px;
   padding: 12px 14px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+  border-radius: 14px;
   color: #64748b;
   font-family: 'Fredoka', 'Nunito', sans-serif;
   font-size: 13px;
@@ -1315,6 +1318,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .waiting-pad-icon {
@@ -1322,38 +1326,93 @@
   color: #64748b;
 }
 
-/* In-Game Guess Input Section */
+/* In-Game Guess Input Section (Spaced cleanly from chat) */
 .guess-section-wrapper {
-  padding: 10px 14px 14px 14px;
-  background: rgba(255, 255, 255, 0.02);
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin: 12px 14px 14px 14px;
+  flex-shrink: 0;
 }
 
 .drawer-active-banner {
-  background: rgba(124, 77, 255, 0.18);
+  background: linear-gradient(135deg, rgba(124, 77, 255, 0.2) 0%, rgba(56, 189, 248, 0.12) 100%);
   color: #c4b5fd;
-  padding: 10px;
-  border-radius: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1.5px solid rgba(124, 77, 255, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.drawer-banner-icon {
+  font-size: 14px;
+  color: #38bdf8;
+}
+
+.guess-interactive-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: linear-gradient(180deg, rgba(30, 24, 68, 0.65) 0%, rgba(18, 14, 44, 0.85) 100%);
+  border: 1.5px solid rgba(124, 77, 255, 0.35);
+  border-radius: 14px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.guess-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px;
+}
+
+.guess-badge-tag {
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.guess-tag-icon {
   font-size: 12px;
-  font-weight: 800;
-  text-align: center;
-  border: 1px solid rgba(124, 77, 255, 0.35);
+  color: #fbbf24;
+}
+
+.guess-hint-mini {
+  font-family: 'Consolas', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #cbd5e1;
 }
 
 .guess-section {
   display: flex;
   flex-direction: column;
+}
+
+.guess-input-box {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
 .guess-input {
-  width: 100%;
-  padding: 10px 14px;
+  flex: 1;
+  padding: 9px 12px;
   font-family: 'Nunito', sans-serif;
   font-size: 13px;
   font-weight: 700;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid rgba(56, 189, 248, 0.35);
   border-radius: 10px;
   outline: none;
   box-sizing: border-box;
@@ -1366,23 +1425,26 @@
 }
 
 .guess-input:focus {
-  border-color: #7c4dff;
-  box-shadow: 0 0 0 2px rgba(124, 77, 255, 0.25);
+  border-color: #38bdf8;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
 }
 
 .guess-submit-btn {
-  width: 100%;
   background: linear-gradient(135deg, #7c4dff, #38bdf8);
   color: white;
   border: none;
   border-radius: 10px;
-  padding: 10px;
+  padding: 9px 16px;
   font-family: 'Fredoka', 'Nunito', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
+  letter-spacing: 0.5px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 2px 10px rgba(124, 77, 255, 0.35);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .guess-submit-btn:hover:not(:disabled) {
