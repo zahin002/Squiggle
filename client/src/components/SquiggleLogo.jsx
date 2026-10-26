@@ -59,7 +59,11 @@ export default function SquiggleLogo({ size = 28, fontSize = '1.35rem', id = 'sq
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
-          letterSpacing: '-0.5px'
+          letterSpacing: '-0.5px',
+          display: 'inline-block',
+          lineHeight: 1.25,
+          paddingBottom: '0.18em',
+          marginBottom: '-0.18em'
         }}
       >
         Squiggle

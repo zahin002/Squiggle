@@ -176,6 +176,10 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: -0.5px;
+  display: inline-block;
+  line-height: 1.25;
+  padding-bottom: 0.18em;
+  margin-bottom: -0.18em;
 }
 
 .navbar-links {
@@ -710,6 +714,9 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin-bottom: 0.5rem;
+  display: inline-block;
+  line-height: 1.25;
+  padding-bottom: 0.18em;
 }
 
 .footer-text {
