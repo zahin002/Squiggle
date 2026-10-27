@@ -746,7 +746,7 @@ function renderBeard(style) {
   }
 }
 
-function AvatarComponent({ avatar, size = 48, className = '', username = '' }) {
+function AvatarComponent({ avatar, size = 48, className = '', username = '', isStage = false }) {
   const norm = normalizeAvatar(avatar);
 
   const baseColor = norm.color || '#f5c6a5';
@@ -754,7 +754,7 @@ function AvatarComponent({ avatar, size = 48, className = '', username = '' }) {
 
   return (
     <div
-      className={`squiggle-avatar-wrap ${className}`}
+      className={`squiggle-avatar-wrap ${isStage ? 'is-stage' : ''} ${className}`}
       style={{
         width: size,
         height: size,
@@ -764,9 +764,10 @@ function AvatarComponent({ avatar, size = 48, className = '', username = '' }) {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: '50%',
-        boxShadow: `0 4px 16px ${baseColor}33`,
+        borderRadius: isStage ? '12px' : '50%',
+        boxShadow: isStage ? 'none' : `0 4px 16px ${baseColor}33`,
         flexShrink: 0,
+        overflow: isStage ? 'visible' : 'hidden',
       }}
     >
       <svg
@@ -774,9 +775,9 @@ function AvatarComponent({ avatar, size = 48, className = '', username = '' }) {
         width="100%"
         height="100%"
         style={{
-          borderRadius: '50%',
+          borderRadius: isStage ? '0' : '50%',
           display: 'block',
-          overflow: 'hidden',
+          overflow: isStage ? 'visible' : 'hidden',
         }}
       >
         <defs>
@@ -787,8 +788,8 @@ function AvatarComponent({ avatar, size = 48, className = '', username = '' }) {
           </radialGradient>
         </defs>
 
-        {/* 1. Backdrop circle for circular profile badges / cards */}
-        <circle cx="50" cy="50" r="49" fill="url(#avatar-bg-soft)" />
+        {/* 1. Backdrop circle for circular profile badges / cards when NOT in stage mode */}
+        {!isStage && <circle cx="50" cy="50" r="49" fill="url(#avatar-bg-soft)" />}
 
         {/* 2. Character Body & Head Silhouette (Skribbl doodle style) */}
         <path

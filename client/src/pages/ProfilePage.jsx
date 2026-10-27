@@ -522,7 +522,7 @@ export default function ProfilePage() {
 
                 {/* Center Avatar Display */}
                 <div className="skribbl-avatar-center-wrap">
-                  <Avatar avatar={avatarState} size={156} username={profile.username} />
+                  <Avatar avatar={avatarState} size={156} username={profile.username} isStage />
                 </div>
 
                 {/* Right Arrow Column */}
@@ -645,7 +645,7 @@ export default function ProfilePage() {
                         onClick={() => setAvatarState((prev) => ({ ...prev, hat: opt.id }))}
                       >
                         <div className="option-avatar-thumb">
-                          <Avatar avatar={{ ...avatarState, hat: opt.id }} size={46} />
+                          <Avatar avatar={{ ...avatarState, hat: opt.id }} size={46} isStage />
                         </div>
                         <span className="option-label">{opt.label}</span>
                       </button>
@@ -664,7 +664,7 @@ export default function ProfilePage() {
                         onClick={() => setAvatarState((prev) => ({ ...prev, eyes: opt.id }))}
                       >
                         <div className="option-avatar-thumb">
-                          <Avatar avatar={{ ...avatarState, eyes: opt.id }} size={46} />
+                          <Avatar avatar={{ ...avatarState, eyes: opt.id }} size={46} isStage />
                         </div>
                         <span className="option-label">{opt.label}</span>
                       </button>
@@ -683,7 +683,7 @@ export default function ProfilePage() {
                         onClick={() => setAvatarState((prev) => ({ ...prev, eyebrows: opt.id }))}
                       >
                         <div className="option-avatar-thumb">
-                          <Avatar avatar={{ ...avatarState, eyebrows: opt.id }} size={46} />
+                          <Avatar avatar={{ ...avatarState, eyebrows: opt.id }} size={46} isStage />
                         </div>
                         <span className="option-label">{opt.label}</span>
                       </button>
@@ -702,7 +702,7 @@ export default function ProfilePage() {
                         onClick={() => setAvatarState((prev) => ({ ...prev, mouth: opt.id }))}
                       >
                         <div className="option-avatar-thumb">
-                          <Avatar avatar={{ ...avatarState, mouth: opt.id }} size={46} />
+                          <Avatar avatar={{ ...avatarState, mouth: opt.id }} size={46} isStage />
                         </div>
                         <span className="option-label">{opt.label}</span>
                       </button>
@@ -721,7 +721,7 @@ export default function ProfilePage() {
                         onClick={() => setAvatarState((prev) => ({ ...prev, moustache: opt.id }))}
                       >
                         <div className="option-avatar-thumb">
-                          <Avatar avatar={{ ...avatarState, moustache: opt.id }} size={46} />
+                          <Avatar avatar={{ ...avatarState, moustache: opt.id }} size={46} isStage />
                         </div>
                         <span className="option-label">{opt.label}</span>
                       </button>
@@ -740,7 +740,7 @@ export default function ProfilePage() {
                         onClick={() => setAvatarState((prev) => ({ ...prev, beard: opt.id }))}
                       >
                         <div className="option-avatar-thumb">
-                          <Avatar avatar={{ ...avatarState, beard: opt.id }} size={46} />
+                          <Avatar avatar={{ ...avatarState, beard: opt.id }} size={46} isStage />
                         </div>
                         <span className="option-label">{opt.label}</span>
                       </button>
