@@ -106,9 +106,11 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="profile-container">
+        <div className="profile-bg" aria-hidden="true" />
         <div className="profile-card">
           <div className="profile-loading">
-            <p style={{ color: '#64748b', fontWeight: 700, fontSize: '1.1rem' }}>
+            <div className="profile-spinner" />
+            <p style={{ color: '#cbd5e1', fontWeight: 700, fontSize: '1.1rem', marginTop: '16px' }}>
               Loading your profile...
             </p>
           </div>
@@ -121,9 +123,33 @@ export default function ProfilePage() {
   if (!user || user.isGuest) {
     return (
       <div className="profile-container">
+        <div className="profile-bg" aria-hidden="true" />
+        <div className="profile-bg-icons" aria-hidden="true">
+          <FaTrophy className="profile-doodle" />
+          <FaPalette className="profile-doodle" />
+          <FaCoins className="profile-doodle" />
+          <FaGem className="profile-doodle" />
+          <FaFire className="profile-doodle" />
+        </div>
         <div className="profile-card">
+          <header className="profile-header">
+            <div className="profile-header-left">
+              <button className="leave-room-box-btn profile-back-btn" onClick={() => navigate('/lobby')}>
+                <FaArrowLeft style={{ marginRight: '6px', verticalAlign: '-1px' }} /> Back to Lobby
+              </button>
+            </div>
+            <div className="profile-header-center">
+              <h1 className="profile-page-title">My Profile</h1>
+            </div>
+            <div className="profile-header-right">
+              <Link to="/" className="profile-brand-link" title="Squiggle Home">
+                <img src="/squiggle-wordmark.png" alt="Squiggle" className="profile-brand-logo-img" />
+              </Link>
+            </div>
+          </header>
+
           <div className="profile-guest-notice">
-            <div style={{ fontSize: '3rem', marginBottom: '12px', color: '#6366f1' }}>
+            <div style={{ fontSize: '3.5rem', marginBottom: '16px', color: '#a78bfa' }}>
               <FaUserSecret />
             </div>
             <h2>Guest Account</h2>
@@ -131,28 +157,12 @@ export default function ProfilePage() {
               You're playing as a guest. Create a free account to save your
               progress, earn gold coins, and appear on the Global Leaderboard!
             </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap', alignItems: 'center' }}>
               <button className="btn-go-register" onClick={() => navigate('/register')}>
                 Create Account <FaArrowRight style={{ marginLeft: '6px' }} />
               </button>
-              <button
-                onClick={() => navigate('/lobby')}
-                style={{
-                  background: '#f1f5f9',
-                  color: '#475569',
-                  border: '1.5px solid #cbd5e1',
-                  borderRadius: '999px',
-                  padding: '12px 28px',
-                  fontFamily: 'Nunito, sans-serif',
-                  fontSize: '1rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-              >
-                <FaArrowLeft /> Back to Lobby
+              <button className="leave-room-box-btn profile-back-btn" onClick={() => navigate('/lobby')}>
+                <FaArrowLeft style={{ marginRight: '6px', verticalAlign: '-1px' }} /> Back to Lobby
               </button>
             </div>
           </div>
@@ -165,13 +175,30 @@ export default function ProfilePage() {
   if (error) {
     return (
       <div className="profile-container">
+        <div className="profile-bg" aria-hidden="true" />
         <div className="profile-card">
+          <header className="profile-header">
+            <div className="profile-header-left">
+              <button className="leave-room-box-btn profile-back-btn" onClick={() => navigate('/lobby')}>
+                <FaArrowLeft style={{ marginRight: '6px', verticalAlign: '-1px' }} /> Back to Lobby
+              </button>
+            </div>
+            <div className="profile-header-center">
+              <h1 className="profile-page-title">My Profile</h1>
+            </div>
+            <div className="profile-header-right">
+              <Link to="/" className="profile-brand-link" title="Squiggle Home">
+                <img src="/squiggle-wordmark.png" alt="Squiggle" className="profile-brand-logo-img" />
+              </Link>
+            </div>
+          </header>
+
           <div className="profile-guest-notice">
             <div style={{ fontSize: '2.5rem', marginBottom: '12px', color: '#ef4444' }}>
               <FaExclamationTriangle />
             </div>
             <p style={{ color: '#ef4444', fontWeight: 700 }}>{error}</p>
-            <button className="btn-go-register" onClick={fetchProfile}>
+            <button className="btn-go-register" onClick={fetchProfile} style={{ marginTop: '16px' }}>
               Retry
             </button>
           </div>
@@ -187,18 +214,33 @@ export default function ProfilePage() {
 
   return (
     <div className="profile-container">
+      {/* ── Fixed background layers ── */}
+      <div className="profile-bg" aria-hidden="true" />
+      <div className="profile-bg-icons" aria-hidden="true">
+        <FaTrophy className="profile-doodle" />
+        <FaPalette className="profile-doodle" />
+        <FaCoins className="profile-doodle" />
+        <FaGem className="profile-doodle" />
+        <FaFire className="profile-doodle" />
+        <FaGlobeAmericas className="profile-doodle" />
+      </div>
+
       <div className="profile-card">
 
         {/* ── Header ── */}
         <header className="profile-header">
           <div className="profile-header-left">
+            <button className="leave-room-box-btn profile-back-btn" onClick={() => navigate('/lobby')}>
+              <FaArrowLeft style={{ marginRight: '6px', verticalAlign: '-1px' }} /> Back to Lobby
+            </button>
+          </div>
+          <div className="profile-header-center">
+            <h1 className="profile-page-title">My Profile</h1>
+          </div>
+          <div className="profile-header-right">
             <Link to="/" className="profile-brand-link" title="Squiggle Home">
               <img src="/squiggle-wordmark.png" alt="Squiggle" className="profile-brand-logo-img" />
             </Link>
-            <button className="btn-back-profile" onClick={() => navigate('/lobby')}>
-              <FaArrowLeft style={{ marginRight: '6px', verticalAlign: '-1px' }} /> Back to Lobby
-            </button>
-            <h1 className="profile-page-title">My Profile</h1>
           </div>
         </header>
 
@@ -235,27 +277,13 @@ export default function ProfilePage() {
                 <span className="profile-rank-suffix"> place</span>
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>
+            <div className="profile-climb-box">
+              <div className="profile-climb-text">
                 Want to climb higher?
               </div>
               <button
+                className="btn-view-leaderboard"
                 onClick={() => navigate('/leaderboard')}
-                style={{
-                  background: 'linear-gradient(135deg, #1a64ff 0%, #7c4dff 100%)',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '999px',
-                  padding: '6px 16px',
-                  fontFamily: 'Nunito, sans-serif',
-                  fontSize: '12px',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  boxShadow: '0 3px 10px rgba(26,100,255,0.25)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
               >
                 View Leaderboard <FaArrowRight />
               </button>
