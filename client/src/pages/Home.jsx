@@ -20,7 +20,9 @@ import {
   FaDice,
   FaCrown,
   FaEraser,
-  FaQuestion
+  FaQuestion,
+  FaCoins,
+  FaGem
 } from 'react-icons/fa';
 import '../styles/Home.css';
 
@@ -74,7 +76,7 @@ export default function Home() {
       <nav className={`home-navbar ${scrolled ? 'scrolled' : ''}`}>
         <Link to="/" className="navbar-brand">
           <img
-            src="/Top Corner Logo.png"
+            src="/top-corner-logo.png"
             alt="Squiggle"
             className="navbar-logo-img"
           />
@@ -114,6 +116,26 @@ export default function Home() {
 
       {/* ── Hero Section ───────────────────────────────────── */}
       <section className="home-hero">
+        {/* Floating playful icons around the hero */}
+        <div className="hero-floating-doodles" aria-hidden="true">
+          <span className="hero-doodle hero-doodle--1"><FaPencilAlt /></span>
+          <span className="hero-doodle hero-doodle--2"><FaPaintBrush /></span>
+          <span className="hero-doodle hero-doodle--3"><FaPalette /></span>
+          <span className="hero-doodle hero-doodle--4"><FaLightbulb /></span>
+          <span className="hero-doodle hero-doodle--5"><FaQuestion /></span>
+          <span className="hero-doodle hero-doodle--6"><FaGamepad /></span>
+          <span className="hero-doodle hero-doodle--7"><FaDice /></span>
+          <span className="hero-doodle hero-doodle--8"><FaSmile /></span>
+          <span className="hero-doodle hero-doodle--9"><FaTrophy /></span>
+          <span className="hero-doodle hero-doodle--10"><FaCrown /></span>
+          <span className="hero-doodle hero-doodle--11"><FaStar /></span>
+          <span className="hero-doodle hero-doodle--12"><FaCoins /></span>
+          <span className="hero-doodle hero-doodle--13"><FaGem /></span>
+          <span className="hero-doodle hero-doodle--14"><FaBolt /></span>
+          <span className="hero-doodle hero-doodle--15"><FaEraser /></span>
+          <span className="hero-doodle hero-doodle--16"><FaComments /></span>
+        </div>
+
         <div className="hero-badge">
           <span className="hero-badge-dot"></span>
           {user && !user.isGuest
@@ -288,13 +310,13 @@ export default function Home() {
       <footer className="home-footer">
         <div className="footer-brand">
           <img
-            src="/Top Corner Logo.png"
+            src="/top-corner-logo.png"
             alt="Squiggle"
             className="footer-logo-img"
           />
         </div>
         <p className="footer-text">
-          © {new Date().getFullYear()} SQUIGGLE — SKETCH, THINK AND GUESS
+          SKETCH, THINK AND GUESS
         </p>
       </footer>
     </div>

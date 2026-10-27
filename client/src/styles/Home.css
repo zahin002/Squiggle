@@ -351,6 +351,58 @@ body {
   min-height: 80vh;
 }
 
+/* ── Hero Floating Doodles ─────────────────────────────────── */
+.hero-floating-doodles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.hero-doodle {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.32;
+  filter: drop-shadow(0 0 12px currentColor);
+  animation: heroDoodleFloat 9s ease-in-out infinite alternate;
+  user-select: none;
+}
+
+@keyframes heroDoodleFloat {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translateY(-22px) rotate(8deg) scale(1.08);
+  }
+  100% {
+    transform: translateY(-8px) rotate(-6deg) scale(0.96);
+  }
+}
+
+.hero-doodle--1 { top: 12%; left: 8%; color: #38bdf8; font-size: 2.5rem; animation-delay: 0s; animation-duration: 7s; }
+.hero-doodle--2 { top: 22%; right: 9%; color: #c084fc; font-size: 2.8rem; animation-delay: -2s; animation-duration: 8.5s; }
+.hero-doodle--3 { top: 42%; left: 5%; color: #f472b6; font-size: 2.4rem; animation-delay: -4s; animation-duration: 9s; }
+.hero-doodle--4 { top: 18%; left: 24%; color: #fbbf24; font-size: 2.2rem; animation-delay: -1.5s; animation-duration: 7.5s; }
+.hero-doodle--5 { top: 32%; right: 18%; color: #06b6d4; font-size: 2.6rem; animation-delay: -3s; animation-duration: 8s; }
+.hero-doodle--6 { top: 62%; left: 10%; color: #a855f7; font-size: 2.7rem; animation-delay: -5s; animation-duration: 10s; }
+.hero-doodle--7 { top: 58%; right: 12%; color: #ec4899; font-size: 2.5rem; animation-delay: -2.5s; animation-duration: 9.5s; }
+.hero-doodle--8 { top: 78%; left: 20%; color: #34d399; font-size: 2.3rem; animation-delay: -6s; animation-duration: 8s; }
+.hero-doodle--9 { top: 80%; right: 22%; color: #eab308; font-size: 2.6rem; animation-delay: -1s; animation-duration: 9s; }
+.hero-doodle--10 { top: 8%; right: 28%; color: #f59e0b; font-size: 2.4rem; animation-delay: -3.5s; animation-duration: 7.8s; }
+.hero-doodle--11 { top: 28%; left: 15%; color: #fde047; font-size: 2rem; animation-delay: -4.5s; animation-duration: 8.2s; }
+.hero-doodle--12 { top: 72%; right: 30%; color: #f59e0b; font-size: 2.2rem; animation-delay: -5.5s; animation-duration: 8.8s; }
+.hero-doodle--13 { top: 48%; right: 6%; color: #38bdf8; font-size: 2.3rem; animation-delay: -2s; animation-duration: 7.2s; }
+.hero-doodle--14 { top: 10%; left: 40%; color: #f43f5e; font-size: 2.1rem; animation-delay: -4s; animation-duration: 6.5s; }
+.hero-doodle--15 { top: 85%; left: 8%; color: #94a3b8; font-size: 2rem; animation-delay: -6.5s; animation-duration: 9.2s; }
+.hero-doodle--16 { top: 68%; left: 32%; color: #818cf8; font-size: 2.2rem; animation-delay: -3s; animation-duration: 8.4s; }
+
 .hero-badge {
   display: inline-flex;
   align-items: center;
@@ -804,10 +856,16 @@ body {
 }
 
 .footer-text {
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.55);
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #a78bfa 0%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: block;
+  margin-top: 6px;
 }
 
 /* ── Animations ────────────────────────────────────────────── */
