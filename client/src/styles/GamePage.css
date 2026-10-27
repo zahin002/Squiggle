@@ -2030,9 +2030,9 @@
 }
 
 .word-selection-card {
-  max-width: 520px;
-  width: 92%;
-  padding: 28px 24px;
+  max-width: 560px;
+  width: 94%;
+  padding: 26px 22px;
 }
 
 .word-choices-grid {
@@ -2060,10 +2060,17 @@
   justify-content: center;
   text-align: center;
   line-height: 1.2;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  hyphens: auto;
   box-sizing: border-box;
+  overflow: hidden;
+}
+
+.word-choice-text {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
+  letter-spacing: -0.2px;
 }
 
 .word-choice-btn:hover {

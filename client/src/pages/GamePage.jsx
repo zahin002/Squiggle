@@ -1059,7 +1059,11 @@ export default function GamePage() {
                   <div className="word-choices-grid">
                     {roomState.wordChoices.map((word) => {
                       const len = word.length;
-                      const fontSize = len > 14 ? '0.78rem' : len > 11 ? '0.86rem' : len > 8 ? '0.94rem' : '1.02rem';
+                      const fontSize =
+                        len >= 14 ? '0.72rem' :
+                        len >= 12 ? '0.78rem' :
+                        len >= 10 ? '0.82rem' :
+                        len >= 8  ? '0.90rem' : '1.02rem';
                       return (
                         <button
                           key={word}
@@ -1071,7 +1075,7 @@ export default function GamePage() {
                           }}
                           title={word}
                         >
-                          {word}
+                          <span className="word-choice-text">{word}</span>
                         </button>
                       );
                     })}
