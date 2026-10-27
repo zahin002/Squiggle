@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import {
@@ -91,7 +91,6 @@ export default function GamePage() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [emojiTab, setEmojiTab] = useState('emojis');
 
-  const hasJoinedRef = useRef(false);
   const chatBottomRef = useRef(null);
   const chatInputRef = useRef(null);
   const emojiPickerRef = useRef(null);
@@ -151,33 +150,49 @@ export default function GamePage() {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const activeUserRef = useRef(activeUser);
+  useEffect(() => {
+    activeUserRef.current = activeUser;
+  }, [activeUser]);
+
+  const requestedRoleRef = useRef(requestedRole);
+  useEffect(() => {
+    requestedRoleRef.current = requestedRole;
+  }, [requestedRole]);
+
+  const emitJoin = useCallback(() => {
+    const curUser = activeUserRef.current;
+    if (!curUser) return;
+    socket.emit('joinRoom', {
+      roomId,
+      token: localStorage.getItem('token'),
+      username: curUser.username,
+      role: requestedRoleRef.current || 'player',
+      isGuest: !!curUser.isGuest,
+      guestId: curUser.id,
+      userId: curUser.id,
+    });
+    socket.emit('requestCanvasState', { roomId });
+  }, [roomId, socket]);
+
+  // When activeUser becomes available or updates, emit joinRoom if socket is connected
   useEffect(() => {
     if (!activeUser) return;
-    if (hasJoinedRef.current) return;
-
-    hasJoinedRef.current = true;
-    socket.connect();
-
-    const emitJoin = () => {
-      socket.emit('joinRoom', {
-        roomId,
-        token: localStorage.getItem('token'),
-        username: activeUser.username,
-        role: requestedRole,
-        isGuest: !!activeUser.isGuest,
-        guestId: activeUser.id,
-        userId: activeUser.id,
-      });
-    };
-
-    socket.on('connect', () => {
-      emitJoin();
-      socket.emit('requestCanvasState', { roomId });
-    });
-
     if (socket.connected) {
       emitJoin();
-      socket.emit('requestCanvasState', { roomId });
+    }
+  }, [activeUser, emitJoin, socket]);
+
+  useEffect(() => {
+    socket.connect();
+
+    const handleConnect = () => {
+      emitJoin();
+    };
+
+    socket.on('connect', handleConnect);
+    if (socket.connected) {
+      handleConnect();
     }
 
     socket.on('roomState', (state) => {
@@ -197,10 +212,6 @@ export default function GamePage() {
       if (state?.chatHistory) {
         setMessages(state.chatHistory);
       }
-    });
-
-    socket.on('connect', () => {
-      socket.emit('requestCanvasState', { roomId });
     });
 
     socket.on('playerJoined', ({ players }) => {
@@ -341,6 +352,7 @@ export default function GamePage() {
     });
 
     return () => {
+      socket.off('connect', handleConnect);
       socket.off('roomState');
       socket.off('playerJoined');
       socket.off('playerLeft');
@@ -365,7 +377,7 @@ export default function GamePage() {
 
       socket.disconnect();
     };
-  }, [activeUser, roomId, socket, navigate, requestedRole]);
+  }, [roomId, socket, emitJoin, navigate]);
 
   const isDrawer = roomState?.currentDrawer?.socketId === socket.id;
   const isHost =

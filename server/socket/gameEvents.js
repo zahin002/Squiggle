@@ -157,36 +157,27 @@ module.exports = (io) => {
               username
             );
           } else {
-            const existingPlayer = roomState.players.find(
+            const existingPlayerIndex = roomState.players.findIndex(
               p =>
-                p.userId &&
-                resolvedUserId &&
-                p.userId === resolvedUserId
+                (p.userId && resolvedUserId && String(p.userId) === String(resolvedUserId)) ||
+                (p.isGuest && isGuest && p.username === username)
             );
 
-            if (existingPlayer) {
-              const existingPlayerIndex = roomState.players.findIndex(
-                p => p.userId && resolvedUserId && p.userId === resolvedUserId
-              );
-
-              if (existingPlayerIndex !== -1) {
-                roomState.players[existingPlayerIndex].socketId =
-                  socket.id;
-              }
+            if (existingPlayerIndex !== -1) {
+              roomState.players[existingPlayerIndex].socketId = socket.id;
+              roomState.players[existingPlayerIndex].username = username;
 
               // Rebind drawer to the latest player record after reconnect.
-              const player = roomState.players.find(
-                p => p.userId && resolvedUserId && p.userId === resolvedUserId
-              );
+              const player = roomState.players[existingPlayerIndex];
 
               if (
                 player &&
                 roomState.currentDrawer &&
-                roomState.currentDrawer.userId === resolvedUserId
+                ((roomState.currentDrawer.userId && player.userId && String(roomState.currentDrawer.userId) === String(player.userId)) ||
+                 (roomState.currentDrawer.username === player.username))
               ) {
                 roomState.currentDrawer = player;
               }
-
 
               console.log(
                 '[PLAYER RECONNECTED]',
@@ -757,7 +748,9 @@ module.exports = (io) => {
 
       if (role === 'player') {
         const disconnectedSocketId = socket.id;
-        const disconnectedUserId = socket.data?.userId;
+        const disconnectedUserId = socket.data?.userId ? String(socket.data.userId) : null;
+        const disconnectedUsername = socket.data?.username;
+        const disconnectedIsGuest = !!socket.data?.isGuest;
         const roomIdForCleanup = roomId;
 
         const isDrawer = roomState.currentDrawer && roomState.currentDrawer.socketId === socket.id;
@@ -770,31 +763,30 @@ module.exports = (io) => {
           require('./roundManager').endRound(io, roomState, roomId);
         }
 
-        // Delay cleanup to allow quick refresh/reconnect.
+        // Delay cleanup to allow quick refresh/reconnect (5s grace period).
         // If the same user reconnects with a different socketId, we keep them.
         setTimeout(() => {
           const room = getRoom(roomIdForCleanup);
           if (!room) return;
 
-          const reconnected =
-            room.players.some(
-              p =>
-                p.userId === disconnectedUserId &&
-                p.socketId !== disconnectedSocketId
-            );
+          const reconnected = (room.players || []).some(p => {
+            const sameUser = disconnectedUserId && p.userId && String(p.userId) === disconnectedUserId;
+            const sameGuest = disconnectedIsGuest && p.isGuest && p.username === disconnectedUsername;
+            return (sameUser || sameGuest) && p.socketId !== disconnectedSocketId;
+          });
 
           if (reconnected) {
-            console.log('[REFRESH DETECTED]', {
+            console.log('[REFRESH DETECTED - KEEPING PLAYER]', {
               userId: disconnectedUserId,
+              username: disconnectedUsername,
               oldSocketId: disconnectedSocketId
             });
             return;
           }
 
-          room.players =
-            room.players.filter(
-              p => p.socketId !== disconnectedSocketId
-            );
+          room.players = (room.players || []).filter(
+            p => p.socketId !== disconnectedSocketId
+          );
 
           console.log('[AFTER REMOVE]', {
             disconnectedSocket: disconnectedSocketId,
@@ -808,7 +800,7 @@ module.exports = (io) => {
           // Re-apply host reassignment logic after delayed removal.
           const wasHost = (room.hostId === disconnectedSocketId) ||
             (room.hostSocketId === disconnectedSocketId) ||
-            (room.hostUserId && disconnectedUserId && String(room.hostUserId) === String(disconnectedUserId));
+            (room.hostUserId && disconnectedUserId && String(room.hostUserId) === disconnectedUserId);
 
           if (wasHost && room.players.length > 0) {
             if (room.players[0].userId != null) {
@@ -832,12 +824,6 @@ module.exports = (io) => {
             });
           }
 
-          io.to(roomIdForCleanup).emit('playerLeft', {
-            username,
-            isGuest,
-            players: buildRoomState(room, null, null).players
-          });
-
           if (room.players.length === 0) {
             console.log('[ROOM DELETED]', roomIdForCleanup);
             
@@ -857,16 +843,16 @@ module.exports = (io) => {
           setRoom(roomIdForCleanup, room);
 
           io.to(roomIdForCleanup).emit('playerLeft', {
-            username: socket.data?.username,
-            isGuest: socket.data?.isGuest,
-            players: room.players
+            username: disconnectedUsername,
+            isGuest: disconnectedIsGuest,
+            players: buildRoomState(room, null, null).players
           });
 
           io.to(roomIdForCleanup).emit('chatMessage', {
             type: 'system',
-            text: `${socket.data?.username}${socket.data?.isGuest ? ' (Guest)' : ''} left the room.`
+            text: `${disconnectedUsername}${disconnectedIsGuest ? ' (Guest)' : ''} left the room.`
           });
-        }, 3000);
+        }, 5000);
 
 
       } else {
