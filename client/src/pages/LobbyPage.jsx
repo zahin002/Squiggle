@@ -27,6 +27,21 @@ import {
   FaEraser,
   FaComments
 } from 'react-icons/fa';
+import {
+  LuInfo,
+  LuUsers,
+  LuClock,
+  LuTrophy,
+  LuMic,
+  LuMicOff,
+  LuZap,
+  LuGamepad2,
+  LuHash,
+  LuLock,
+  LuGlobe,
+  LuArrowRight,
+  LuEye
+} from 'react-icons/lu';
 import '../styles/Lobby.css';
 
 export default function LobbyPage() {
@@ -34,6 +49,7 @@ export default function LobbyPage() {
   const [joinCode, setJoinCode] = useState('');
   const [joinRole, setJoinRole] = useState('player');
   const [error, setError] = useState('');
+  const [expandedRoomId, setExpandedRoomId] = useState(null);
   const { user, loginAsGuest, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -182,27 +198,107 @@ export default function LobbyPage() {
               </div>
             ) : (
               <ul className="room-list">
-                {rooms.map((room) => (
-                  <li key={room.roomId} className="room-item">
-                    <div className="room-info">
-                      <span className="room-code-display">
-                        <FaHashtag className="room-hash" />{room.roomId}
-                      </span>
-                      <span className="room-mode">
-                        {room.settings?.isPrivate ? <FaLock className="room-mode-icon" /> : <FaGlobe className="room-mode-icon" />}
-                        {room.settings?.gameMode || 'standard'}
-                      </span>
-                    </div>
-                    <div className="room-actions">
-                      <button className="btn-room-join" onClick={() => joinRoom(room.roomId, 'player')}>
-                        <FaArrowRight /> Join
-                      </button>
-                      <button className="btn-room-spectate" onClick={() => joinRoom(room.roomId, 'spectator')}>
-                        <FaEye /> Spectate
-                      </button>
-                    </div>
-                  </li>
-                ))}
+                {rooms.map((room) => {
+                  const isExpanded = expandedRoomId === room.roomId;
+                  const currentPlayers = room.playerCount || room.players?.length || 1;
+                  const maxPlayers = room.settings?.maxPlayers || 8;
+                  const drawTime = room.settings?.drawTime || 80;
+                  const rounds = room.settings?.rounds || 3;
+                  const isVoiceEnabled = room.settings?.voiceChatEnabled === true;
+                  const isPowerupsEnabled = room.settings?.powerupsEnabled !== false;
+                  const gameMode = room.settings?.gameMode || 'standard';
+
+                  return (
+                    <li key={room.roomId} className={`room-item ${isExpanded ? 'is-expanded' : ''}`}>
+                      <div className="room-item-row">
+                        <div className="room-info">
+                          <div className="room-code-badge-group">
+                            <span className="room-code-display">
+                              <LuHash className="room-hash" />{room.roomId}
+                            </span>
+                            <span className="room-mode">
+                              {room.settings?.isPrivate ? <LuLock className="room-mode-icon" /> : <LuGlobe className="room-mode-icon" />}
+                              {gameMode}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="room-actions">
+                          {/* Info option to see room details */}
+                          <button
+                            type="button"
+                            className={`btn-room-details ${isExpanded ? 'is-active' : ''}`}
+                            onClick={() => setExpandedRoomId((prev) => (prev === room.roomId ? null : room.roomId))}
+                            title={isExpanded ? 'Hide room details' : 'View room details (players, draw time, rounds, voice, power-ups)'}
+                            aria-label="View room details"
+                          >
+                            <LuInfo className="btn-details-icon" />
+                          </button>
+
+                          <button className="btn-room-join" onClick={() => joinRoom(room.roomId, 'player')}>
+                            <LuArrowRight className="btn-action-icon" /> Join
+                          </button>
+                          <button className="btn-room-spectate" onClick={() => joinRoom(room.roomId, 'spectator')}>
+                            <LuEye className="btn-action-icon" /> Spectate
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Expandable Room Details Drawer */}
+                      {isExpanded && (
+                        <div className="room-details-drawer">
+                          <div className="room-details-grid">
+                            <div className="room-detail-pill" title="Max Players">
+                              <LuUsers className="detail-pill-icon icon-users" />
+                              <span className="detail-pill-label">Players:</span>
+                              <strong className="detail-pill-value">{currentPlayers}/{maxPlayers}</strong>
+                            </div>
+
+                            <div className="room-detail-pill" title="Draw Time per Turn">
+                              <LuClock className="detail-pill-icon icon-clock" />
+                              <span className="detail-pill-label">Draw Time:</span>
+                              <strong className="detail-pill-value">{drawTime}s</strong>
+                            </div>
+
+                            <div className="room-detail-pill" title="Total Rounds">
+                              <LuTrophy className="detail-pill-icon icon-trophy" />
+                              <span className="detail-pill-label">Rounds:</span>
+                              <strong className="detail-pill-value">{rounds}</strong>
+                            </div>
+
+                            <div className="room-detail-pill" title="Voice Chat Status">
+                              {isVoiceEnabled ? (
+                                <LuMic className="detail-pill-icon icon-mic-on" />
+                              ) : (
+                                <LuMicOff className="detail-pill-icon icon-mic-off" />
+                              )}
+                              <span className="detail-pill-label">Voice:</span>
+                              <strong className={`detail-pill-value ${isVoiceEnabled ? 'val-green' : 'val-muted'}`}>
+                                {isVoiceEnabled ? 'Enabled' : 'Disabled'}
+                              </strong>
+                            </div>
+
+                            <div className="room-detail-pill" title="Power-Ups Status">
+                              <LuZap className={`detail-pill-icon ${isPowerupsEnabled ? 'icon-bolt-on' : 'icon-bolt-off'}`} />
+                              <span className="detail-pill-label">Power-Ups:</span>
+                              <strong className={`detail-pill-value ${isPowerupsEnabled ? 'val-cyan' : 'val-muted'}`}>
+                                {isPowerupsEnabled ? 'Enabled' : 'Disabled'}
+                              </strong>
+                            </div>
+
+                            <div className="room-detail-pill" title="Game Mode">
+                              <LuGamepad2 className="detail-pill-icon icon-game" />
+                              <span className="detail-pill-label">Mode:</span>
+                              <strong className="detail-pill-value" style={{ textTransform: 'capitalize' }}>
+                                {gameMode}
+                              </strong>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>

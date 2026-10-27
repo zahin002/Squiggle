@@ -98,7 +98,12 @@ router.get('/', async (req, res) => {
 
       // Only display in lobby if the room is currently active in memory with players
       if (memRoom && memRoom.players && memRoom.players.length > 0) {
-        activeRooms.push(r);
+        const roomObj = r.toObject ? r.toObject() : JSON.parse(JSON.stringify(r));
+        roomObj.playerCount = memRoom.players.length;
+        if (memRoom.settings) {
+          roomObj.settings = { ...roomObj.settings, ...memRoom.settings };
+        }
+        activeRooms.push(roomObj);
         continue;
       }
 
