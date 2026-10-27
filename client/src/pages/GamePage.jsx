@@ -2,44 +2,47 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import {
-  FaUserSlash,
-  FaVoteYea,
-  FaStopwatch,
-  FaCheck,
-  FaTimes,
-  FaExclamationTriangle,
-  FaCheckCircle,
-  FaCoins,
-  FaBan,
-  FaInfoCircle,
-  FaLock,
-  FaPencilAlt,
-  FaArrowLeft,
-  FaPlay,
-  FaTrophy,
-  FaCopy,
-  FaMicrophone,
-  FaMicrophoneSlash,
-  FaUserCircle,
-  FaUsers,
-  FaUserPlus,
-  FaCrown,
-  FaVolumeUp,
-  FaVolumeMute,
-  FaCommentDots,
-  FaSmile,
-  FaPaperPlane,
-  FaGamepad,
-  FaLightbulb,
-  FaPaintBrush,
-  FaArrowRight,
-  FaSnowflake,
-  FaBolt,
-  FaGem
-} from 'react-icons/fa';
+  LuUsers,
+  LuCrown,
+  LuArrowLeft,
+  LuArrowRight,
+  LuClock,
+  LuTimer,
+  LuMessageSquare,
+  LuSend,
+  LuUserPlus,
+  LuUserX,
+  LuZap,
+  LuCoins,
+  LuGem,
+  LuLightbulb,
+  LuTarget,
+  LuCrosshair,
+  LuMic,
+  LuMicOff,
+  LuVolume2,
+  LuVolumeX,
+  LuCopy,
+  LuCheck,
+  LuUser,
+  LuGamepad2,
+  LuPencil,
+  LuPaintbrush,
+  LuSmile,
+  LuBan,
+  LuVote,
+  LuInfo,
+  LuCircleAlert,
+  LuCircleCheck,
+  LuSnowflake,
+  LuPlay,
+  LuTrophy,
+  LuLock,
+  LuX
+} from 'react-icons/lu';
 import DrawingCanvas from '../components/DrawingCanvas';
 import WordleBoard from '../components/WordleBoard';
-import DraggableGuessWindow from '../components/DraggableGuessWindow';
+import PowerupsPanel from '../components/PowerupsPanel';
 import SquiggleLogo, { SquiggleLogoMark } from '../components/SquiggleLogo';
 import { useAuth } from '../context/AuthContext';
 import useWebRTC from '../hooks/useWebRTC';
@@ -94,7 +97,6 @@ export default function GamePage() {
   const [chatInput, setChatInput] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [emojiTab, setEmojiTab] = useState('emojis');
-  const [guessWindowOpen, setGuessWindowOpen] = useState(true);
   const [freezeState, setFreezeState] = useState(null);
   const [extraCluesData, setExtraCluesData] = useState(null);
 
@@ -526,6 +528,32 @@ export default function GamePage() {
 
   const currentWordDisplay = roomState?.currentWord || roomState?.selectedWord;
 
+  const cleanSystemMessage = (text) => {
+    if (!text) return '';
+    return text.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1FA00}-\u{1FAFF}]/gu, '').trim();
+  };
+
+  const handleGuessSubmit = (e) => {
+    e?.preventDefault();
+    if (!guess.trim() || roomState?.status !== 'playing' || isDrawer) return;
+    if (isWordle) {
+      socket.emit('guessWordle', { roomId, guess: guess.trim().toUpperCase() });
+    } else {
+      socket.emit('guessWord', { roomId, guess: guess.trim() });
+    }
+    setGuess('');
+  };
+
+  const handleGuessWordDirect = (wordToGuess) => {
+    if (!wordToGuess || roomState?.status !== 'playing' || isDrawer) return;
+    if (isWordle) {
+      socket.emit('guessWordle', { roomId, guess: wordToGuess.trim().toUpperCase() });
+    } else {
+      socket.emit('guessWord', { roomId, guess: wordToGuess.trim() });
+    }
+    setGuess('');
+  };
+
   // Render guess hint: single words guaranteed on a single line,
   // auto-scaled font size for long words, wraps only between words if multi-word.
   const renderWordHint = (hint) => {
@@ -592,221 +620,251 @@ export default function GamePage() {
     <div className="game-page-modern">
       {/* Unified Compact Top Header Bar */}
       <header className="game-navbar-compact">
-        {/* Left: Leave Button (Leftest in Red Box) & Logo */}
+        {/* Left: Leave Button & Squiggle Logo */}
         <div className="nav-left">
           <button className="leave-room-box-btn" onClick={handleLeaveRoom} title="Leave Game Room">
-            <FaArrowLeft className="btn-icon-xs" /> Leave Room
+            <LuArrowLeft className="btn-icon-xs" />
+            <span>Leave Room</span>
           </button>
-          <button className="nav-logo" onClick={handleLeaveRoom} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} title="Squiggle">
+          <button
+            className="nav-logo"
+            onClick={handleLeaveRoom}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            title="Squiggle"
+          >
             <SquiggleLogo height={32} />
           </button>
         </div>
 
-        {/* Center: Live Round */}
+        {/* Center: Glowing Round Pill */}
         <div className="nav-center">
           <span className="round-badge">
             ROUND {roomState?.currentRound || 1}/{roomState?.settings?.rounds || 3}
           </span>
         </div>
 
-        {/* Right: Room Code, User */}
+        {/* Right: Room Code & User Profile */}
         <div className="nav-right">
-          <div className="room-code-badge">
-            <span className="code-label">Room Code:</span>
+          <div className="room-code-badge" title="Room Code">
+            <span className="code-label">Room:</span>
             <strong className="code-value">{roomId}</strong>
+            <button
+              type="button"
+              className="room-code-copy-btn"
+              onClick={handleCopyInvite}
+              title="Copy Room Link"
+            >
+              {copySuccess ? <LuCheck className="code-copy-icon is-copied" /> : <LuCopy className="code-copy-icon" />}
+            </button>
           </div>
 
           <div className="user-profile-pill">
-            <FaUserCircle className="user-profile-avatar" />
+            <LuUser className="user-profile-avatar" />
             <span className="user-profile-name">{activeUser?.username || 'Player'}</span>
           </div>
         </div>
       </header>
 
-      {/* Main 3-Column Content (100vh - 48px) */}
-      <main className={`game-main-content ${isWordle ? 'is-wordle-mode' : ''}`}>
+      {/* Main 3-Column Content */}
+      <main className={`game-main-content ${isWordle ? 'is-wordle-mode' : ''} ${!isDrawer ? 'guesser-view-active' : 'drawer-view-active'}`}>
         {error && (
           <div className="game-error-banner">
-            <FaExclamationTriangle style={{ marginRight: '6px' }} />
+            <LuCircleAlert style={{ marginRight: '6px' }} />
             <span>{error}</span>
           </div>
         )}
 
-        {/* LEFT SIDEBAR: Players */}
+        {/* LEFT COLUMN: Players Panel + Invite Friends + Power-Ups */}
         <aside className="game-left-col">
-          <div className="players-header">
-            <div className="players-header-title-box">
-              <FaUsers className="players-header-icon" />
-              <span>PLAYERS ({(roomState?.players?.length || 0)}/{(roomState?.settings?.maxPlayers || 8)})</span>
+          {/* 3. PLAYER PANEL - Compact height */}
+          <div className="players-panel-card">
+            <div className="players-header">
+              <div className="players-header-title-box">
+                <LuUsers className="players-header-icon" />
+                <span>PLAYERS ({(roomState?.players?.length || 0)}/{(roomState?.settings?.maxPlayers || 8)})</span>
+              </div>
+
+              {/* Mic toggle */}
+              {requestedRole !== 'spectator' && (
+                roomState?.settings?.voiceChatEnabled ? (
+                  <button
+                    type="button"
+                    className={`players-header-mic-btn ${isForceMuted ? 'is-force-muted' : isMuted ? 'is-muted' : 'is-active'}`}
+                    onClick={toggleMute}
+                    disabled={isForceMuted}
+                    title={isForceMuted ? 'Muted by Host' : isMuted ? 'Mic is Muted (Click to Turn ON)' : 'Mic is ON (Click to Turn OFF)'}
+                  >
+                    {isForceMuted || isMuted ? (
+                      <LuMicOff className="header-mic-icon mic-red" />
+                    ) : (
+                      <LuMic className="header-mic-icon mic-green" />
+                    )}
+                  </button>
+                ) : (
+                  <div
+                    className="players-header-mic-btn is-disabled"
+                    title="Voice chat disabled by host"
+                  >
+                    <LuMicOff className="header-mic-icon mic-off" />
+                  </div>
+                )
+              )}
             </div>
 
-            {/* Mic icon beside players(x/y) */}
-            {requestedRole !== 'spectator' && (
-              roomState?.settings?.voiceChatEnabled ? (
-                <button
-                  type="button"
-                  className={`players-header-mic-btn ${isForceMuted ? 'is-force-muted' : isMuted ? 'is-muted' : 'is-active'}`}
-                  onClick={toggleMute}
-                  disabled={isForceMuted}
-                  title={isForceMuted ? 'Muted by Host' : isMuted ? 'Mic is Muted (Click to Turn ON)' : 'Mic is ON (Click to Turn OFF)'}
-                >
-                  {isForceMuted || isMuted ? (
-                    <FaMicrophoneSlash className="header-mic-icon mic-red" />
-                  ) : (
-                    <FaMicrophone className="header-mic-icon mic-green" />
-                  )}
-                </button>
-              ) : (
-                <div
-                  className="players-header-mic-btn is-disabled"
-                  title="Voice chat disabled by host"
-                >
-                  <FaMicrophoneSlash className="header-mic-icon mic-off" />
-                </div>
-              )
-            )}
-          </div>
-          <div className="players-list">
-            {sortedPlayers.map((player) => {
-              const isDrawing = player.socketId === currentDrawerId;
-              const isPlayerHost = player.isHost !== undefined
-                ? !!player.isHost
-                : (roomState?.hostUserId && player.userId
-                    ? String(roomState.hostUserId) === String(player.userId)
-                    : (roomState?.hostId ? (player.socketId === roomState.hostId || player.userId === roomState.hostId) : false));
-              const rank = playerRankMap[player.socketId || player.userId] || 1;
+            <div className="players-list-compact">
+              {sortedPlayers.map((player) => {
+                const isDrawing = player.socketId === currentDrawerId;
+                const isPlayerHost = player.isHost !== undefined
+                  ? !!player.isHost
+                  : (roomState?.hostUserId && player.userId
+                      ? String(roomState.hostUserId) === String(player.userId)
+                      : (roomState?.hostId ? (player.socketId === roomState.hostId || player.userId === roomState.hostId) : false));
+                const rank = playerRankMap[player.socketId || player.userId] || 1;
 
-              return (
-                <div key={player.socketId || player.userId} className={`player-card-vertical ${isPlayerHost ? 'is-host' : ''} ${isDrawing ? 'is-drawing' : ''}`}>
-                  <div className="player-card-left">
-                    <div className={`player-avatar-circle rank-badge-${rank <= 3 ? rank : 'default'}`} title={`Rank ${rank} • ${player.score || 0} pts`}>
-                      <span className="player-rank-number">{rank}</span>
-                    </div>
-                    <div className="player-meta-box">
-                      <div className="player-name-row">
-                        <span className="player-name-text" title={player.username}>{player.username}</span>
-                        {roomState?.settings?.voiceChatEnabled && (
-                          <span className="player-mic-mini">
-                            {player.isMuted ? <FaMicrophoneSlash className="mic-muted-red" /> : <FaMicrophone className="mic-on-green" />}
-                          </span>
-                        )}
+                return (
+                  <div key={player.socketId || player.userId} className={`player-card-compact ${isPlayerHost ? 'is-host' : ''} ${isDrawing ? 'is-drawing' : ''}`}>
+                    <div className="player-card-left">
+                      <div className={`player-avatar-circle rank-badge-${rank <= 3 ? rank : 'default'}`} title={`Rank ${rank} • ${player.score || 0} pts`}>
+                        <span className="player-rank-number">{rank}</span>
                       </div>
-                      <span className="player-score-text">{player.score || 0} pts</span>
+                      <div className="player-meta-box">
+                        <div className="player-name-row">
+                          <span className="player-name-text" title={player.username}>{player.username}</span>
+                          {roomState?.settings?.voiceChatEnabled && (
+                            <span className="player-mic-mini">
+                              {player.isMuted ? <LuMicOff className="mic-muted-red" /> : <LuMic className="mic-on-green" />}
+                            </span>
+                          )}
+                        </div>
+                        <span className="player-score-text">{player.score || 0} pts</span>
+                      </div>
+                    </div>
+
+                    <div className="player-card-right">
+                      {isPlayerHost ? (
+                        <span className="host-badge-pill">
+                          <LuCrown className="crown-icon" /> Host
+                        </span>
+                      ) : (
+                        <div className="player-mod-actions">
+                          {/* Vote-kick trigger */}
+                          {player.socketId !== socket.id && (
+                            <button
+                              className="btn-player-kick"
+                              title={`Call vote to kick ${player.username}`}
+                              onClick={() => socket.emit('startVoteKick', { roomId, targetSocketId: player.socketId })}
+                              disabled={activeVote !== null}
+                            >
+                              <LuUserX className="btn-icon-xs" /> Kick
+                            </button>
+                          )}
+
+                          {/* Host controls to force mute */}
+                          {isHost && roomState?.settings?.voiceChatEnabled && player.socketId !== socket.id && (
+                            <button
+                              className="btn-player-mute"
+                              title={player.isMuted ? 'Unmute microphone' : 'Mute microphone'}
+                              onClick={() => socket.emit('forceMuteUser', {
+                                roomId,
+                                targetSocketId: player.socketId,
+                                mute: !player.isMuted
+                              })}
+                            >
+                              {player.isMuted ? <><LuVolume2 className="btn-icon-xs" /> Unmute</> : <><LuVolumeX className="btn-icon-xs" /> Mute</>}
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  <div className="player-card-right">
-                    {isPlayerHost ? (
-                      <span className="host-badge-pill">
-                        <FaCrown className="crown-icon" /> Host
-                      </span>
-                    ) : (
-                      <div className="player-mod-actions">
-                        {/* Vote-kick trigger for other players */}
-                        {player.socketId !== socket.id && (
-                          <button
-                            className="btn-player-kick"
-                            title={`Call vote to kick ${player.username}`}
-                            onClick={() => socket.emit('startVoteKick', { roomId, targetSocketId: player.socketId })}
-                            disabled={activeVote !== null}
-                          >
-                            <FaUserSlash className="btn-icon-xs" /> Kick
-                          </button>
-                        )}
-
-                        {/* Host controls to force mute other active players */}
-                        {isHost && roomState?.settings?.voiceChatEnabled && player.socketId !== socket.id && (
-                          <button
-                            className="btn-player-mute"
-                            title={player.isMuted ? 'Unmute microphone' : 'Mute microphone'}
-                            onClick={() => socket.emit('forceMuteUser', {
-                              roomId,
-                              targetSocketId: player.socketId,
-                              mute: !player.isMuted
-                            })}
-                          >
-                            {player.isMuted ? <><FaVolumeUp className="btn-icon-xs" /> Unmute</> : <><FaVolumeMute className="btn-icon-xs" /> Mute</>}
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
 
-          {/* Decorative floating dots/curves in empty player space */}
-          <div className="players-ambient-decor">
-            <span className="decor-dot dot-1" />
-            <span className="decor-dot dot-2" />
-            <span className="decor-dot dot-3" />
-            <svg className="decor-squiggle-curve" viewBox="0 0 160 50" fill="none">
-              <path d="M10 35 C 40 10, 80 45, 110 20 C 130 5, 150 25, 155 30" stroke="rgba(124, 77, 255, 0.18)" strokeWidth="4" strokeLinecap="round" />
-            </svg>
-          </div>
-
-          {/* Invite Friends Button at bottom with copied popup toast */}
-          <div className="invite-friends-wrapper">
+          {/* 4. INVITE FRIENDS - Part of the left-side stack */}
+          <div className="invite-friends-stack-box">
             {copySuccess && (
               <div className="invite-copied-toast">
-                <FaCheckCircle className="toast-check-icon" />
+                <LuCircleCheck className="toast-check-icon" />
                 <span>Room link copied to clipboard!</span>
               </div>
             )}
             <button
-              className={`invite-friends-btn ${copySuccess ? 'is-copied' : ''}`}
+              className={`btn-invite-friends-gradient ${copySuccess ? 'is-copied' : ''}`}
               onClick={handleCopyInvite}
               title="Copy room link to invite friends"
             >
               {copySuccess ? (
                 <>
-                  <FaCheck className="btn-icon-sm" />
+                  <LuCheck className="btn-icon-sm" />
                   <span>Link Copied!</span>
                 </>
               ) : (
                 <>
-                  <FaUserPlus className="btn-icon-sm" />
+                  <LuUserPlus className="btn-icon-sm" />
                   <span>Invite Friends</span>
                 </>
               )}
             </button>
           </div>
+
+          {/* 5. POWER-UPS - Placed below Invite Friends */}
+          <PowerupsPanel
+            socket={socket}
+            roomId={roomId}
+            roomState={roomState}
+            user={activeUser}
+            setUser={setUser}
+            freezeState={freezeState}
+            extraCluesData={extraCluesData}
+            onGuessWord={handleGuessWordDirect}
+          />
         </aside>
 
-        {/* CENTER COLUMN: Canvas & Canvas Overlays (NO SCROLLING) */}
-        <section className="game-mid-col">
-          {/* Top Bar above Canvas: Clock/Timer + Word Display */}
+        {/* CENTER COLUMN: HUD + Canvas + Dedicated Guess Bar Underneath */}
+        <section className={`game-mid-col ${!isDrawer ? 'guesser-mid-layout' : 'drawer-mid-layout'}`}>
+          {/* Top HUD above Canvas: Timer + Word Pattern */}
           {(roomState?.status === 'playing' || roomState?.status === 'wordSelection') && (
             <div className="canvas-header-bar">
-              {/* Freeze Red Timer popup to the left of normal timer */}
+              {/* Freeze Red Timer popup */}
               {freezeState?.active && freezeState.userSocketId === socket.id && (
                 <div className="canvas-freeze-red-timer" title="Active Freeze Time Countdown">
-                  <FaSnowflake className="freeze-pulse-icon" />
+                  <LuSnowflake className="freeze-pulse-icon" />
                   <span>+{freezeState.freezeSecondsRemaining}s FREEZE</span>
                 </div>
               )}
 
-              {/* Clock Timer - big and prominent */}
-              <div className={`canvas-timer-pill ${timeLeft <= 10 && !(freezeState?.active && freezeState.userSocketId === socket.id) ? 'warn' : ''} ${freezeState?.active && freezeState.userSocketId === socket.id ? 'is-frozen' : ''}`}>
+              {/* Timer HUD Element with smooth color warnings */}
+              <div
+                className={`canvas-timer-pill ${
+                  freezeState?.active && freezeState.userSocketId === socket.id
+                    ? 'is-frozen'
+                    : timeLeft <= 7
+                    ? 'critical'
+                    : timeLeft <= 15
+                    ? 'warn'
+                    : 'normal'
+                }`}
+              >
                 {freezeState?.active && freezeState.userSocketId === socket.id ? (
                   <>
-                    <FaSnowflake className="canvas-timer-icon freeze-snow-icon" />
+                    <LuSnowflake className="canvas-timer-icon freeze-snow-icon" />
                     <span className="canvas-timer-text">{freezeState.normalTimeFrozenAt ?? timeLeft}s (FROZEN)</span>
                   </>
                 ) : (
                   <>
-                    <FaStopwatch className="canvas-timer-icon" />
+                    <LuClock className="canvas-timer-icon" />
                     <span className="canvas-timer-text">{timeLeft}s</span>
                   </>
                 )}
               </div>
 
-              {/* Word Display (Draw / Guess / Wordle Phase) */}
+              {/* Word Pattern / Secret Word HUD element */}
               {isWordle ? (
                 <div className="canvas-word-pill wordle-phase">
                   <span className={`wordle-nav-phase ${roomState?.wordleState?.phase === 1 ? 'blind' : 'draw'}`}>
-                    {roomState?.wordleState?.phase === 1 ? <><FaLock className="btn-icon-xs" /> Blind Phase</> : <><FaPencilAlt className="btn-icon-xs" /> Drawing Phase</>}
+                    {roomState?.wordleState?.phase === 1 ? <><LuLock className="btn-icon-xs" /> Blind Phase</> : <><LuPencil className="btn-icon-xs" /> Drawing Phase</>}
                   </span>
                   {isDrawer && currentWordDisplay ? (
                     <div className="canvas-drawer-word-inline">
@@ -829,13 +887,14 @@ export default function GamePage() {
             </div>
           )}
 
-          <div className="canvas-wrapper-relative">
+          {/* Canvas Wrapper: Slightly resized for guesser, full-size for drawer */}
+          <div className={`canvas-wrapper-relative ${!isDrawer ? 'is-guesser-canvas' : 'is-drawer-canvas'}`}>
             <DrawingCanvas socket={socket} roomId={roomId} isDrawer={isDrawingAllowed} status={roomState?.status} />
 
-            {/* OVERLAY: Blind Phase Canvas Lock for Drawer */}
+            {/* OVERLAY: Blind Phase Canvas Lock for Drawer in Wordle */}
             {isWordle && isDrawer && roomState?.status === 'playing' && roomState?.wordleState?.isDrawerLocked && (
               <div className="canvas-blind-phase-overlay">
-                <FaLock className="blind-phase-icon" />
+                <LuLock className="blind-phase-icon" />
                 <h3>Phase 1: Blind Guessing</h3>
                 <p>Drawing is locked for Guesses 1 & 2. Players are attempting deduction blindly. Canvas unlocks in Phase 2!</p>
               </div>
@@ -861,17 +920,17 @@ export default function GamePage() {
                       title="Click to toggle microphone access for all players"
                     >
                       {roomState?.settings?.voiceChatEnabled ? (
-                        <><FaMicrophone className="btn-icon-xs" /> Mic: Enabled (Click to Disable)</>
+                        <><LuMic className="btn-icon-xs" /> Mic: Enabled (Click to Disable)</>
                       ) : (
-                        <><FaMicrophoneSlash className="btn-icon-xs" /> Mic: Disabled (Click to Enable)</>
+                        <><LuMicOff className="btn-icon-xs" /> Mic: Disabled (Click to Enable)</>
                       )}
                     </button>
                   ) : (
                     <span className={`lobby-voice-badge ${roomState?.settings?.voiceChatEnabled ? 'is-enabled' : 'is-disabled'}`}>
                       {roomState?.settings?.voiceChatEnabled ? (
-                        <><FaMicrophone className="btn-icon-xs" /> Mic Enabled</>
+                        <><LuMic className="btn-icon-xs" /> Mic Enabled</>
                       ) : (
-                        <><FaMicrophoneSlash className="btn-icon-xs" /> Mic Disabled by Host</>
+                        <><LuMicOff className="btn-icon-xs" /> Mic Disabled by Host</>
                       )}
                     </span>
                   )}
@@ -884,20 +943,20 @@ export default function GamePage() {
                       type="button"
                       className={`lobby-voice-toggle-btn ${roomState?.settings?.powerupsEnabled !== false ? 'is-enabled' : 'is-disabled'}`}
                       onClick={() => handleSetPowerups(roomState?.settings?.powerupsEnabled === false)}
-                      title="Click to toggle Power-Ups (Hint Steal, Extra Clues, Freeze Time)"
+                      title="Click to toggle Power-Ups"
                     >
                       {roomState?.settings?.powerupsEnabled !== false ? (
-                        <><FaBolt className="btn-icon-xs" /> Power-Ups: Enabled (Click to Disable)</>
+                        <><LuZap className="btn-icon-xs" /> Power-Ups: Enabled (Click to Disable)</>
                       ) : (
-                        <><FaBolt className="btn-icon-xs" /> Power-Ups: Disabled (Click to Enable)</>
+                        <><LuZap className="btn-icon-xs" /> Power-Ups: Disabled (Click to Enable)</>
                       )}
                     </button>
                   ) : (
                     <span className={`lobby-voice-badge ${roomState?.settings?.powerupsEnabled !== false ? 'is-enabled' : 'is-disabled'}`}>
                       {roomState?.settings?.powerupsEnabled !== false ? (
-                        <><FaBolt className="btn-icon-xs" /> Power-Ups Enabled</>
+                        <><LuZap className="btn-icon-xs" /> Power-Ups Enabled</>
                       ) : (
-                        <><FaBolt className="btn-icon-xs" /> Power-Ups Disabled by Host</>
+                        <><LuZap className="btn-icon-xs" /> Power-Ups Disabled by Host</>
                       )}
                     </span>
                   )}
@@ -915,7 +974,7 @@ export default function GamePage() {
                       </>
                     ) : (
                       <>
-                        <FaPlay className="btn-play-icon" /> START GAME NOW
+                        <LuPlay className="btn-play-icon" /> START GAME NOW
                       </>
                     )}
                   </button>
@@ -944,7 +1003,7 @@ export default function GamePage() {
               </div>
             )}
 
-            {/* OVERLAY: Round Started Splash (Active for 2.5s on roundStarted) */}
+            {/* OVERLAY: Round Started Splash */}
             {roundSplash && (
               <div className="round-started-splash-overlay">
                 <div className="round-started-splash-card">
@@ -999,11 +1058,11 @@ export default function GamePage() {
               </div>
             )}
 
-            {/* OVERLAY: Freeze Time Waiting Banner for other players when normal time expires */}
+            {/* OVERLAY: Freeze Time Waiting Banner for other players */}
             {freezeState?.active && freezeState.userSocketId !== socket.id && timeLeft <= 0 && (
               <div className="freeze-time-canvas-banner">
                 <div className="freeze-canvas-banner-card">
-                  <FaSnowflake className="freeze-banner-snowflake" />
+                  <LuSnowflake className="freeze-banner-snowflake" />
                   <div className="freeze-banner-text">
                     <span><strong>{freezeState.username}</strong> used Freeze Time! Wait for them to finish...</span>
                     <span className="freeze-banner-remaining">({freezeState.freezeSecondsRemaining}s remaining)</span>
@@ -1016,7 +1075,7 @@ export default function GamePage() {
             {roomState?.status === 'roundEnding' && (
               <div className="round-ended-overlay">
                 <div className="round-ended-card">
-                  <h2>Round Completed! <FaCheckCircle style={{ color: '#10b981', marginLeft: '6px', verticalAlign: '-2px' }} /></h2>
+                  <h2>Round Completed! <LuCircleCheck style={{ color: '#10b981', marginLeft: '6px', verticalAlign: '-2px' }} /></h2>
                   <p className="revealed-word-label">The secret word was:</p>
                   <div className="revealed-word-box">{roomState.revealedWord || roomState.currentWord}</div>
                   <p className="next-round-countdown">Next round starting shortly...</p>
@@ -1028,7 +1087,7 @@ export default function GamePage() {
             {roomState?.status === 'finished' && (
               <div className="game-ended-overlay">
                 <div className="game-ended-card">
-                  <h2><FaTrophy style={{ color: '#f59e0b', marginRight: '8px', verticalAlign: '-2px' }} /> Game Over!</h2>
+                  <h2><LuTrophy style={{ color: '#f59e0b', marginRight: '8px', verticalAlign: '-2px' }} /> Game Over!</h2>
                   <p className="winner-announcement">
                     Winner: <strong>{roomState.winner || sortedPlayers[0]?.username || 'Player'}</strong>!
                   </p>
@@ -1048,13 +1107,81 @@ export default function GamePage() {
               </div>
             )}
           </div>
+
+          {/* 7 & 8. DEDICATED GUESS BAR DIRECTLY UNDERNEATH CANVAS (GUESSER ONLY) */}
+          {!isDrawer && (
+            <div className="guesser-bottom-bar-wrapper">
+              <form className="guesser-control-bar" onSubmit={handleGuessSubmit}>
+                <div className="guesser-bar-tag">
+                  <LuTarget className="guesser-target-icon" />
+                  <span>I Think...</span>
+                </div>
+
+                <div className="guesser-bar-input-wrap">
+                  <input
+                    type="text"
+                    className="guesser-bar-input"
+                    value={guess}
+                    onChange={(e) => setGuess(e.target.value)}
+                    placeholder={
+                      roomState?.status !== 'playing'
+                        ? 'Waiting for round to start...'
+                        : isWordle
+                        ? `Type 5-letter deduction (${6 - (roomState?.wordleState?.guesses?.length || 0)} tries left)...`
+                        : 'Type your guess here...'
+                    }
+                    disabled={roomState?.status !== 'playing' || requestedRole === 'spectator'}
+                    autoComplete="off"
+                    maxLength={isWordle ? 5 : 40}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="guesser-bar-submit-btn"
+                  disabled={!guess.trim() || roomState?.status !== 'playing' || requestedRole === 'spectator'}
+                  title="Submit your guess"
+                >
+                  <span>GUESS</span>
+                  <LuArrowRight className="guesser-btn-arrow" />
+                </button>
+              </form>
+
+              {/* If Wordle mode is active, also render the compact Wordle keyboard/board underneath */}
+              {isWordle && roomState?.status === 'playing' && (
+                <div className="guesser-wordle-board-container">
+                  <WordleBoard
+                    wordleState={roomState?.wordleState}
+                    isDrawer={false}
+                    onKeyInput={(letter) => {
+                      if (letter === 'ENTER') {
+                        handleGuessSubmit();
+                      } else if (letter === 'BACKSPACE') {
+                        setGuess((prev) => prev.slice(0, -1));
+                      } else if (guess.length < 5) {
+                        setGuess((prev) => (prev + letter).toUpperCase());
+                      }
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Drawer Banner when Drawer is drawing */}
+          {isDrawer && roomState?.status === 'playing' && (
+            <div className="drawer-active-banner">
+              <LuPaintbrush className="drawer-banner-icon" />
+              <span>You are drawing! Watch player guesses in live chat.</span>
+            </div>
+          )}
         </section>
 
-        {/* RIGHT SIDEBAR: Live Chat & Guess Input */}
+        {/* RIGHT COLUMN: Live Chat Full Height */}
         <aside className="game-right-col">
           <div className="chat-header">
             <div className="chat-header-title">
-              <FaCommentDots className="chat-header-icon" />
+              <LuMessageSquare className="chat-header-icon" />
               <span>LIVE CHAT</span>
             </div>
             <span className="chat-online-badge">
@@ -1072,8 +1199,8 @@ export default function GamePage() {
                 return (
                   <div key={`${index}-${message.text}`} className="chat-msg-card system">
                     <div className="chat-sys-content">
-                      <FaUsers className="chat-sys-icon" />
-                      <span>{message.text}</span>
+                      <LuInfo className="chat-sys-icon" />
+                      <span>{cleanSystemMessage(message.text)}</span>
                     </div>
                     <span className="chat-msg-time">{msgTime}</span>
                   </div>
@@ -1094,7 +1221,7 @@ export default function GamePage() {
           </div>
 
           <div className="chat-input-area" ref={emojiPickerRef}>
-            {/* Floating popover for Full Emojis + Text Emojis (opened only on clicking smile icon) */}
+            {/* Popover for Full Emojis + Text Emojis */}
             {showEmojiPicker && (
               <div className="chat-emoji-popover">
                 <div className="emoji-popover-tabs">
@@ -1103,14 +1230,14 @@ export default function GamePage() {
                     className={`emoji-tab-btn ${emojiTab === 'emojis' ? 'active' : ''}`}
                     onClick={() => setEmojiTab('emojis')}
                   >
-                    😀 Emojis
+                    Emojis
                   </button>
                   <button
                     type="button"
                     className={`emoji-tab-btn ${emojiTab === 'text' ? 'active' : ''}`}
                     onClick={() => setEmojiTab('text')}
                   >
-                    (•‿•) Text Emojis
+                    Text Emojis
                   </button>
                 </div>
 
@@ -1166,7 +1293,7 @@ export default function GamePage() {
                   onClick={() => setShowEmojiPicker((prev) => !prev)}
                   title="Emoji & text emoji panel"
                 >
-                  <FaSmile className="chat-smile-icon" />
+                  <LuSmile className="chat-smile-icon" />
                 </button>
               </div>
               <button
@@ -1175,57 +1302,10 @@ export default function GamePage() {
                 title="Send message"
                 disabled={!chatInput.trim()}
               >
-                <FaPaperPlane className="send-plane-icon" />
+                <LuSend className="send-plane-icon" />
               </button>
             </form>
           </div>
-
-          {/* In-Game Floating Guess Trigger Bar (For Guessers) */}
-          {roomState?.status === 'playing' && requestedRole !== 'spectator' && !isDrawer && (
-            <div className="guess-trigger-bar">
-              <button
-                type="button"
-                className={`btn-trigger-guess-modal ${guessWindowOpen ? 'is-active' : ''}`}
-                onClick={() => setGuessWindowOpen((prev) => !prev)}
-                title={guessWindowOpen ? 'Hide draggable guess window' : 'Open draggable guess window'}
-              >
-                <div className="trigger-guess-left">
-                  <span className="trigger-guess-icon-pulse">
-                    {isWordle ? '🟩' : '🎯'}
-                  </span>
-                  <div className="trigger-guess-text">
-                    <span className="trigger-guess-title">
-                      {isWordle ? 'Wordle Mode Guesser' : 'Submit Your Guess'}
-                    </span>
-                    <span className="trigger-guess-sub">
-                      {isWordle
-                        ? `Phase ${roomState?.wordleState?.phase || 1} • Guess ${roomState?.wordleState?.currentGuessPhase || 1}/6`
-                        : (roomState?.wordHint ? `Hint: ${roomState.wordHint}` : 'Tap to open draggable guess box')}
-                    </span>
-                  </div>
-                </div>
-                <span className={`trigger-guess-badge ${guessWindowOpen ? 'active' : ''}`}>
-                  {guessWindowOpen ? 'ACTIVE' : 'OPEN'}
-                </span>
-              </button>
-            </div>
-          )}
-
-          {/* Drawer Banner */}
-          {isDrawer && roomState?.status === 'playing' && (
-            <div className="drawer-active-banner">
-              <FaPaintBrush className="drawer-banner-icon" />
-              <span>You are drawing! Watch player guesses in live chat.</span>
-            </div>
-          )}
-
-          {/* Lobby Waiting Card */}
-          {roomState?.status === 'lobby' && (
-            <div className="lobby-waiting-status-card">
-              <FaGamepad className="waiting-pad-icon" />
-              <span>Waiting to start...</span>
-            </div>
-          )}
         </aside>
       </main>
 
@@ -1252,7 +1332,7 @@ export default function GamePage() {
       {/* Vote Kick Toast Notification */}
       {voteNotice && (
         <div className="vote-kick-toast-notification">
-          <FaInfoCircle className="vote-toast-icon" />
+          <LuInfo className="vote-toast-icon" />
           <span>{voteNotice}</span>
         </div>
       )}
@@ -1263,10 +1343,10 @@ export default function GamePage() {
           <div className="vote-kick-card">
             <div className="vote-kick-card-header">
               <span className="vote-kick-badge">
-                <FaVoteYea className="vote-badge-icon" /> VOTE KICK
+                <LuVote className="vote-badge-icon" /> VOTE KICK
               </span>
               <span className="vote-kick-timer">
-                <FaStopwatch className="vote-timer-icon" /> {activeVote.timeLeft}s
+                <LuClock className="vote-timer-icon" /> {activeVote.timeLeft}s
               </span>
             </div>
 
@@ -1296,11 +1376,11 @@ export default function GamePage() {
 
               {socket.id === activeVote.targetSocketId ? (
                 <div className="vote-kick-status-msg vote-kick-status-msg--warning">
-                  <FaExclamationTriangle className="vote-msg-icon" /> A vote kick has been called against you.
+                  <LuCircleAlert className="vote-msg-icon" /> A vote kick has been called against you.
                 </div>
               ) : hasVoted ? (
                 <div className="vote-kick-status-msg vote-kick-status-msg--voted">
-                  <FaCheckCircle className="vote-msg-icon" /> Your vote has been recorded!
+                  <LuCircleCheck className="vote-msg-icon" /> Your vote has been recorded!
                 </div>
               ) : (
                 <div className="vote-kick-action-buttons">
@@ -1311,7 +1391,7 @@ export default function GamePage() {
                       setHasVoted(true);
                     }}
                   >
-                    <FaCheck className="btn-vote-icon" /> Vote Yes
+                    <LuCheck className="btn-vote-icon" /> Vote Yes
                   </button>
                   <button
                     className="btn-vote-no"
@@ -1320,7 +1400,7 @@ export default function GamePage() {
                       setHasVoted(true);
                     }}
                   >
-                    <FaTimes className="btn-vote-icon" /> Vote No
+                    <LuX className="btn-vote-icon" /> Vote No
                   </button>
                 </div>
               )}
@@ -1329,39 +1409,17 @@ export default function GamePage() {
         </div>
       )}
 
-      {/* Draggable Floating Guess / Wordle Window */}
-      <DraggableGuessWindow
-        isOpen={guessWindowOpen && roomState?.status === 'playing' && requestedRole !== 'spectator' && !isDrawer}
-        onClose={() => setGuessWindowOpen(false)}
-        isWordle={isWordle}
-        socket={socket}
-        roomId={roomId}
-        roomState={roomState}
-        isDrawer={isDrawer}
-        currentWord={currentWordDisplay}
-        guess={guess}
-        setGuess={setGuess}
-        onGuessWord={(guessedWord) => {
-          socket.emit('guessWord', { roomId, guess: guessedWord });
-          setGuess('');
-        }}
-        user={activeUser}
-        setUser={setUser}
-        freezeState={freezeState}
-        extraCluesData={extraCluesData}
-      />
-
       {/* Kicked from room full-screen overlay */}
       {kickedModal && (
         <div className="kicked-overlay-backdrop">
           <div className="kicked-modal-card">
             <div className="kicked-icon">
-              <FaBan className="kicked-ban-icon" />
+              <LuBan className="kicked-ban-icon" />
             </div>
             <h2 className="kicked-title">You Were Vote-Kicked</h2>
             <p className="kicked-text">{kickedModal}</p>
             <div className="kicked-penalty-chip">
-              <FaCoins className="penalty-coin-icon" />
+              <LuCoins className="penalty-coin-icon" />
               <span>Penalty:</span>
               <strong>-50 Gold Coins</strong>
             </div>

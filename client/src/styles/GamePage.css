@@ -155,17 +155,20 @@
 }
 
 .round-badge {
-  background: rgba(79, 70, 229, 0.25);
+  background: rgba(79, 70, 229, 0.28);
   color: #c4b5fd;
-  border: 1px solid rgba(99, 102, 241, 0.4);
+  border: 1.5px solid rgba(124, 77, 255, 0.6);
   font-family: 'Fredoka', 'Nunito', sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  padding: 5px 22px;
+  padding: 6px 24px;
   border-radius: 9999px;
-  letter-spacing: 0.8px;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 0 16px rgba(124, 77, 255, 0.4), inset 0 0 8px rgba(124, 77, 255, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .timer-bubble-compact {
@@ -245,25 +248,55 @@
 
 .room-code-badge {
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 6px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 5px 12px 5px 14px;
   border-radius: 9999px;
   font-size: 13px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
 }
 
 .room-code-badge .code-label {
   color: #94a3b8;
   font-weight: 600;
+  font-size: 12px;
 }
 
 .room-code-badge .code-value {
   color: #38bdf8;
   font-family: 'Fredoka', monospace;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
+}
+
+.room-code-copy-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  color: #cbd5e1;
+  transition: all 0.2s ease;
+}
+
+.room-code-copy-btn:hover {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  transform: scale(1.05);
+}
+
+.code-copy-icon {
+  font-size: 13px;
+}
+
+.code-copy-icon.is-copied {
+  color: #10b981;
 }
 
 .copy-link-btn {
@@ -409,24 +442,51 @@
   font-size: 13px;
 }
 
-/* ── 2. Left Sidebar: Players Panel ─────────────────────────── */
+/* ── 2. Left Sidebar: Players, Invite Friends & Power-Ups ──── */
 .game-left-col {
   display: flex;
   flex-direction: column;
-  background: rgba(18, 14, 44, 0.65);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.35);
+  gap: 12px;
   height: 100%;
   min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
+  box-sizing: border-box;
+}
+
+/* Custom sleek scrollbar for left column */
+.game-left-col::-webkit-scrollbar {
+  width: 5px;
+}
+
+.game-left-col::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.game-left-col::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+
+/* 3. Compact Player Panel Card */
+.players-panel-card {
+  background: rgba(18, 14, 44, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
+  max-height: 38vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.25s ease;
 }
 
 .players-header {
-  padding: 14px 16px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -437,6 +497,7 @@
   text-transform: uppercase;
   color: #cbd5e1;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
 }
 
 .players-header-title-box {
@@ -445,12 +506,17 @@
   gap: 8px;
 }
 
+.players-header-icon {
+  font-size: 16px;
+  color: #94a3b8;
+}
+
 .players-header-mic-btn {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 8px;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -486,7 +552,7 @@
 }
 
 .header-mic-icon {
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .header-mic-icon.mic-green {
@@ -501,59 +567,61 @@
   color: #94a3b8;
 }
 
-.players-header-icon {
-  font-size: 16px;
-  color: #94a3b8;
-}
-
-.players-list {
-  flex: 1;
+.players-list-compact {
   overflow-y: auto;
-  padding: 12px 14px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
+  min-height: 0;
 }
 
-.player-card-vertical {
+.players-list-compact::-webkit-scrollbar {
+  width: 4px;
+}
+.players-list-compact::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+
+.player-card-compact {
   background: rgba(255, 255, 255, 0.035);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 14px;
-  padding: 10px 12px;
+  border-radius: 12px;
+  padding: 6px 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   transition: all 0.2s ease;
 }
 
-.player-card-vertical:hover {
+.player-card-compact:hover {
   background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-.player-card-vertical.is-host {
-  border-color: rgba(124, 77, 255, 0.45);
-  background: rgba(124, 77, 255, 0.08);
-  box-shadow: 0 0 16px rgba(124, 77, 255, 0.2);
+.player-card-compact.is-host {
+  border-color: rgba(124, 77, 255, 0.4);
+  background: rgba(124, 77, 255, 0.07);
 }
 
-.player-card-vertical.is-drawing {
+.player-card-compact.is-drawing {
   border-color: rgba(56, 189, 248, 0.5);
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.25);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
 }
 
 .player-card-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
   flex: 1;
 }
 
 .player-avatar-circle {
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: linear-gradient(135deg, #4f46e5, #7c3aed);
   color: #ffffff;
@@ -561,18 +629,17 @@
   align-items: center;
   justify-content: center;
   font-family: 'Fredoka', 'Nunito', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   border: 1.5px solid rgba(99, 102, 241, 0.3);
 }
 
 .player-avatar-circle.rank-badge-1 {
   background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
   color: #78350f;
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.6);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
   border: 2px solid #fef08a;
   font-weight: 800;
 }
@@ -580,7 +647,7 @@
 .player-avatar-circle.rank-badge-2 {
   background: linear-gradient(135deg, #64748b 0%, #cbd5e1 100%);
   color: #0f172a;
-  box-shadow: 0 0 12px rgba(148, 163, 184, 0.5);
+  box-shadow: 0 0 10px rgba(148, 163, 184, 0.5);
   border: 2px solid rgba(148, 163, 184, 0.6);
   font-weight: 800;
 }
@@ -588,7 +655,7 @@
 .player-avatar-circle.rank-badge-3 {
   background: linear-gradient(135deg, #c2410c 0%, #fb923c 100%);
   color: #431407;
-  box-shadow: 0 0 12px rgba(234, 88, 12, 0.5);
+  box-shadow: 0 0 10px rgba(234, 88, 12, 0.5);
   border: 2px solid #ffedd5;
   font-weight: 800;
 }
@@ -614,12 +681,12 @@
 .player-name-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .player-name-text {
   font-family: 'Fredoka', 'Nunito', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #ffffff;
   white-space: nowrap;
@@ -642,7 +709,7 @@
 }
 
 .player-score-text {
-  font-size: 12px;
+  font-size: 11px;
   color: #94a3b8;
   font-weight: 600;
 }
@@ -650,14 +717,14 @@
 .host-badge-pill {
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: #ffffff;
-  border-radius: 8px;
-  padding: 4px 10px;
+  border-radius: 6px;
+  padding: 3px 8px;
   font-family: 'Fredoka', 'Nunito', sans-serif;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
   flex-shrink: 0;
 }
@@ -669,7 +736,7 @@
 .player-mod-actions {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   flex-shrink: 0;
 }
 
@@ -677,14 +744,14 @@
   background: rgba(239, 68, 68, 0.15);
   border: 1px solid rgba(239, 68, 68, 0.45);
   color: #fca5a5;
-  border-radius: 8px;
-  padding: 3px 8px;
+  border-radius: 6px;
+  padding: 3px 7px;
   font-family: 'Fredoka', 'Nunito', sans-serif;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -699,14 +766,14 @@
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #ffffff;
-  border-radius: 8px;
-  padding: 3px 8px;
+  border-radius: 6px;
+  padding: 3px 7px;
   font-family: 'Fredoka', 'Nunito', sans-serif;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -716,73 +783,11 @@
   transform: translateY(-1px);
 }
 
-/* ── 3. Empty Space Ambient Decor ───────────────────────────── */
-.players-ambient-decor {
+/* 4. Invite Friends Button (Part of Left-Side Stack) */
+.invite-friends-stack-box {
   position: relative;
-  height: 50px;
-  margin: 6px 14px;
-  pointer-events: none;
-  opacity: 0.35;
-}
-
-.decor-dot {
-  position: absolute;
-  border-radius: 50%;
-  animation: floatDot 10s ease-in-out infinite;
-}
-
-.dot-1 {
-  width: 6px;
-  height: 6px;
-  left: 20%;
-  top: 30%;
-  animation-delay: 0s;
-  background: #7c4dff;
-}
-
-.dot-2 {
-  width: 4px;
-  height: 4px;
-  left: 70%;
-  top: 60%;
-  animation-delay: 3s;
-  background: #38bdf8;
-}
-
-.dot-3 {
-  width: 7px;
-  height: 7px;
-  left: 45%;
-  top: 15%;
-  animation-delay: 5s;
-  background: rgba(139, 92, 246, 0.5);
-}
-
-@keyframes floatDot {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-8px) scale(1.2); }
-}
-
-.decor-squiggle-curve {
-  position: absolute;
-  bottom: 0;
-  left: 10%;
-  width: 80%;
-  height: 28px;
-  animation: floatCurve 14s ease-in-out infinite alternate;
-}
-
-@keyframes floatCurve {
-  0% { transform: translateX(0) scaleY(1); }
-  100% { transform: translateX(10px) scaleY(1.2); }
-}
-
-/* ── 4. Invite Friends Button & Copied Toast ─────────────────── */
-.invite-friends-wrapper {
-  position: relative;
-  margin: auto 14px 14px 14px;
-  display: flex;
-  flex-direction: column;
+  width: 100%;
+  flex-shrink: 0;
 }
 
 .invite-copied-toast {
@@ -792,16 +797,16 @@
   transform: translateX(-50%);
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #ffffff;
-  padding: 8px 14px;
+  padding: 7px 12px;
   border-radius: 10px;
   font-family: 'Fredoka', 'Nunito', sans-serif;
   font-size: 12px;
   font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   white-space: nowrap;
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45), 0 0 10px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
   z-index: 50;
   pointer-events: none;
   animation: toastPopUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -818,42 +823,37 @@
   border-color: #059669 transparent transparent transparent;
 }
 
-.toast-check-icon {
-  font-size: 13px;
-  color: #ffffff;
-}
-
-.invite-friends-btn {
+.btn-invite-friends-gradient {
   width: 100%;
   margin: 0;
-  padding: 12px 18px;
-  background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
-  border: 1px solid rgba(99, 102, 241, 0.4);
-  border-radius: 12px;
+  padding: 11px 16px;
+  background: linear-gradient(135deg, #7c4dff 0%, #2563eb 50%, #06b6d4 100%);
+  border: 1px solid rgba(124, 77, 255, 0.4);
+  border-radius: 14px;
   color: #ffffff;
   font-family: 'Fredoka', 'Nunito', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 18px rgba(124, 77, 255, 0.35);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.invite-friends-btn:hover {
-  transform: translateY(-2px) scale(1.02);
-  filter: brightness(1.1);
-  box-shadow: 0 6px 22px rgba(99, 102, 241, 0.5);
+.btn-invite-friends-gradient:hover {
+  transform: translateY(-1px) scale(1.02);
+  filter: brightness(1.12);
+  box-shadow: 0 6px 24px rgba(124, 77, 255, 0.5);
 }
 
-.invite-friends-btn:active {
+.btn-invite-friends-gradient:active {
   transform: translateY(0) scale(0.98);
 }
 
-.invite-friends-btn.is-copied {
+.btn-invite-friends-gradient.is-copied {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border-color: rgba(16, 185, 129, 0.5);
   box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4);
@@ -885,17 +885,19 @@
 .canvas-header-bar {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 16px;
   width: 100%;
-  padding: 2px 0 10px 0;
+  max-width: 960px;
+  padding: 2px 4px 10px 4px;
   flex-shrink: 0;
   z-index: 10;
 }
 
+/* 10. Timer HUD with smooth color transitions */
 .canvas-timer-pill {
   background: rgba(14, 11, 33, 0.88);
-  border: 2px solid rgba(56, 189, 248, 0.5);
+  border: 1.5px solid rgba(56, 189, 248, 0.45);
   color: #38bdf8;
   font-family: 'Fredoka', 'Nunito', sans-serif;
   font-weight: 700;
@@ -904,42 +906,61 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 18px rgba(56, 189, 248, 0.3);
-  transition: all 0.25s ease;
+  box-shadow: 0 4px 18px rgba(56, 189, 248, 0.25);
+  transition: all 0.35s ease;
+  flex-shrink: 0;
+}
+
+.canvas-timer-pill.normal {
+  background: rgba(14, 11, 33, 0.88);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #38bdf8;
+  box-shadow: 0 4px 18px rgba(56, 189, 248, 0.25);
+}
+
+.canvas-timer-pill.warn {
+  background: rgba(249, 115, 22, 0.18);
+  border-color: rgba(249, 115, 22, 0.55);
+  color: #fb923c;
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.35);
+}
+
+.canvas-timer-pill.critical {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(239, 68, 68, 0.7);
+  color: #f87171;
+  box-shadow: 0 0 22px rgba(239, 68, 68, 0.45);
+}
+
+.canvas-timer-pill.is-frozen {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: #38bdf8;
+  color: #7dd3fc;
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.45);
 }
 
 .canvas-timer-icon {
-  font-size: 20px;
-  color: #38bdf8;
+  font-size: 19px;
+  color: inherit;
+  transition: color 0.35s ease;
 }
 
 .canvas-timer-text {
-  font-size: 19px;
+  font-size: 18px;
   line-height: 1;
   letter-spacing: 0.5px;
 }
 
-.canvas-timer-pill.warn {
-  background: rgba(239, 68, 68, 0.25);
-  border-color: rgba(239, 68, 68, 0.8);
-  color: #f87171;
-  box-shadow: 0 0 22px rgba(239, 68, 68, 0.5);
-  animation: pulse-warn 0.8s infinite alternate;
-}
-
-.canvas-timer-pill.warn .canvas-timer-icon {
-  color: #f87171;
-}
-
+/* 9. Word Pattern HUD Element */
 .canvas-word-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 6px 18px;
+  padding: 6px 20px;
   border-radius: 9999px;
   box-sizing: border-box;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
   max-width: 95%;
 }
 
@@ -951,9 +972,11 @@
 }
 
 .canvas-word-pill.is-guesser {
-  background: rgba(14, 11, 33, 0.88);
-  border: 1.5px solid rgba(99, 102, 241, 0.35);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  background: rgba(18, 14, 44, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid rgba(124, 77, 255, 0.4);
+  box-shadow: 0 4px 20px rgba(124, 77, 255, 0.25);
 }
 
 .canvas-word-pill.wordle-phase {
@@ -995,10 +1018,11 @@
 }
 
 .canvas-hint-mask {
-  font-family: 'Consolas', monospace;
+  font-family: 'Consolas', 'Courier New', monospace;
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 800;
   color: #38bdf8;
+  text-shadow: 0 0 14px rgba(56, 189, 248, 0.5);
   line-height: 1.2;
   display: inline-flex;
   flex-wrap: wrap;
@@ -1010,9 +1034,10 @@
 .hint-word-chunk {
   display: inline-block;
   white-space: nowrap;
-  letter-spacing: 3px;
+  letter-spacing: 3.5px;
 }
 
+/* 6. Canvas Wrapper — Guesser View vs Drawer View */
 .canvas-wrapper-relative {
   position: relative;
   display: flex;
@@ -1020,10 +1045,162 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  flex: 1;
-  min-height: 0;
-  max-height: 100%;
   overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Guesser: slightly smaller canvas so dedicated guessing interface sits comfortably below */
+.canvas-wrapper-relative.is-guesser-canvas {
+  flex: 1 1 auto;
+  max-height: calc(100vh - 215px);
+  min-height: 280px;
+}
+
+/* Drawer: preserves the full-size canvas layout */
+.canvas-wrapper-relative.is-drawer-canvas {
+  flex: 1 1 auto;
+  max-height: calc(100vh - 135px);
+  min-height: 340px;
+}
+
+/* 7 & 8. Dedicated Guess Bar (Underneath Canvas for Guesser) */
+.guesser-bottom-bar-wrapper {
+  width: 100%;
+  max-width: 960px;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.guesser-control-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(18, 14, 44, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(124, 77, 255, 0.35);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 20px rgba(124, 77, 255, 0.16);
+  box-sizing: border-box;
+  transition: all 0.25s ease;
+}
+
+.guesser-control-bar:focus-within {
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.5), 0 0 24px rgba(56, 189, 248, 0.25);
+}
+
+.guesser-bar-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  background: rgba(124, 77, 255, 0.18);
+  border: 1px solid rgba(124, 77, 255, 0.35);
+  color: #c4b5fd;
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.guesser-target-icon {
+  font-size: 16px;
+  color: #38bdf8;
+}
+
+.guesser-bar-input-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.guesser-bar-input {
+  width: 100%;
+  height: 42px;
+  background: rgba(10, 8, 28, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 0 16px;
+  color: #ffffff;
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.guesser-bar-input:focus {
+  border-color: #38bdf8;
+  background: rgba(10, 8, 28, 0.9);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+}
+
+.guesser-bar-input::placeholder {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.guesser-bar-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 42px;
+  padding: 0 22px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);
+  border: none;
+  color: #ffffff;
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(6, 182, 212, 0.4);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.guesser-bar-submit-btn:hover:not(:disabled) {
+  transform: scale(1.02);
+  filter: brightness(1.12);
+  box-shadow: 0 6px 22px rgba(6, 182, 212, 0.55);
+}
+
+.guesser-bar-submit-btn:hover:not(:disabled) .guesser-btn-arrow {
+  transform: translateX(4px);
+}
+
+.guesser-bar-submit-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.guesser-bar-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+.guesser-btn-arrow {
+  font-size: 15px;
+  transition: transform 0.2s ease;
+}
+
+.guesser-wordle-board-container {
+  width: 100%;
+  margin-top: 6px;
 }
 
 /* Lobby Canvas Overlay */

@@ -2,16 +2,17 @@
 
 import React, { useState } from 'react';
 import {
-  FaLightbulb,
-  FaBullseye,
-  FaSnowflake,
-  FaCoins,
-  FaGem,
-  FaLock,
-  FaCheck,
-  FaChevronDown,
-  FaChevronUp
-} from 'react-icons/fa';
+  LuLightbulb,
+  LuTarget,
+  LuSnowflake,
+  LuCoins,
+  LuGem,
+  LuLock,
+  LuCheck,
+  LuChevronDown,
+  LuChevronUp,
+  LuZap
+} from 'react-icons/lu';
 import '../styles/PowerupsPanel.css';
 
 export default function PowerupsPanel({
@@ -40,7 +41,6 @@ export default function PowerupsPanel({
 
   // ── Calculate Remaining Letters for Hint Steal ───────────────────
   const wordHint = roomState?.wordHint || '';
-  // Count unrevealed underscores in hint
   const unrevealedLetterCount = (wordHint.match(/_/g) || []).length;
   
   let hintGoldCost = 100;
@@ -65,7 +65,6 @@ export default function PowerupsPanel({
   const freezeActive = !!freezeState?.active;
   const freezeSeconds = freezeState?.freezeSecondsRemaining || 0;
   const isFreezeUser = freezeState?.userSocketId === socket?.id;
-  // If user already purchased, cost doubles: 200, 400, 800... / 1, 2, 4, 8...
   const freezePurchases = (roomState?.freezeState?.purchasesByUser?.[socket?.id] || 0);
   const nextFreezeCostGold = 200 * Math.pow(2, freezePurchases);
   const nextFreezeCostDiamond = 1 * Math.pow(2, freezePurchases);
@@ -74,7 +73,7 @@ export default function PowerupsPanel({
   const handleUseHintSteal = (currency) => {
     if (!isPowerupsAllowed) return;
     if (isGuest) {
-      showToast('Sign in with an account to spend Gold Coins or Diamonds!', 'error');
+      showToast('Sign in to spend Gold Coins or Diamonds!', 'error');
       return;
     }
     socket.emit('useHintSteal', { roomId, currency });
@@ -83,7 +82,7 @@ export default function PowerupsPanel({
   const handleUseExtraClues = (currency = 'gold') => {
     if (!isPowerupsAllowed) return;
     if (isGuest) {
-      showToast('Sign in with an account to spend Gold Coins or Diamonds!', 'error');
+      showToast('Sign in to spend Gold Coins or Diamonds!', 'error');
       return;
     }
     socket.emit('useExtraClues', { roomId, currency });
@@ -92,7 +91,7 @@ export default function PowerupsPanel({
   const handleUseFreezeTime = (currency = 'gold') => {
     if (!isPowerupsAllowed) return;
     if (isGuest) {
-      showToast('Sign in with an account to spend Gold Coins or Diamonds!', 'error');
+      showToast('Sign in to spend Gold Coins or Diamonds!', 'error');
       return;
     }
     socket.emit('useFreezeTime', { roomId, currency });
@@ -102,11 +101,11 @@ export default function PowerupsPanel({
     return (
       <div className="powerups-container powerups-disabled-card">
         <div className="powerups-disabled-header">
-          <FaLock className="powerup-lock-icon" />
+          <LuLock className="powerup-lock-icon" />
           <span>
             {gameMode !== 'standard'
-              ? `Power-Ups are disabled in ${gameMode.toUpperCase()} mode`
-              : 'Power-Ups are disabled by room host'}
+              ? `Power-Ups unavailable in ${gameMode.toUpperCase()}`
+              : 'Power-Ups disabled by host'}
           </span>
         </div>
         <p className="powerups-disabled-desc">
@@ -124,14 +123,15 @@ export default function PowerupsPanel({
       <div className="powerups-header-bar" onClick={() => setCollapsed(!collapsed)}>
         <div className="powerups-header-left">
           <span className="powerups-header-title">
-            ⚡ Power-Ups
+            <LuZap className="powerups-bolt-icon" />
+            <span>POWER-UPS</span>
           </span>
           <div className="powerups-wallet-mini">
             <span className="wallet-coin-item" title="Gold Coins">
-              <FaCoins className="coin-icon" /> {user?.goldCoins || 0}
+              <LuCoins className="coin-icon" /> Coins: {user?.goldCoins || 0}
             </span>
             <span className="wallet-gem-item" title="Diamonds">
-              <FaGem className="gem-icon" /> {user?.diamonds || 0}
+              <LuGem className="gem-icon" /> Gems: {user?.diamonds || 0}
             </span>
           </div>
         </div>
@@ -140,7 +140,7 @@ export default function PowerupsPanel({
           className="powerups-toggle-collapse-btn"
           aria-label={collapsed ? 'Expand power-ups' : 'Collapse power-ups'}
         >
-          {collapsed ? <FaChevronDown /> : <FaChevronUp />}
+          {collapsed ? <LuChevronDown /> : <LuChevronUp />}
         </button>
       </div>
 
@@ -158,7 +158,7 @@ export default function PowerupsPanel({
           <div className="powerup-card">
             <div className="powerup-card-top">
               <div className="powerup-icon-box hint">
-                <FaLightbulb />
+                <LuLightbulb />
               </div>
               <div className="powerup-info">
                 <div className="powerup-name">Hint Steal</div>
@@ -178,7 +178,7 @@ export default function PowerupsPanel({
                 disabled={unrevealedLetterCount === 0 || (user?.goldCoins || 0) < hintGoldCost}
                 title={`Reveal 1 letter for ${hintGoldCost} Gold Coins`}
               >
-                <FaCoins className="btn-curr-icon" />
+                <LuCoins className="btn-curr-icon" />
                 <span>{hintGoldCost}</span>
               </button>
               <button
@@ -188,7 +188,7 @@ export default function PowerupsPanel({
                 disabled={unrevealedLetterCount === 0 || (user?.diamonds || 0) < hintDiamondCost}
                 title={`Reveal 1 letter for ${hintDiamondCost} Diamond`}
               >
-                <FaGem className="btn-curr-icon" />
+                <LuGem className="btn-curr-icon" />
                 <span>{hintDiamondCost}</span>
               </button>
             </div>
@@ -198,7 +198,7 @@ export default function PowerupsPanel({
           <div className="powerup-card extra-clues-card">
             <div className="powerup-card-top">
               <div className="powerup-icon-box clue">
-                <FaBullseye />
+                <LuTarget />
               </div>
               <div className="powerup-info">
                 <div className="powerup-name">Extra Clues</div>
@@ -237,7 +237,7 @@ export default function PowerupsPanel({
                     disabled={(user?.goldCoins || 0) < 150}
                     title="Get 5 options for 150 Gold Coins"
                   >
-                    <FaCoins className="btn-curr-icon" />
+                    <LuCoins className="btn-curr-icon" />
                     <span>150</span>
                   </button>
                   <button
@@ -247,7 +247,7 @@ export default function PowerupsPanel({
                     disabled={(user?.diamonds || 0) < 1}
                     title="Get 5 options for 1 Diamond"
                   >
-                    <FaGem className="btn-curr-icon" />
+                    <LuGem className="btn-curr-icon" />
                     <span>1</span>
                   </button>
                 </>
@@ -259,12 +259,12 @@ export default function PowerupsPanel({
                   disabled={(user?.goldCoins || 0) < nextClueGoldCost}
                   title={`Eliminate 1 wrong option for ${nextClueGoldCost} Gold Coins`}
                 >
-                  <FaCoins className="btn-curr-icon" />
-                  <span>Eliminate 1 Option (+{nextClueGoldCost} 🪙)</span>
+                  <LuCoins className="btn-curr-icon" />
+                  <span>Eliminate Option (+{nextClueGoldCost})</span>
                 </button>
               ) : (
                 <div className="clue-final-tag">
-                  <FaCheck /> 1 Option Remaining!
+                  <LuCheck /> 1 Option Remaining!
                 </div>
               )}
             </div>
@@ -274,7 +274,7 @@ export default function PowerupsPanel({
           <div className="powerup-card freeze-card">
             <div className="powerup-card-top">
               <div className={`powerup-icon-box freeze ${freezeActive ? 'pulse' : ''}`}>
-                <FaSnowflake />
+                <LuSnowflake />
               </div>
               <div className="powerup-info">
                 <div className="powerup-name">Freeze Time</div>
@@ -299,7 +299,7 @@ export default function PowerupsPanel({
                 }
                 title={`Stop clock and add +20 seconds for ${nextFreezeCostGold} Gold Coins`}
               >
-                <FaCoins className="btn-curr-icon" />
+                <LuCoins className="btn-curr-icon" />
                 <span>{nextFreezeCostGold}</span>
               </button>
               <button
@@ -312,7 +312,7 @@ export default function PowerupsPanel({
                 }
                 title={`Stop clock and add +20 seconds for ${nextFreezeCostDiamond} Diamond${nextFreezeCostDiamond > 1 ? 's' : ''}`}
               >
-                <FaGem className="btn-curr-icon" />
+                <LuGem className="btn-curr-icon" />
                 <span>{nextFreezeCostDiamond}</span>
               </button>
             </div>
