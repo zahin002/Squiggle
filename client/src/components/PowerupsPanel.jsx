@@ -25,7 +25,7 @@ export default function PowerupsPanel({
   extraCluesData,
   onGuessWord
 }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [powerupToast, setPowerupToast] = useState(null);
 
   const gameMode = roomState?.settings?.gameMode || 'standard';
@@ -38,6 +38,11 @@ export default function PowerupsPanel({
       setPowerupToast(null);
     }, 4000);
   };
+
+  // If power-ups are disabled by the host or not available in the current mode, do not render the feature
+  if (!isPowerupsAllowed) {
+    return null;
+  }
 
   // ── Calculate Remaining Letters for Hint Steal ───────────────────
   const wordHint = roomState?.wordHint || '';
@@ -96,26 +101,6 @@ export default function PowerupsPanel({
     }
     socket.emit('useFreezeTime', { roomId, currency });
   };
-
-  if (!isPowerupsAllowed) {
-    return (
-      <div className="powerups-container powerups-disabled-card">
-        <div className="powerups-disabled-header">
-          <LuLock className="powerup-lock-icon" />
-          <span>
-            {gameMode !== 'standard'
-              ? `Power-Ups unavailable in ${gameMode.toUpperCase()}`
-              : 'Power-Ups disabled by host'}
-          </span>
-        </div>
-        <p className="powerups-disabled-desc">
-          {gameMode !== 'standard'
-            ? 'Play in Standard Mode to use Hint Steal, Extra Clues, and Freeze Time.'
-            : 'The host disabled power-ups in lobby settings.'}
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="powerups-container">
