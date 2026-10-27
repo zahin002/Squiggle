@@ -156,7 +156,7 @@ export default function LobbyPage() {
           {/* Join / Browse panel */}
           <div className="lobby-panel lobby-panel--join">
             <h2 className="lobby-panel-title">
-              <FaHashtag className="panel-title-icon panel-title-icon--sky" />
+              <LuHash className="panel-title-icon panel-title-icon--sky" />
               Join By Code
             </h2>
 
@@ -179,127 +179,128 @@ export default function LobbyPage() {
                 </select>
               </div>
               <button className="btn-join-main" onClick={() => joinRoom(joinCode)}>
-                <FaArrowRight className="btn-icon-sm" /> Join Game
+                <LuArrowRight className="btn-icon-sm" /> Join Game
               </button>
             </div>
 
             {error && <p className="lobby-error">{error}</p>}
 
             <h2 className="lobby-panel-title lobby-panel-title--open">
-              <FaGlobe className="panel-title-icon panel-title-icon--green" />
+              <LuGlobe className="panel-title-icon panel-title-icon--cyan" />
               Open Games
             </h2>
 
             {rooms.length === 0 ? (
               <div className="rooms-empty">
-                <FaGamepad className="rooms-empty-icon" />
+                <LuGamepad2 className="rooms-empty-icon" />
                 <p>No public games right now.</p>
                 <p className="rooms-empty-sub">Create a room and invite friends!</p>
               </div>
             ) : (
-              <ul className="room-list">
-                {rooms.map((room) => {
-                  const isExpanded = expandedRoomId === room.roomId;
-                  const currentPlayers = room.playerCount || room.players?.length || 1;
-                  const maxPlayers = room.settings?.maxPlayers || 8;
-                  const drawTime = room.settings?.drawTime || 80;
-                  const rounds = room.settings?.rounds || 3;
-                  const isVoiceEnabled = room.settings?.voiceChatEnabled === true;
-                  const isPowerupsEnabled = room.settings?.powerupsEnabled !== false;
-                  const gameMode = room.settings?.gameMode || 'standard';
+              <div className="room-list-scroll-container">
+                <ul className="room-list">
+                  {rooms.map((room) => {
+                    const isExpanded = expandedRoomId === room.roomId;
+                    const isVoiceEnabled = room.settings?.voiceChatEnabled === true;
+                    const isPowerupsEnabled = room.settings?.powerupsEnabled !== false;
+                    const gameMode = room.settings?.gameMode || 'standard';
+                    const currentPlayers = room.playerCount || room.players?.length || 1;
+                    const maxPlayers = room.settings?.maxPlayers || 8;
+                    const drawTime = room.settings?.drawTime || 80;
+                    const rounds = room.settings?.rounds || 3;
 
-                  return (
-                    <li key={room.roomId} className={`room-item ${isExpanded ? 'is-expanded' : ''}`}>
-                      <div className="room-item-row">
-                        <div className="room-info">
-                          <div className="room-code-badge-group">
-                            <span className="room-code-display">
-                              <LuHash className="room-hash" />{room.roomId}
+                    return (
+                      <li key={room.roomId} className={`room-item ${isExpanded ? 'is-expanded' : ''}`}>
+                        <div className="room-item-row">
+                          {/* ── LEFT: Room identification ── */}
+                          <div className="room-ident-group">
+                            <div className="room-code-tag">
+                              <span className="room-hash">#</span>
+                              <span className="room-code-gradient">{room.roomId}</span>
+                            </div>
+                            <span className="room-mode-subtle">{gameMode}</span>
+                          </div>
+
+                          {/* ── CENTER: Status icons ── */}
+                          <div className="room-status-group">
+                            <span
+                              className={`room-status-ico-badge ${isVoiceEnabled ? 'is-voice-on' : 'is-voice-off'}`}
+                              title={isVoiceEnabled ? 'Voice Chat: Enabled' : 'Voice Chat: Disabled'}
+                              aria-label={isVoiceEnabled ? 'Voice Chat Enabled' : 'Voice Chat Disabled'}
+                            >
+                              {isVoiceEnabled ? <LuMic className="room-status-svg" /> : <LuMicOff className="room-status-svg" />}
                             </span>
-                            <span className="room-mode">
-                              {room.settings?.isPrivate ? <LuLock className="room-mode-icon" /> : <LuGlobe className="room-mode-icon" />}
-                              {gameMode}
+
+                            <span
+                              className={`room-status-ico-badge ${isPowerupsEnabled ? 'is-powerup-on' : 'is-powerup-off'}`}
+                              title={isPowerupsEnabled ? 'Power-Ups: Enabled' : 'Power-Ups: Disabled'}
+                              aria-label={isPowerupsEnabled ? 'Power-Ups Enabled' : 'Power-Ups Disabled'}
+                            >
+                              <LuZap className="room-status-svg" />
                             </span>
+                          </div>
+
+                          {/* ── RIGHT: Actions ── */}
+                          <div className="room-actions-group">
+                            <button
+                              type="button"
+                              className="btn-room-join-compact"
+                              onClick={() => joinRoom(room.roomId, 'player')}
+                              title={`Join room #${room.roomId}`}
+                            >
+                              <span>Join</span>
+                              <LuArrowRight className="btn-compact-icon" />
+                            </button>
+
+                            <button
+                              type="button"
+                              className="btn-room-spectate-compact"
+                              onClick={() => joinRoom(room.roomId, 'spectator')}
+                              title="Spectate"
+                              aria-label="Spectate"
+                            >
+                              <LuEye className="btn-compact-icon" />
+                            </button>
+
+                            <button
+                              type="button"
+                              className={`btn-room-info-compact ${isExpanded ? 'is-active' : ''}`}
+                              onClick={() => setExpandedRoomId((prev) => (prev === room.roomId ? null : room.roomId))}
+                              title={isExpanded ? 'Hide room details' : 'Room details'}
+                              aria-label="Room details"
+                            >
+                              <LuInfo className="btn-compact-icon" />
+                            </button>
                           </div>
                         </div>
 
-                        <div className="room-actions">
-                          {/* Info option to see room details */}
-                          <button
-                            type="button"
-                            className={`btn-room-details ${isExpanded ? 'is-active' : ''}`}
-                            onClick={() => setExpandedRoomId((prev) => (prev === room.roomId ? null : room.roomId))}
-                            title={isExpanded ? 'Hide room details' : 'View room details (players, draw time, rounds, voice, power-ups)'}
-                            aria-label="View room details"
-                          >
-                            <LuInfo className="btn-details-icon" />
-                          </button>
-
-                          <button className="btn-room-join" onClick={() => joinRoom(room.roomId, 'player')}>
-                            <LuArrowRight className="btn-action-icon" /> Join
-                          </button>
-                          <button className="btn-room-spectate" onClick={() => joinRoom(room.roomId, 'spectator')}>
-                            <LuEye className="btn-action-icon" /> Spectate
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Expandable Room Details Drawer */}
-                      {isExpanded && (
-                        <div className="room-details-drawer">
-                          <div className="room-details-grid">
-                            <div className="room-detail-pill" title="Max Players">
-                              <LuUsers className="detail-pill-icon icon-users" />
-                              <span className="detail-pill-label">Players:</span>
-                              <strong className="detail-pill-value">{currentPlayers}/{maxPlayers}</strong>
-                            </div>
-
-                            <div className="room-detail-pill" title="Draw Time per Turn">
-                              <LuClock className="detail-pill-icon icon-clock" />
-                              <span className="detail-pill-label">Draw Time:</span>
-                              <strong className="detail-pill-value">{drawTime}s</strong>
-                            </div>
-
-                            <div className="room-detail-pill" title="Total Rounds">
-                              <LuTrophy className="detail-pill-icon icon-trophy" />
-                              <span className="detail-pill-label">Rounds:</span>
-                              <strong className="detail-pill-value">{rounds}</strong>
-                            </div>
-
-                            <div className="room-detail-pill" title="Voice Chat Status">
-                              {isVoiceEnabled ? (
-                                <LuMic className="detail-pill-icon icon-mic-on" />
-                              ) : (
-                                <LuMicOff className="detail-pill-icon icon-mic-off" />
-                              )}
-                              <span className="detail-pill-label">Voice:</span>
-                              <strong className={`detail-pill-value ${isVoiceEnabled ? 'val-green' : 'val-muted'}`}>
-                                {isVoiceEnabled ? 'Enabled' : 'Disabled'}
-                              </strong>
-                            </div>
-
-                            <div className="room-detail-pill" title="Power-Ups Status">
-                              <LuZap className={`detail-pill-icon ${isPowerupsEnabled ? 'icon-bolt-on' : 'icon-bolt-off'}`} />
-                              <span className="detail-pill-label">Power-Ups:</span>
-                              <strong className={`detail-pill-value ${isPowerupsEnabled ? 'val-cyan' : 'val-muted'}`}>
-                                {isPowerupsEnabled ? 'Enabled' : 'Disabled'}
-                              </strong>
-                            </div>
-
-                            <div className="room-detail-pill" title="Game Mode">
-                              <LuGamepad2 className="detail-pill-icon icon-game" />
-                              <span className="detail-pill-label">Mode:</span>
-                              <strong className="detail-pill-value" style={{ textTransform: 'capitalize' }}>
-                                {gameMode}
-                              </strong>
+                        {/* Optional Expandable Details */}
+                        {isExpanded && (
+                          <div className="room-details-drawer">
+                            <div className="room-details-grid">
+                              <div className="room-detail-pill" title="Players">
+                                <LuUsers className="detail-pill-icon icon-users" />
+                                <span className="detail-pill-label">Players:</span>
+                                <strong className="detail-pill-value">{currentPlayers}/{maxPlayers}</strong>
+                              </div>
+                              <div className="room-detail-pill" title="Draw Time">
+                                <LuClock className="detail-pill-icon icon-clock" />
+                                <span className="detail-pill-label">Time:</span>
+                                <strong className="detail-pill-value">{drawTime}s</strong>
+                              </div>
+                              <div className="room-detail-pill" title="Rounds">
+                                <LuTrophy className="detail-pill-icon icon-trophy" />
+                                <span className="detail-pill-label">Rounds:</span>
+                                <strong className="detail-pill-value">{rounds}</strong>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             )}
           </div>
         </section>
