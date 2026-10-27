@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { GoogleLogin } from '@react-oauth/google';
 import {
   FaEye,
   FaEyeSlash,
@@ -49,17 +48,6 @@ export default function Register() {
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    try {
-      const res = await axios.post('/api/auth/google', { token: credentialResponse.credential });
-      localStorage.setItem('token', res.data.token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
-      setUser(res.data.user);
-      navigate('/lobby');
-    } catch (err) {
-      setError('Google Sign-In failed');
-    }
-  };
 
   return (
     <div className="auth-page">
@@ -160,20 +148,6 @@ export default function Register() {
             </button>
           </form>
 
-          <div className="auth-divider">
-            <span>OR</span>
-          </div>
-
-          <div className="auth-google-wrapper">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => setError('Google Sign-In failed')}
-              shape="pill"
-              theme="filled_blue"
-              size="large"
-              text="signup_with"
-            />
-          </div>
 
           <div className="auth-switch">
             <span>
