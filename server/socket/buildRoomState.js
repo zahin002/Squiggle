@@ -60,6 +60,8 @@ function buildRoomState(room, currentUserId, socketId) {
       freezeSecondsRemaining: room.freezeState.freezeSecondsRemaining,
       normalTimeFrozenAt: room.freezeState.normalTimeFrozenAt,
       isNormalTimeExpired: room.timeLeft <= 0
+    } : null,
+
     isHost
   };
 }
