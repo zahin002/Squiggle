@@ -173,7 +173,7 @@ export default function RoomSetup() {
 
         {/* Draw Time */}
         <label className="rs-label">
-          Draw Time (seconds)
+          Draw Time
           <select
             className="rs-input"
             value={settings.drawTime}
@@ -293,7 +293,7 @@ export default function RoomSetup() {
         {/* Custom words */}
         {!isGuest && settings.gameMode === 'custom' && (
           <label className="rs-label rs-label--full">
-            Custom Words (minimum 10)
+            Custom Words
             <textarea
               className={`rs-textarea ${isCustomWordsInvalid ? 'rs-input--invalid' : ''}`}
               placeholder="Enter words separated by commas (minimum 10 words, e.g. laptop, guitar, ocean, volcano...)"

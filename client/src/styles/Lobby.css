@@ -335,9 +335,9 @@
   border-radius: 12px;
   padding: 10px 14px;
   color: #f1f5f9;
-  font-family: 'Nunito', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
   transition: all 0.2s ease;
   box-sizing: border-box;
 }
@@ -364,9 +364,9 @@
 }
 
 .rs-mode-label {
-  font-family: 'Nunito', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
   color: #f8fafc;
   letter-spacing: normal;
   text-transform: none;
@@ -423,9 +423,9 @@
   background: transparent;
   color: #f1f5f9;
   cursor: pointer;
-  font-family: 'Nunito', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
   transition: all 0.18s ease;
   width: 100%;
   box-sizing: border-box;
