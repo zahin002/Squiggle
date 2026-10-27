@@ -103,16 +103,19 @@ Key highlights include:
 |---|:---:|---|---|
 | **Standard Mode** | ✅ Enabled | Gemini AI + WordBank | Classic sketch-and-guess with progressive letter clues and power-ups. |
 | **Wordle Mode** | ❌ Disabled | 5-Letter Dictionary | 2-phase hybrid: blind Wordle deduction transitioning to canvas sketching. |
-| **Genre Selection** | ✅ Enabled | Gemini AI Categorized | Wordlists curated by genre (Animals, Gaming, Movies, Anime, Science, etc.). |
-| **Custom Words** | ✅ Enabled | Host-Defined List | Room host supplies secret custom word sets for tailored party play. |
+| **Genre Selection** | ❌ Disabled | Gemini AI Categorized | Wordlists curated by genre (Animals, Gaming, Movies, Anime, Science, etc.). |
+| **Custom Words** | ❌ Disabled | Host-Defined List | Room host supplies secret custom word sets for tailored party play. |
 
 ---
 
 ## Tactical Power-Ups & Economy
 
-### Power-Ups (Standard Mode)
+### Power-Ups (Standard Mode Only)
 
-Power-ups introduce strategic depth during drawing rounds:
+> [!IMPORTANT]
+> Power-ups are strictly available in **Standard Mode** only. In Wordle Mode, Genre Selection, and Custom Words, power-ups are disabled to preserve fair deduction and custom room dynamics.
+
+Power-ups introduce strategic depth during Standard Mode drawing rounds:
 
 - **Freeze Time** (`200 Gold Coins`):
   - Pauses the round countdown clock for **+20 seconds**.
