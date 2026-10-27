@@ -178,7 +178,7 @@ export default function Home() {
             </div>
             <div className="feature-title">Real-Time Multiplayer</div>
             <div className="feature-desc">
-              See drawings appear stroke by stroke. Powered by WebSocket for instant, lag-free gameplay.
+              See drawings appear stroke by stroke with instant, smooth, and lag-free gameplay.
             </div>
           </div>
 
