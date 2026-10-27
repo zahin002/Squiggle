@@ -33,7 +33,8 @@ const userSchema = new mongoose.Schema({
     eyes: { type: String, default: 'normal' },
     mouth: { type: String, default: 'smile' },
     moustache: { type: String, default: 'none' },
-    beard: { type: String, default: 'none' }
+    beard: { type: String, default: 'none' },
+    hat: { type: String, default: 'none' }
   },
   goldCoins: { type: Number, default: 0 },
   diamonds: { type: Number, default: 5 }, // New users get 5 diamonds

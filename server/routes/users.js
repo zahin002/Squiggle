@@ -113,7 +113,7 @@ router.get('/me/rank', authMiddleware, async (req, res) => {
 // PATCH /api/users/me/avatar — update avatar customization
 router.patch('/me/avatar', authMiddleware, async (req, res) => {
   try {
-    const { color, eyebrows, eyes, mouth, moustache, beard } = req.body;
+    const { color, eyebrows, eyes, mouth, moustache, beard, hat } = req.body;
 
     const updateFields = {};
 
@@ -130,6 +130,7 @@ router.patch('/me/avatar', authMiddleware, async (req, res) => {
     if (typeof mouth === 'string') updateFields['avatar.mouth'] = mouth.slice(0, 30);
     if (typeof moustache === 'string') updateFields['avatar.moustache'] = moustache.slice(0, 30);
     if (typeof beard === 'string') updateFields['avatar.beard'] = beard.slice(0, 30);
+    if (typeof hat === 'string') updateFields['avatar.hat'] = hat.slice(0, 30);
 
     const user = await User.findByIdAndUpdate(
       req.user.id,

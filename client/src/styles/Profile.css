@@ -609,46 +609,128 @@
   }
 }
 
-/* ── Left: Showcase Preview ── */
-.avatar-preview-showcase {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  padding: 1.5rem 1rem;
+/* ── Left: Skribbl-Style Avatar Stage ── */
+.avatar-preview-showcase.skribbl-avatar-stage {
+  position: relative;
+  background: radial-gradient(circle at 50% 35%, #2a1254 0%, #170932 100%);
+  border: 1.5px solid rgba(139, 92, 246, 0.3);
+  border-radius: 22px;
+  padding: 1.75rem 1rem 1.25rem 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.25rem;
+  justify-content: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 0 30px rgba(124, 77, 255, 0.12);
+  overflow: hidden;
+  min-height: 230px;
 }
 
-.avatar-preview-halo {
-  position: relative;
+/* Subtle doodle pattern in background of avatar box like skribbl */
+.skribbl-avatar-stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.04) 2px, transparent 2px),
+    radial-gradient(circle at 85% 80%, rgba(255, 255, 255, 0.04) 2px, transparent 2px),
+    radial-gradient(circle at 20% 75%, rgba(255, 255, 255, 0.03) 3px, transparent 3px),
+    radial-gradient(circle at 80% 25%, rgba(255, 255, 255, 0.03) 3px, transparent 3px);
+  background-size: 50px 50px;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* Top Right Randomize Dice Button */
+.skribbl-stage-dice-btn {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fbbf24;
+  font-size: 1.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  padding: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 35px var(--glow-color, rgba(56, 189, 248, 0.4));
-  transition: box-shadow 0.3s ease;
+  cursor: pointer;
+  z-index: 5;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
 }
 
-.avatar-current-chips {
+.skribbl-stage-dice-btn:hover {
+  background: rgba(251, 191, 36, 0.2);
+  border-color: #fbbf24;
+  color: #fef08a;
+  transform: translateY(-2px) scale(1.08);
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.5);
+}
+
+.skribbl-stage-dice-btn.is-rolling svg {
+  animation: diceRoll 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Arena holding Left Arrows, Center Character, and Right Arrows */
+.skribbl-stage-arena {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 250px;
+  position: relative;
+  z-index: 2;
 }
 
-.avatar-chip {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  padding: 3px 10px;
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: #cbd5e1;
-  text-transform: capitalize;
+.skribbl-arrow-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 160px;
+  width: 32px;
+  align-items: center;
+}
+
+.btn-skribbl-arrow {
+  background: transparent;
+  border: none;
+  padding: 4px 2px;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s ease, filter 0.12s ease;
+  outline: none;
+}
+
+.btn-skribbl-arrow:hover {
+  transform: scale(1.22);
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.8));
+}
+
+.btn-skribbl-arrow:active {
+  transform: scale(0.92);
+}
+
+.pixel-arrow {
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.6));
+}
+
+.skribbl-avatar-center-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 6px;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+
+.skribbl-avatar-center-wrap:hover {
+  transform: scale(1.03);
 }
 
 /* ── Right: Customization Controls ── */
