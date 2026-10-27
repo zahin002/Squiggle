@@ -167,9 +167,9 @@
 /* Shapes Icon Grid Dropdown */
 .shapes-dropdown-grid {
   position: absolute;
-  bottom: 100%;
+  top: 100%;
   left: 0;
-  margin-bottom: 6px;
+  margin-top: 6px;
   background: #181436;
   border: 2px solid rgba(124, 77, 255, 0.5);
   border-radius: 10px;
