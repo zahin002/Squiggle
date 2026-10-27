@@ -936,10 +936,11 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 6px 22px;
+  padding: 6px 18px;
   border-radius: 9999px;
   box-sizing: border-box;
   transition: all 0.2s ease;
+  max-width: 95%;
 }
 
 .canvas-word-pill.is-drawer {
@@ -970,6 +971,7 @@
   display: inline-flex;
   align-items: center;
   color: rgba(255, 255, 255, 0.85);
+  flex-shrink: 0;
 }
 
 .canvas-word-value {
@@ -978,21 +980,37 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  line-height: 1;
+  line-height: 1.2;
   color: #ffffff;
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.word-text-chunk {
+  display: inline-block;
+  white-space: nowrap;
 }
 
 .canvas-hint-mask {
   font-family: 'Consolas', monospace;
   font-size: 22px;
   font-weight: 700;
-  letter-spacing: 4px;
   color: #38bdf8;
-  line-height: 1;
+  line-height: 1.2;
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.hint-word-chunk {
+  display: inline-block;
+  white-space: nowrap;
+  letter-spacing: 3px;
 }
 
 .canvas-wrapper-relative {
@@ -1834,9 +1852,15 @@
   margin: 0 0 12px 0;
 }
 
+.word-selection-card {
+  max-width: 520px;
+  width: 92%;
+  padding: 28px 24px;
+}
+
 .word-choices-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   width: 100%;
   margin: 16px 0;
@@ -1847,12 +1871,22 @@
   border: 1.5px solid rgba(124, 77, 255, 0.4);
   color: #ffffff;
   border-radius: 12px;
-  padding: 12px 14px;
+  padding: 10px 8px;
   font-family: 'Fredoka', 'Nunito', sans-serif;
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  box-sizing: border-box;
 }
 
 .word-choice-btn:hover {

@@ -526,6 +526,68 @@ export default function GamePage() {
 
   const currentWordDisplay = roomState?.currentWord || roomState?.selectedWord;
 
+  // Render guess hint: single words guaranteed on a single line,
+  // auto-scaled font size for long words, wraps only between words if multi-word.
+  const renderWordHint = (hint) => {
+    if (!hint) return null;
+    const wordChunks = hint.trim().split(/\s{2,}/);
+    const totalLetters = (hint.match(/[^\s]/g) || []).length;
+    const maxChunkLetters = Math.max(...wordChunks.map((c) => (c.match(/[^\s]/g) || []).length), 1);
+
+    let fontSize = '22px';
+    if (wordChunks.length === 1) {
+      if (totalLetters > 14) fontSize = '13px';
+      else if (totalLetters > 11) fontSize = '15px';
+      else if (totalLetters > 9) fontSize = '17px';
+      else if (totalLetters > 7) fontSize = '19px';
+      else fontSize = '22px';
+    } else {
+      if (maxChunkLetters > 12 || totalLetters > 16) fontSize = '14px';
+      else if (maxChunkLetters > 9 || totalLetters > 12) fontSize = '16px';
+      else fontSize = '18px';
+    }
+
+    return (
+      <strong className="canvas-hint-mask" style={{ fontSize }}>
+        {wordChunks.map((chunk, idx) => (
+          <span key={idx} className="hint-word-chunk">
+            {chunk}
+          </span>
+        ))}
+      </strong>
+    );
+  };
+
+  // Render drawer secret word: single words on 1 line, wraps only between words.
+  const renderDrawerWord = (word) => {
+    if (!word) return null;
+    const wordChunks = word.trim().split(/\s+/);
+    const totalLetters = word.replace(/\s+/g, '').length;
+    const maxChunkLetters = Math.max(...wordChunks.map((c) => c.length), 1);
+
+    let fontSize = '20px';
+    if (wordChunks.length === 1) {
+      if (totalLetters > 14) fontSize = '13px';
+      else if (totalLetters > 11) fontSize = '15px';
+      else if (totalLetters > 8) fontSize = '17px';
+      else fontSize = '20px';
+    } else {
+      if (maxChunkLetters > 12 || totalLetters > 16) fontSize = '14px';
+      else if (maxChunkLetters > 9 || totalLetters > 12) fontSize = '16px';
+      else fontSize = '18px';
+    }
+
+    return (
+      <strong className="canvas-word-value" style={{ fontSize }}>
+        {wordChunks.map((chunk, idx) => (
+          <span key={idx} className="word-text-chunk">
+            {chunk}
+          </span>
+        ))}
+      </strong>
+    );
+  };
+
   return (
     <div className="game-page-modern">
       {/* Unified Compact Top Header Bar */}
@@ -749,19 +811,19 @@ export default function GamePage() {
                   {isDrawer && currentWordDisplay ? (
                     <div className="canvas-drawer-word-inline">
                       <span className="canvas-word-tag">WORD:</span>
-                      <strong className="canvas-word-value">{currentWordDisplay}</strong>
+                      {renderDrawerWord(currentWordDisplay)}
                     </div>
                   ) : null}
                 </div>
               ) : isDrawer && roomState?.status === 'playing' && currentWordDisplay ? (
                 <div className="canvas-word-pill is-drawer">
                   <span className="canvas-word-tag">DRAW:</span>
-                  <strong className="canvas-word-value">{currentWordDisplay}</strong>
+                  {renderDrawerWord(currentWordDisplay)}
                 </div>
               ) : !isDrawer && roomState?.status === 'playing' && roomState?.wordHint ? (
                 <div className="canvas-word-pill is-guesser">
                   <span className="canvas-word-tag">GUESS:</span>
-                  <strong className="canvas-hint-mask">{roomState.wordHint}</strong>
+                  {renderWordHint(roomState.wordHint)}
                 </div>
               ) : null}
             </div>
@@ -913,18 +975,24 @@ export default function GamePage() {
                   </div>
                   <h3>Choose a word to draw!</h3>
                   <div className="word-choices-grid">
-                    {roomState.wordChoices.map((word) => (
-                      <button
-                        key={word}
-                        className="word-choice-btn"
-                        onClick={() => {
-                          socket.emit('wordSelected', { roomId, word });
-                          setRoomState((s) => ({ ...s, wordChoices: null, selectedWord: word, currentWord: word }));
-                        }}
-                      >
-                        {word}
-                      </button>
-                    ))}
+                    {roomState.wordChoices.map((word) => {
+                      const len = word.length;
+                      const fontSize = len > 14 ? '0.78rem' : len > 11 ? '0.86rem' : len > 8 ? '0.94rem' : '1.02rem';
+                      return (
+                        <button
+                          key={word}
+                          className="word-choice-btn"
+                          style={{ fontSize }}
+                          onClick={() => {
+                            socket.emit('wordSelected', { roomId, word });
+                            setRoomState((s) => ({ ...s, wordChoices: null, selectedWord: word, currentWord: word }));
+                          }}
+                          title={word}
+                        >
+                          {word}
+                        </button>
+                      );
+                    })}
                   </div>
                   <p className="auto-pick-timer">Auto-picking in {timeLeft}s...</p>
                 </div>

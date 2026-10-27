@@ -65,9 +65,10 @@ export default function PowerupsPanel({
   const freezeActive = !!freezeState?.active;
   const freezeSeconds = freezeState?.freezeSecondsRemaining || 0;
   const isFreezeUser = freezeState?.userSocketId === socket?.id;
-  // If user already purchased, cost doubles: 200, 400, 800...
+  // If user already purchased, cost doubles: 200, 400, 800... / 1, 2, 4, 8...
   const freezePurchases = (roomState?.freezeState?.purchasesByUser?.[socket?.id] || 0);
-  const nextFreezeCost = 200 * Math.pow(2, freezePurchases);
+  const nextFreezeCostGold = 200 * Math.pow(2, freezePurchases);
+  const nextFreezeCostDiamond = 1 * Math.pow(2, freezePurchases);
 
   // ── Action Handlers ──────────────────────────────────────────────
   const handleUseHintSteal = (currency) => {
@@ -88,13 +89,13 @@ export default function PowerupsPanel({
     socket.emit('useExtraClues', { roomId, currency });
   };
 
-  const handleUseFreezeTime = () => {
+  const handleUseFreezeTime = (currency = 'gold') => {
     if (!isPowerupsAllowed) return;
     if (isGuest) {
-      showToast('Sign in with an account to spend Gold Coins on Freeze Time!', 'error');
+      showToast('Sign in with an account to spend Gold Coins or Diamonds!', 'error');
       return;
     }
-    socket.emit('useFreezeTime', { roomId });
+    socket.emit('useFreezeTime', { roomId, currency });
   };
 
   if (!isPowerupsAllowed) {
@@ -237,7 +238,7 @@ export default function PowerupsPanel({
                     title="Get 5 options for 150 Gold Coins"
                   >
                     <FaCoins className="btn-curr-icon" />
-                    <span>150 (5 opts)</span>
+                    <span>150</span>
                   </button>
                   <button
                     type="button"
@@ -247,7 +248,7 @@ export default function PowerupsPanel({
                     title="Get 5 options for 1 Diamond"
                   >
                     <FaGem className="btn-curr-icon" />
-                    <span>1 💎</span>
+                    <span>1</span>
                   </button>
                 </>
               ) : clueStage < 5 && nextClueGoldCost !== null ? (
@@ -290,20 +291,29 @@ export default function PowerupsPanel({
             <div className="powerup-actions-row">
               <button
                 type="button"
-                className={`btn-powerup-buy btn-freeze btn-full-width ${freezeActive && isFreezeUser ? 'is-active-freeze' : ''}`}
-                onClick={handleUseFreezeTime}
+                className={`btn-powerup-buy btn-gold ${freezeActive && isFreezeUser ? 'is-active-freeze' : ''}`}
+                onClick={() => handleUseFreezeTime('gold')}
                 disabled={
-                  (user?.goldCoins || 0) < nextFreezeCost ||
+                  (user?.goldCoins || 0) < nextFreezeCostGold ||
                   (freezeActive && !isFreezeUser)
                 }
-                title={`Stop clock and add +20 seconds for ${nextFreezeCost} Gold Coins`}
+                title={`Stop clock and add +20 seconds for ${nextFreezeCostGold} Gold Coins`}
               >
-                <FaSnowflake className="btn-curr-icon" />
-                <span>
-                  {freezeActive && isFreezeUser
-                    ? `+20s More (${nextFreezeCost} 🪙)`
-                    : `+20s Freeze (${nextFreezeCost} 🪙)`}
-                </span>
+                <FaCoins className="btn-curr-icon" />
+                <span>{nextFreezeCostGold}</span>
+              </button>
+              <button
+                type="button"
+                className={`btn-powerup-buy btn-diamond ${freezeActive && isFreezeUser ? 'is-active-freeze' : ''}`}
+                onClick={() => handleUseFreezeTime('diamonds')}
+                disabled={
+                  (user?.diamonds || 0) < nextFreezeCostDiamond ||
+                  (freezeActive && !isFreezeUser)
+                }
+                title={`Stop clock and add +20 seconds for ${nextFreezeCostDiamond} Diamond${nextFreezeCostDiamond > 1 ? 's' : ''}`}
+              >
+                <FaGem className="btn-curr-icon" />
+                <span>{nextFreezeCostDiamond}</span>
               </button>
             </div>
           </div>

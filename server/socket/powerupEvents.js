@@ -307,7 +307,7 @@ module.exports = (socket, io) => {
   });
 
   // ── 3. Freeze Time ───────────────────────────────────────────────
-  socket.on('useFreezeTime', async ({ roomId }) => {
+  socket.on('useFreezeTime', async ({ roomId, currency = 'gold' }) => {
     try {
       const room = getRoom(roomId);
       if (!room || room.status !== 'playing') {
@@ -333,7 +333,7 @@ module.exports = (socket, io) => {
       }
 
       if (!player.userId || player.isGuest) {
-        return socket.emit('powerupError', { message: 'Log in with an account to spend Gold Coins on power-ups.' });
+        return socket.emit('powerupError', { message: 'Log in with an account to spend Gold Coins or Diamonds on power-ups.' });
       }
 
       // Only one player can have active freeze time at a time
@@ -343,29 +343,40 @@ module.exports = (socket, io) => {
         });
       }
 
-      // Cost calculation: 200, 400, 800, 1600...
+      // Cost calculation: 200, 400, 800, 1600... / 1, 2, 4, 8...
       const purchases = room.freezeState?.purchasesByUser?.[socket.id] || 0;
       const costGold = 200 * Math.pow(2, purchases);
+      const costDiamond = 1 * Math.pow(2, purchases);
 
       const user = await User.findById(player.userId);
       if (!user) {
         return socket.emit('powerupError', { message: 'User account not found.' });
       }
 
-      if ((user.goldCoins || 0) < costGold) {
-        return socket.emit('powerupError', {
-          message: `Not enough Gold Coins! Needs ${costGold} 🪙 (You have ${user.goldCoins || 0})`
-        });
+      const useDiamonds = currency === 'diamonds';
+      if (useDiamonds) {
+        if ((user.diamonds || 0) < costDiamond) {
+          return socket.emit('powerupError', {
+            message: `Not enough Diamonds! Needs ${costDiamond} 💎 (You have ${user.diamonds || 0})`
+          });
+        }
+        user.diamonds = (user.diamonds || 0) - costDiamond;
+      } else {
+        if ((user.goldCoins || 0) < costGold) {
+          return socket.emit('powerupError', {
+            message: `Not enough Gold Coins! Needs ${costGold} 🪙 (You have ${user.goldCoins || 0})`
+          });
+        }
+        user.goldCoins = (user.goldCoins || 0) - costGold;
       }
 
-      user.goldCoins = (user.goldCoins || 0) - costGold;
       await user.save();
 
       Reward.create({
         userId: user._id,
         type: 'powerup_spend',
-        amount: -costGold,
-        currency: 'goldCoins',
+        amount: useDiamonds ? -costDiamond : -costGold,
+        currency: useDiamonds ? 'diamonds' : 'goldCoins',
         metadata: { powerup: 'freeze_time', purchaseNumber: purchases + 1 }
       }).catch(() => {});
 
