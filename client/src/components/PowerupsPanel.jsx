@@ -3,12 +3,9 @@
 import React, { useState } from 'react';
 import {
   LuLightbulb,
-  LuTarget,
   LuSnowflake,
   LuCoins,
   LuGem,
-  LuLock,
-  LuCheck,
   LuChevronDown,
   LuChevronUp,
   LuZap
@@ -22,7 +19,6 @@ export default function PowerupsPanel({
   user,
   setUser,
   freezeState,
-  extraCluesData,
   onGuessWord
 }) {
   const [collapsed, setCollapsed] = useState(true);
@@ -61,11 +57,6 @@ export default function PowerupsPanel({
     hintDiamondCost = 1;
   }
 
-  // ── Calculate Extra Clues Cost & Options ─────────────────────────
-  const clueStage = extraCluesData?.stage || 0;
-  const clueOptions = extraCluesData?.options || [];
-  const nextClueGoldCost = extraCluesData?.nextCostGold ?? 150;
-
   // ── Calculate Freeze Time Cost ───────────────────────────────────
   const freezeActive = !!freezeState?.active;
   const freezeSeconds = freezeState?.freezeSecondsRemaining || 0;
@@ -82,15 +73,6 @@ export default function PowerupsPanel({
       return;
     }
     socket.emit('useHintSteal', { roomId, currency });
-  };
-
-  const handleUseExtraClues = (currency = 'gold') => {
-    if (!isPowerupsAllowed) return;
-    if (isGuest) {
-      showToast('Sign in to spend Gold Coins or Diamonds!', 'error');
-      return;
-    }
-    socket.emit('useExtraClues', { roomId, currency });
   };
 
   const handleUseFreezeTime = (currency = 'gold') => {
@@ -181,81 +163,7 @@ export default function PowerupsPanel({
             </div>
           </div>
 
-          {/* 2. Extra Clues (Eliminating Options) */}
-          <div className="powerup-card extra-clues-card">
-            <div className="powerup-card-top">
-              <div className="powerup-icon-box clue">
-                <LuTarget />
-              </div>
-              <div className="powerup-info">
-                <div className="powerup-name">Extra Clues</div>
-                <div className="powerup-sub">
-                  {clueStage === 0
-                    ? 'Get 5 multiple-choice options'
-                    : `${clueOptions.length} option${clueOptions.length > 1 ? 's' : ''} remaining`}
-                </div>
-              </div>
-            </div>
 
-            {/* Display options as clickable guess buttons */}
-            {clueOptions.length > 0 && (
-              <div className="clue-options-list">
-                {clueOptions.map((opt, idx) => (
-                  <button
-                    key={`${opt}-${idx}`}
-                    type="button"
-                    className="clue-option-pill"
-                    onClick={() => onGuessWord(opt)}
-                    title={`Click to guess "${opt}"`}
-                  >
-                    <span>{opt}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="powerup-actions-row">
-              {clueStage === 0 ? (
-                <>
-                  <button
-                    type="button"
-                    className="btn-powerup-buy btn-gold"
-                    onClick={() => handleUseExtraClues('gold')}
-                    disabled={(user?.goldCoins || 0) < 150}
-                    title="Get 5 options for 150 Gold Coins"
-                  >
-                    <LuCoins className="btn-curr-icon" />
-                    <span>150</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-powerup-buy btn-diamond"
-                    onClick={() => handleUseExtraClues('diamonds')}
-                    disabled={(user?.diamonds || 0) < 1}
-                    title="Get 5 options for 1 Diamond"
-                  >
-                    <LuGem className="btn-curr-icon" />
-                    <span>1</span>
-                  </button>
-                </>
-              ) : clueStage < 5 && nextClueGoldCost !== null ? (
-                <button
-                  type="button"
-                  className="btn-powerup-buy btn-gold btn-full-width"
-                  onClick={() => handleUseExtraClues('gold')}
-                  disabled={(user?.goldCoins || 0) < nextClueGoldCost}
-                  title={`Eliminate 1 wrong option for ${nextClueGoldCost} Gold Coins`}
-                >
-                  <LuCoins className="btn-curr-icon" />
-                  <span>Eliminate Option (+{nextClueGoldCost})</span>
-                </button>
-              ) : (
-                <div className="clue-final-tag">
-                  <LuCheck /> 1 Option Remaining!
-                </div>
-              )}
-            </div>
-          </div>
 
           {/* 3. Freeze Time */}
           <div className="powerup-card freeze-card">

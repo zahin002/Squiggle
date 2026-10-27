@@ -26,8 +26,7 @@ export default function DraggableGuessWindow({
   onGuessWord,
   user,
   setUser,
-  freezeState,
-  extraCluesData
+  freezeState
 }) {
   const windowRef = useRef(null);
   const [pos, setPos] = useState({ x: 0, y: 0 });
@@ -190,7 +189,7 @@ export default function DraggableGuessWindow({
               </div>
             </form>
 
-            {/* Power-Ups Panel (Hint Steal, Extra Clues, Freeze Time) */}
+            {/* Power-Ups Panel (Hint Steal, Freeze Time) */}
             <PowerupsPanel
               socket={socket}
               roomId={roomId}
@@ -198,7 +197,6 @@ export default function DraggableGuessWindow({
               user={user}
               setUser={setUser}
               freezeState={freezeState}
-              extraCluesData={extraCluesData}
               onGuessWord={onGuessWord}
             />
           </div>

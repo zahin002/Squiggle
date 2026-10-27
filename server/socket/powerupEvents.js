@@ -3,10 +3,7 @@
 const { getRoom, setRoom, persistRoom } = require('./roomStore');
 const User = require('../models/User');
 const Reward = require('../models/Reward');
-const { wordBank } = require('../utils/WordBank');
 
-// Flatten all words for generating decoy options
-const ALL_DECOY_WORDS = Object.values(wordBank).flat();
 
 function arePowerupsActive(room) {
   if (!room) return false;
@@ -169,144 +166,7 @@ module.exports = (socket, io) => {
     }
   });
 
-  // ── 2. Extra Clues (Eliminating Options) ──────────────────────────
-  socket.on('useExtraClues', async ({ roomId, currency = 'gold' }) => {
-    try {
-      const room = getRoom(roomId);
-      if (!room || room.status !== 'playing') {
-        return socket.emit('powerupError', { message: 'A round must be in progress to use Extra Clues.' });
-      }
-
-      if (room.settings?.gameMode !== 'standard' || room.settings?.powerupsEnabled === false) {
-        return socket.emit('powerupError', { message: 'Power-ups are disabled for this match.' });
-      }
-
-      const player = (room.players || []).find((p) => p.socketId === socket.id);
-      if (!player) {
-        return socket.emit('powerupError', { message: 'Player not found in room.' });
-      }
-
-      if (room.currentDrawer?.socketId === socket.id) {
-        return socket.emit('powerupError', { message: 'The drawer cannot use Extra Clues.' });
-      }
-
-      const guesserId = player.userId || player.socketId;
-      if (room.correctGuessers && room.correctGuessers.includes(guesserId)) {
-        return socket.emit('powerupError', { message: 'You have already guessed the word!' });
-      }
-
-      if (!player.userId || player.isGuest) {
-        return socket.emit('powerupError', { message: 'Log in with an account to spend Gold Coins or Diamonds on power-ups.' });
-      }
-
-      if (!room.playerExtraClues) room.playerExtraClues = {};
-      const clueData = room.playerExtraClues[socket.id] || { stage: 0, options: [] };
-
-      // Cost table:
-      // stage 0 -> 1 (5 options): 150 Gold or 1 Diamond
-      // stage 1 -> 2 (4 options): +200 Gold
-      // stage 2 -> 3 (3 options): +300 Gold
-      // stage 3 -> 4 (2 options): +400 Gold
-      // stage 4 -> 5 (1 option):  +500 Gold
-      const stageCostsGold = [150, 200, 300, 400, 500];
-      if (clueData.stage >= 5) {
-        return socket.emit('powerupError', { message: 'Only 1 option remains!' });
-      }
-
-      const currentStage = clueData.stage;
-      const goldCost = stageCostsGold[currentStage];
-      const diamondCost = currentStage === 0 ? 1 : null;
-
-      const user = await User.findById(player.userId);
-      if (!user) {
-        return socket.emit('powerupError', { message: 'User account not found.' });
-      }
-
-      const useDiamonds = currency === 'diamonds' && diamondCost !== null;
-      if (useDiamonds) {
-        if ((user.diamonds || 0) < diamondCost) {
-          return socket.emit('powerupError', {
-            message: `Not enough Diamonds! Needs ${diamondCost} 💎 (You have ${user.diamonds || 0})`
-          });
-        }
-        user.diamonds = (user.diamonds || 0) - diamondCost;
-      } else {
-        if ((user.goldCoins || 0) < goldCost) {
-          return socket.emit('powerupError', {
-            message: `Not enough Gold Coins! Needs ${goldCost} 🪙 (You have ${user.goldCoins || 0})`
-          });
-        }
-        user.goldCoins = (user.goldCoins || 0) - goldCost;
-      }
-
-      await user.save();
-
-      Reward.create({
-        userId: user._id,
-        type: 'powerup_spend',
-        amount: useDiamonds ? -diamondCost : -goldCost,
-        currency: useDiamonds ? 'diamonds' : 'goldCoins',
-        metadata: { powerup: 'extra_clues', stage: currentStage + 1 }
-      }).catch(() => {});
-
-      if (currentStage === 0) {
-        // Initial Clue: Generate 5 options (1 correct + 4 decoys)
-        const currentWord = room.currentWord.toUpperCase();
-        const decoys = ALL_DECOY_WORDS
-          .filter((w) => typeof w === 'string' && w.toUpperCase() !== currentWord && w.length >= 3)
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 4)
-          .map((w) => w.toUpperCase());
-
-        const options = [currentWord, ...decoys].sort(() => Math.random() - 0.5);
-        clueData.stage = 1;
-        clueData.options = options;
-        clueData.correctWord = currentWord;
-      } else {
-        // Reduction: Eliminate 1 incorrect option
-        const currentWord = room.currentWord.toUpperCase();
-        const incorrectIndices = clueData.options
-          .map((opt, idx) => (opt.toUpperCase() !== currentWord ? idx : -1))
-          .filter((idx) => idx !== -1);
-
-        if (incorrectIndices.length > 0) {
-          const eliminateIdx = incorrectIndices[Math.floor(Math.random() * incorrectIndices.length)];
-          clueData.options.splice(eliminateIdx, 1);
-        }
-        clueData.stage += 1;
-      }
-
-      room.playerExtraClues[socket.id] = clueData;
-      setRoom(roomId, room);
-
-      const nextCosts = [150, 200, 300, 400, 500, null];
-      const nextCostGold = nextCosts[clueData.stage];
-
-      socket.emit('extraCluesUpdated', {
-        stage: clueData.stage,
-        options: clueData.options,
-        nextCostGold,
-        goldCoins: user.goldCoins,
-        diamonds: user.diamonds
-      });
-
-      socket.emit('powerupSuccess', {
-        powerup: 'extra_clues',
-        goldCoins: user.goldCoins,
-        diamonds: user.diamonds
-      });
-
-      io.to(roomId).emit('chatMessage', {
-        type: 'system',
-        text: `🎯 ${player.username} used Extra Clues (${clueData.options.length} options remaining)!`
-      });
-    } catch (err) {
-      console.error('[USE EXTRA CLUES ERROR]', err);
-      socket.emit('powerupError', { message: 'Failed to use Extra Clues.' });
-    }
-  });
-
-  // ── 3. Freeze Time ───────────────────────────────────────────────
+  // ── 2. Freeze Time ───────────────────────────────────────────────
   socket.on('useFreezeTime', async ({ roomId, currency = 'gold' }) => {
     try {
       const room = getRoom(roomId);

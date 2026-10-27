@@ -9,7 +9,7 @@ A real-time multiplayer drawing and guessing game built with React, Node.js, Soc
 - 🖌️ **Live drawing canvas** with brushes, shapes, eraser, fill tool, and undo/redo
 - 💬 **Real-time chat & guessing** powered by Socket.IO
 - 🎙️ **Peer-to-peer voice chat** via WebRTC
-- ⚡ **Power-up system** — Hint Steal, Extra Clues, Freeze Time
+- ⚡ **Power-up system** — Hint Steal, Freeze Time
 - 💰 **Reward economy** — Gold Coins, Diamonds, win streaks, daily login bonuses
 - 🎭 **Spectator mode** with read-only access
 - 🗂️ **10 genre categories** + custom word lists
@@ -113,14 +113,6 @@ squiggle/
 | 2 | 200 | 1 |
 | 1 | 300 | 2 |
 
-### Extra Clues (option elimination)
-| Action | Cost (Gold) |
-|--------|------------|
-| Initial clue (5 options) | 150 |
-| Reduce to 4 | +200 |
-| Reduce to 3 | +300 |
-| Reduce to 2 | +400 |
-| Reduce to 1 | +500 |
 
 ### Freeze Time
 - Initial freeze: 200 Gold Coins

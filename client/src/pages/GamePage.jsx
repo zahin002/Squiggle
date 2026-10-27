@@ -102,7 +102,6 @@ export default function GamePage() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [emojiTab, setEmojiTab] = useState('emojis');
   const [freezeState, setFreezeState] = useState(null);
-  const [extraCluesData, setExtraCluesData] = useState(null);
   const [showFinalDrawing, setShowFinalDrawing] = useState(false);
 
   const chatBottomRef = useRef(null);
@@ -251,7 +250,6 @@ export default function GamePage() {
       setIsStartingGame(false);
       setGuessWindowOpen(true);
       setFreezeState(null);
-      setExtraCluesData(null);
       setRoomState((state) => {
         if (!state) return state;
         return {
@@ -274,7 +272,6 @@ export default function GamePage() {
     socket.on('roundEnded', ({ word, players }) => {
       setIsStartingGame(false);
       setFreezeState(null);
-      setExtraCluesData(null);
       setRoomState((state) => (state ? { ...state, status: 'roundEnding', revealedWord: word, players: players || state.players } : state));
       setMessages((items) => [...items, { type: 'system', text: `Round over! Word was: "${word}"` }]);
     });
@@ -283,7 +280,6 @@ export default function GamePage() {
       setIsStartingGame(false);
       setShowFinalDrawing(false);
       setFreezeState(null);
-      setExtraCluesData(null);
       setRoomState((state) => (state ? {
         ...state,
         status: 'finished',
@@ -306,7 +302,6 @@ export default function GamePage() {
       setShowFinalDrawing(false);
       setIsStartingGame(false);
       setFreezeState(null);
-      setExtraCluesData(null);
       setRoomState((prev) => (prev ? {
         ...prev,
         status: status || 'lobby',
@@ -439,10 +434,6 @@ export default function GamePage() {
       setFreezeState(null);
     });
 
-    socket.on('extraCluesUpdated', (data) => {
-      setExtraCluesData(data);
-    });
-
     socket.on('powerupSuccess', ({ powerup, goldCoins, diamonds }) => {
       if (setUser) {
         setUser((prev) => (prev ? { ...prev, goldCoins, diamonds } : prev));
@@ -482,7 +473,6 @@ export default function GamePage() {
       socket.off('powerupsStatusChanged');
       socket.off('freezeTimeUpdate');
       socket.off('freezeTimeEnded');
-      socket.off('extraCluesUpdated');
       socket.off('powerupSuccess');
       socket.off('powerupError');
 
@@ -892,7 +882,6 @@ export default function GamePage() {
             user={activeUser}
             setUser={setUser}
             freezeState={freezeState}
-            extraCluesData={extraCluesData}
             onGuessWord={handleGuessWordDirect}
           />
         </aside>

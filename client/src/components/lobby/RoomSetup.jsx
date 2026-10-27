@@ -339,7 +339,7 @@ export default function RoomSetup() {
 
         {/* Power-Ups toggle - only visible in Standard Mode */}
         {settings.gameMode === 'standard' && (
-          <label className="rs-checkbox-label" title="Allow players to use Hint Steal, Extra Clues, and Freeze Time">
+          <label className="rs-checkbox-label" title="Allow players to use Hint Steal and Freeze Time">
             <input
               className="rs-checkbox"
               type="checkbox"

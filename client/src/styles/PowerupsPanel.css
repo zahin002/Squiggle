@@ -321,47 +321,4 @@
   font-size: 0.74rem;
 }
 
-/* Extra Clues Options Pills */
-.clue-options-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 4px 0;
-}
 
-.clue-option-pill {
-  flex: 1 1 calc(50% - 4px);
-  min-width: 80px;
-  background: rgba(124, 77, 255, 0.2);
-  border: 1px solid rgba(139, 92, 246, 0.45);
-  border-radius: 6px;
-  padding: 4px 6px;
-  color: #f1f5f9;
-  font-size: 0.74rem;
-  font-weight: 700;
-  text-align: center;
-  cursor: pointer;
-  letter-spacing: 0.3px;
-  transition: all 0.2s ease;
-}
-
-.clue-option-pill:hover {
-  background: linear-gradient(135deg, rgba(124, 77, 255, 0.4), rgba(56, 189, 248, 0.4));
-  border-color: #38bdf8;
-  color: #fff;
-  transform: scale(1.02);
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
-}
-
-.clue-final-tag {
-  width: 100%;
-  text-align: center;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #86efac;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 2px;
-}

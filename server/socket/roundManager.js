@@ -239,7 +239,6 @@ function processWordSelection(io, roomId, word) {
   room.status = 'playing';
   room.revealedHintIndices = [];
   room.freezeState = null;
-  room.playerExtraClues = {};
 
   const isWordle = room.settings?.gameMode === 'wordle';
   if (isWordle) {
