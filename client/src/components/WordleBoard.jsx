@@ -257,29 +257,31 @@ export default function WordleBoard({
       <div className="wordle-status-bar">
         <div className="wordle-phase-tags">
           <span className={`phase-badge ${phase === 1 ? 'phase-badge--blind' : 'phase-badge--draw'}`}>
-            {phase === 1 ? <><FaLock /> Phase 1: Blind Guessing</> : <><FaPencilAlt /> Phase 2: Drawing Active</>}
+            {phase === 1 ? <><FaLock className="badge-lock-icon" /> Phase 1: Blind Guessing</> : <><FaPencilAlt className="badge-lock-icon" /> Phase 2: Drawing Active</>}
           </span>
           <span className="guess-count-badge">
             Guess {effectiveGuesses.length + 1 <= 6 ? effectiveGuesses.length + 1 : 6} / 6
           </span>
         </div>
 
-        <div className="wordle-reward-potential">
-          {!isSolved && effectiveGuesses.length < 6 && (
-            <span className="potential-badge">
-              <FaTrophy className="potential-icon" /> Solve for <strong>+{potentialPoints} pts</strong>
-            </span>
-          )}
-          <button
-            type="button"
-            className="btn-wordle-rules-toggle"
-            onClick={() => setShowRules(!showRules)}
-            title="Wordle Mode Rules & Scoring"
-          >
-            <FaQuestionCircle />
-          </button>
-        </div>
+        <button
+          type="button"
+          className="btn-wordle-rules-toggle"
+          onClick={() => setShowRules(!showRules)}
+          title="Wordle Mode Rules & Scoring"
+        >
+          <FaQuestionCircle />
+        </button>
       </div>
+
+      {/* Row 2: Reward Potential Pill */}
+      {!isSolved && effectiveGuesses.length < 6 && (
+        <div className="wordle-reward-row">
+          <div className="potential-badge">
+            <FaTrophy className="potential-icon" /> Solve for <strong className="pts-highlight">+{potentialPoints} pts</strong>
+          </div>
+        </div>
+      )}
 
       {/* Rules Dropdown Modal */}
       {showRules && (
@@ -361,13 +363,14 @@ export default function WordleBoard({
           <div key={rIdx} className="wordle-keyboard-row">
             {row.map((key) => {
               const status = keyboardLetterStatus[key] || '';
+              const isEnter = key === 'ENTER';
               const isSpecial = key === 'ENTER' || key === 'BACKSPACE';
 
               return (
                 <button
                   key={key}
                   type="button"
-                  className={`wordle-key ${isSpecial ? 'wordle-key--special' : ''} ${status ? `wordle-key--${status}` : ''}`}
+                  className={`wordle-key ${isEnter ? 'wordle-key--enter' : isSpecial ? 'wordle-key--special' : ''} ${status ? `wordle-key--${status}` : ''}`}
                   onClick={() => handleKeyClick(key)}
                   disabled={isSolved || effectiveGuesses.length >= 6}
                 >

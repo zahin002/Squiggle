@@ -36,6 +36,7 @@ import {
 } from 'react-icons/fa';
 import DrawingCanvas from '../components/DrawingCanvas';
 import WordleBoard from '../components/WordleBoard';
+import DraggableGuessWindow from '../components/DraggableGuessWindow';
 import SquiggleLogo, { SquiggleLogoMark } from '../components/SquiggleLogo';
 import { useAuth } from '../context/AuthContext';
 import useWebRTC from '../hooks/useWebRTC';
@@ -90,6 +91,7 @@ export default function GamePage() {
   const [chatInput, setChatInput] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [emojiTab, setEmojiTab] = useState('emojis');
+  const [guessWindowOpen, setGuessWindowOpen] = useState(true);
 
   const chatBottomRef = useRef(null);
   const chatInputRef = useRef(null);
@@ -234,6 +236,7 @@ export default function GamePage() {
 
     socket.on('roundStarted', (round) => {
       setIsStartingGame(false);
+      setGuessWindowOpen(true);
       setRoomState((state) => (state ? { ...state, status: 'playing', ...round } : state));
       if (round?.timeLeft !== undefined) setTimeLeft(round.timeLeft);
       setRoundSplash({
@@ -310,6 +313,7 @@ export default function GamePage() {
     });
 
     socket.on('wordlePhaseStarted', ({ guessPhase, isDrawerLocked, phase, timeLeft }) => {
+      setGuessWindowOpen(true);
       setRoomState((prev) => {
         if (!prev) return prev;
         return {
@@ -654,10 +658,12 @@ export default function GamePage() {
                   <span className={`wordle-nav-phase ${roomState?.wordleState?.phase === 1 ? 'blind' : 'draw'}`}>
                     {roomState?.wordleState?.phase === 1 ? <><FaLock className="btn-icon-xs" /> Blind Phase</> : <><FaPencilAlt className="btn-icon-xs" /> Drawing Phase</>}
                   </span>
-                  <span className="canvas-word-tag">Guess {roomState?.wordleState?.currentGuessPhase || 1}/6</span>
-                  {isDrawer && currentWordDisplay && (
-                    <span className="canvas-word-value">({currentWordDisplay})</span>
-                  )}
+                  {isDrawer && currentWordDisplay ? (
+                    <div className="canvas-drawer-word-inline">
+                      <span className="canvas-word-tag">WORD:</span>
+                      <strong className="canvas-word-value">{currentWordDisplay}</strong>
+                    </div>
+                  ) : null}
                 </div>
               ) : isDrawer && roomState?.status === 'playing' && currentWordDisplay ? (
                 <div className="canvas-word-pill is-drawer">
@@ -979,68 +985,50 @@ export default function GamePage() {
             </form>
           </div>
 
-          {/* Lobby Waiting Card or Active Guess/Wordle Input */}
-          {roomState?.status === 'lobby' ? (
+          {/* In-Game Floating Guess Trigger Bar (For Guessers) */}
+          {roomState?.status === 'playing' && requestedRole !== 'spectator' && !isDrawer && (
+            <div className="guess-trigger-bar">
+              <button
+                type="button"
+                className={`btn-trigger-guess-modal ${guessWindowOpen ? 'is-active' : ''}`}
+                onClick={() => setGuessWindowOpen((prev) => !prev)}
+                title={guessWindowOpen ? 'Hide draggable guess window' : 'Open draggable guess window'}
+              >
+                <div className="trigger-guess-left">
+                  <span className="trigger-guess-icon-pulse">
+                    {isWordle ? '🟩' : '🎯'}
+                  </span>
+                  <div className="trigger-guess-text">
+                    <span className="trigger-guess-title">
+                      {isWordle ? 'Wordle Mode Guesser' : 'Submit Your Guess'}
+                    </span>
+                    <span className="trigger-guess-sub">
+                      {isWordle
+                        ? `Phase ${roomState?.wordleState?.phase || 1} • Guess ${roomState?.wordleState?.currentGuessPhase || 1}/6`
+                        : (roomState?.wordHint ? `Hint: ${roomState.wordHint}` : 'Tap to open draggable guess box')}
+                    </span>
+                  </div>
+                </div>
+                <span className={`trigger-guess-badge ${guessWindowOpen ? 'active' : ''}`}>
+                  {guessWindowOpen ? 'ACTIVE' : 'OPEN'}
+                </span>
+              </button>
+            </div>
+          )}
+
+          {/* Drawer Banner */}
+          {isDrawer && roomState?.status === 'playing' && (
+            <div className="drawer-active-banner">
+              <FaPaintBrush className="drawer-banner-icon" />
+              <span>You are drawing! Watch player guesses in live chat.</span>
+            </div>
+          )}
+
+          {/* Lobby Waiting Card */}
+          {roomState?.status === 'lobby' && (
             <div className="lobby-waiting-status-card">
               <FaGamepad className="waiting-pad-icon" />
               <span>Waiting to start...</span>
-            </div>
-          ) : requestedRole !== 'spectator' && (
-            <div className="guess-section-wrapper">
-              {isWordle && roomState?.status === 'playing' ? (
-                <WordleBoard
-                  socket={socket}
-                  roomId={roomId}
-                  isDrawer={isDrawer}
-                  roomState={roomState}
-                  currentWord={currentWordDisplay}
-                />
-              ) : isDrawer ? (
-                <div className="drawer-active-banner">
-                  <FaPaintBrush className="drawer-banner-icon" />
-                  <span>You are drawing! Watch guesses above.</span>
-                </div>
-              ) : (
-                <div className="guess-interactive-card">
-                  <div className="guess-card-header">
-                    <span className="guess-badge-tag">
-                      <FaLightbulb className="guess-tag-icon" /> GUESS THE WORD
-                    </span>
-                    {roomState?.wordHint && (
-                      <span className="guess-hint-mini">{roomState.wordHint}</span>
-                    )}
-                  </div>
-                  <form
-                    className="guess-section"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      if (!guess.trim()) return;
-                      socket.emit('guessWord', { roomId, guess: guess.trim() });
-                      setGuess('');
-                    }}
-                  >
-                    <div className="guess-input-box">
-                      <input
-                        type="text"
-                        className="guess-input"
-                        value={guess}
-                        onChange={(e) => setGuess(e.target.value)}
-                        placeholder="🎯 Enter your guess here..."
-                        disabled={isDrawer || roomState?.status !== 'playing'}
-                        autoComplete="off"
-                      />
-                      <button
-                        type="submit"
-                        className="guess-submit-btn"
-                        disabled={!guess.trim() || isDrawer || roomState?.status !== 'playing'}
-                      >
-                        <span>GUESS</span>
-                        <FaArrowRight className="guess-btn-arrow" />
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
             </div>
           )}
         </aside>
@@ -1145,6 +1133,24 @@ export default function GamePage() {
           </div>
         </div>
       )}
+
+      {/* Draggable Floating Guess / Wordle Window */}
+      <DraggableGuessWindow
+        isOpen={guessWindowOpen && roomState?.status === 'playing' && requestedRole !== 'spectator' && !isDrawer}
+        onClose={() => setGuessWindowOpen(false)}
+        isWordle={isWordle}
+        socket={socket}
+        roomId={roomId}
+        roomState={roomState}
+        isDrawer={isDrawer}
+        currentWord={currentWordDisplay}
+        guess={guess}
+        setGuess={setGuess}
+        onGuessWord={(guessedWord) => {
+          socket.emit('guessWord', { roomId, guess: guessedWord });
+          setGuess('');
+        }}
+      />
 
       {/* Kicked from room full-screen overlay */}
       {kickedModal && (

@@ -112,6 +112,69 @@ body {
   font-size: 2.6rem;
 }
 
+.doodle:nth-child(9) {
+  top: 15%;
+  left: 32%;
+  animation-delay: -4s;
+  font-size: 2.2rem;
+  color: rgba(245, 158, 11, 0.08);
+}
+
+.doodle:nth-child(10) {
+  top: 25%;
+  left: 72%;
+  animation-delay: -1s;
+  font-size: 2.7rem;
+  color: rgba(236, 72, 153, 0.08);
+}
+
+.doodle:nth-child(11) {
+  top: 48%;
+  left: 8%;
+  animation-delay: -8s;
+  font-size: 2.4rem;
+  color: rgba(16, 185, 129, 0.08);
+}
+
+.doodle:nth-child(12) {
+  top: 12%;
+  right: 25%;
+  animation-delay: -12s;
+  font-size: 2rem;
+  color: rgba(251, 191, 36, 0.09);
+}
+
+.doodle:nth-child(13) {
+  top: 65%;
+  right: 8%;
+  animation-delay: -6s;
+  font-size: 2.8rem;
+  color: rgba(168, 85, 247, 0.08);
+}
+
+.doodle:nth-child(14) {
+  top: 78%;
+  left: 28%;
+  animation-delay: -13s;
+  font-size: 2.5rem;
+  color: rgba(234, 179, 8, 0.08);
+}
+
+.doodle:nth-child(15) {
+  top: 35%;
+  left: 22%;
+  animation-delay: -10s;
+  font-size: 2.1rem;
+}
+
+.doodle:nth-child(16) {
+  top: 80%;
+  right: 32%;
+  animation-delay: -15s;
+  font-size: 2.6rem;
+  color: rgba(56, 189, 248, 0.08);
+}
+
 @keyframes floatDoodle {
 
   0%,
@@ -162,6 +225,19 @@ body {
   text-decoration: none;
 }
 
+.navbar-logo-img {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.navbar-logo-img:hover {
+  transform: scale(1.04);
+  filter: drop-shadow(0 0 14px rgba(124, 77, 255, 0.45));
+}
+
 .navbar-brand-icon {
   width: 36px;
   height: 36px;
@@ -177,9 +253,10 @@ body {
   background-clip: text;
   letter-spacing: -0.5px;
   display: inline-block;
-  line-height: 1.25;
-  padding-bottom: 0.18em;
-  margin-bottom: -0.18em;
+  line-height: 1.35;
+  padding-bottom: 0.25em;
+  margin-bottom: -0.25em;
+  overflow: visible;
 }
 
 .navbar-links {
@@ -706,23 +783,31 @@ body {
 }
 
 .footer-brand {
-  font-family: 'Fredoka', 'Nunito', sans-serif;
-  font-size: 1.35rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #7c4dff, #38bdf8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.6rem;
   display: inline-block;
-  line-height: 1.25;
-  padding-bottom: 0.18em;
+  line-height: 1;
+}
+
+.footer-logo-img {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  display: inline-block;
+  opacity: 0.85;
+  transition: opacity 0.25s ease, transform 0.25s ease, filter 0.25s ease;
+}
+
+.footer-logo-img:hover {
+  opacity: 1;
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 10px rgba(124, 77, 255, 0.4));
 }
 
 .footer-text {
   font-size: 0.95rem;
   color: rgba(255, 255, 255, 0.55);
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 /* ── Animations ────────────────────────────────────────────── */

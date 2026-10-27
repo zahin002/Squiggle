@@ -1,0 +1,297 @@
+/* client/src/styles/DraggableGuessWindow.css */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@600;700;800;900&display=swap');
+
+.draggable-guess-window {
+  position: fixed;
+  z-index: 999;
+  width: 380px;
+  max-width: calc(100vw - 24px);
+  background: linear-gradient(180deg, #18133b 0%, #0e0b29 100%);
+  border: 1.5px solid rgba(139, 92, 246, 0.45);
+  border-radius: 24px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75), 0 0 36px rgba(139, 92, 246, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+  animation: popInDraggable 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: box-shadow 0.2s ease;
+}
+
+@keyframes popInDraggable {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── Doodle Watermark Layer ── */
+.doodle-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.doodle-bg {
+  position: absolute;
+  color: #a855f7;
+  opacity: 0.08;
+  filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.4));
+}
+
+.doodle-palette {
+  top: 140px;
+  left: 20px;
+  font-size: 48px;
+  transform: rotate(-15deg);
+}
+
+.doodle-brush {
+  top: 90px;
+  right: 22px;
+  font-size: 52px;
+  transform: rotate(45deg);
+}
+
+.doodle-q {
+  bottom: 140px;
+  right: 32px;
+  font-size: 42px;
+  transform: rotate(12deg);
+}
+
+.doodle-sparkle {
+  font-size: 26px;
+  color: #38bdf8;
+  opacity: 0.14;
+}
+
+.doodle-sparkle-1 {
+  top: 120px;
+  left: 36px;
+}
+
+.doodle-sparkle-2 {
+  bottom: 160px;
+  right: 48px;
+}
+
+.doodle-wave-svg {
+  position: absolute;
+  bottom: 90px;
+  left: 10px;
+  width: 100px;
+  height: 35px;
+  opacity: 0.12;
+}
+
+/* ── Draggable Header Bar ── */
+.draggable-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(15, 23, 42, 0.6);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.25);
+  cursor: grab;
+  position: relative;
+  z-index: 2;
+  transition: background 0.15s ease;
+}
+
+.draggable-header:active {
+  cursor: grabbing;
+  background: rgba(15, 23, 42, 0.85);
+}
+
+.draggable-title-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drag-grip-icon {
+  color: #8b5cf6;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.draggable-title {
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  letter-spacing: 0.4px;
+}
+
+.drag-hint-pill {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 7px;
+  border-radius: 9999px;
+  font-weight: 600;
+}
+
+.draggable-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.draggable-close-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+/* ── Draggable Body ── */
+.draggable-body {
+  position: relative;
+  z-index: 1;
+  padding: 8px 12px 14px 12px;
+  overflow-y: auto;
+  max-height: calc(85vh - 50px);
+}
+
+/* In Draggable mode, make Wordle panel seamless with the outer container */
+.draggable-guess-window .wordle-guesser-panel {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 4px 0 0 0 !important;
+  margin-top: 0 !important;
+}
+
+/* ── Standard Mode Guess Box ── */
+.standard-guess-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 2px;
+}
+
+.standard-guess-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.standard-guess-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #38bdf8;
+  letter-spacing: 0.5px;
+}
+
+.standard-badge-icon {
+  color: #f59e0b;
+}
+
+.standard-hint-pill {
+  font-family: 'Fredoka', 'Consolas', monospace;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 4px 12px;
+  border-radius: 10px;
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+}
+
+.standard-guess-form {
+  width: 100%;
+}
+
+.standard-guess-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(2, 6, 23, 0.85);
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  border-radius: 14px;
+  padding: 5px 8px 5px 12px;
+  transition: all 0.15s ease;
+}
+
+.standard-guess-input-wrap:focus-within {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+  background: rgba(2, 6, 23, 0.95);
+}
+
+.standard-guess-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 6px 0;
+}
+
+.standard-guess-input::placeholder {
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.standard-guess-submit-btn {
+  background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.standard-guess-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 6px 18px rgba(56, 189, 248, 0.55);
+}
+
+.standard-guess-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.guess-btn-arrow {
+  font-size: 11px;
+}

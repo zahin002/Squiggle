@@ -12,7 +12,15 @@ import {
   FaPencilAlt,
   FaComments,
   FaMedal,
-  FaUser
+  FaUser,
+  FaLightbulb,
+  FaPalette,
+  FaSmile,
+  FaStar,
+  FaDice,
+  FaCrown,
+  FaEraser,
+  FaQuestion
 } from 'react-icons/fa';
 import '../styles/Home.css';
 
@@ -52,21 +60,24 @@ export default function Home() {
         <FaComments className="doodle" />
         <FaMedal className="doodle" />
         <FaEye className="doodle" />
+        <FaLightbulb className="doodle" />
+        <FaPalette className="doodle" />
+        <FaSmile className="doodle" />
+        <FaStar className="doodle" />
+        <FaDice className="doodle" />
+        <FaCrown className="doodle" />
+        <FaEraser className="doodle" />
+        <FaQuestion className="doodle" />
       </div>
 
       {/* ── Navbar ──────────────────────────────────────────── */}
       <nav className={`home-navbar ${scrolled ? 'scrolled' : ''}`}>
         <Link to="/" className="navbar-brand">
-          <svg className="navbar-brand-icon" viewBox="0 0 100 100" fill="none" stroke="url(#navGrad)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round">
-            <defs>
-              <linearGradient id="navGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#7c4dff" />
-                <stop offset="100%" stopColor="#38bdf8" />
-              </linearGradient>
-            </defs>
-            <path d="M10 60 C 10 20, 50 20, 40 50 C 30 80, 70 80, 60 50 C 50 20, 90 20, 90 60" />
-          </svg>
-          <span className="navbar-brand-text">Squiggle</span>
+          <img
+            src="/Top Corner Logo.png"
+            alt="Squiggle"
+            className="navbar-logo-img"
+          />
         </Link>
 
         <div className="navbar-links">
@@ -275,9 +286,15 @@ export default function Home() {
 
       {/* ── Footer ─────────────────────────────────────────── */}
       <footer className="home-footer">
-        <div className="footer-brand">Squiggle</div>
+        <div className="footer-brand">
+          <img
+            src="/Top Corner Logo.png"
+            alt="Squiggle"
+            className="footer-logo-img"
+          />
+        </div>
         <p className="footer-text">
-          © {new Date().getFullYear()} Squiggle — Sketch, think and guess
+          © {new Date().getFullYear()} SQUIGGLE — SKETCH, THINK AND GUESS
         </p>
       </footer>
     </div>

@@ -28,85 +28,107 @@
   align-items: center;
   margin-bottom: 10px;
   gap: 8px;
-  flex-wrap: wrap;
+  width: 100%;
 }
 
 .wordle-phase-tags {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .phase-badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
+  gap: 6px;
+  padding: 5px 12px;
   border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.02em;
 }
 
 .phase-badge--blind {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fcd34d;
-  border: 1px solid rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+  border: 1.5px solid #f59e0b;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.32);
 }
 
 .phase-badge--draw {
-  background: rgba(34, 197, 94, 0.2);
-  color: #86efac;
-  border: 1px solid rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.14);
+  color: #4ade80;
+  border: 1.5px solid #22c55e;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.32);
+}
+
+.badge-lock-icon {
+  font-size: 11px;
 }
 
 .guess-count-badge {
-  background: rgba(255, 255, 255, 0.08);
-  color: #c4b5fd;
-  padding: 3px 8px;
+  background: rgba(139, 92, 246, 0.18);
+  color: #e2e8f0;
+  padding: 5px 12px;
   border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.38);
 }
 
-.wordle-reward-potential {
+.btn-wordle-rules-toggle {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  color: #cbd5e1;
+  cursor: pointer;
+  font-size: 14px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.btn-wordle-rules-toggle:hover {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+  color: #38bdf8;
+  transform: scale(1.08);
+}
+
+/* ── Row 2: Reward Potential Pill ── */
+.wordle-reward-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 12px;
+  width: 100%;
 }
 
 .potential-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background: rgba(56, 189, 248, 0.15);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  padding: 3px 9px;
+  gap: 6px;
+  background: rgba(14, 165, 233, 0.12);
+  color: #e2e8f0;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  padding: 5px 12px;
   border-radius: 9999px;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 700;
 }
 
 .potential-icon {
   color: #f59e0b;
+  font-size: 13px;
 }
 
-.btn-wordle-rules-toggle {
-  background: transparent;
-  border: none;
-  color: #94a3b8;
-  cursor: pointer;
-  font-size: 15px;
-  display: inline-flex;
-  align-items: center;
-  padding: 2px;
-  transition: color 0.15s ease;
-}
-
-.btn-wordle-rules-toggle:hover {
+.pts-highlight {
   color: #38bdf8;
+  font-weight: 800;
 }
 
 /* Rules Modal */
@@ -220,8 +242,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-  margin-bottom: 12px;
+  gap: 6px;
+  margin-bottom: 14px;
 }
 
 .wordle-row {
@@ -230,14 +252,14 @@
 }
 
 .wordle-tile {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
+  width: 46px;
+  height: 48px;
+  border-radius: 12px;
   display: flex;
   justify-content: center;
   align-items: center;
   font-family: 'Fredoka', 'Nunito', sans-serif;
-  font-size: 1.35rem;
+  font-size: 1.38rem;
   font-weight: 700;
   text-transform: uppercase;
   user-select: none;
@@ -245,23 +267,24 @@
 }
 
 .wordle-tile--empty {
-  background: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: rgba(30, 27, 75, 0.55);
+  border: 2px solid rgba(139, 92, 246, 0.28);
   color: #ffffff;
 }
 
 .wordle-tile--filled {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid #7c4dff;
+  background: rgba(30, 27, 75, 0.85);
+  border: 2px solid #38bdf8;
   color: #ffffff;
-  transform: scale(1.04);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+  transform: scale(1.05);
 }
 
 .wordle-tile--correct {
   background: #22c55e;
   border: 2px solid #22c55e;
   color: #ffffff;
-  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.4);
+  box-shadow: 0 2px 10px rgba(34, 197, 94, 0.45);
   animation: flipTile 0.35s ease-out;
 }
 
@@ -269,7 +292,7 @@
   background: #eab308;
   border: 2px solid #eab308;
   color: #ffffff;
-  box-shadow: 0 2px 6px rgba(234, 179, 8, 0.4);
+  box-shadow: 0 2px 10px rgba(234, 179, 8, 0.45);
   animation: flipTile 0.35s ease-out;
 }
 
@@ -317,15 +340,15 @@
 
 .wordle-key {
   height: 42px;
-  min-width: 32px;
+  min-width: 28px;
   flex: 1;
-  max-width: 44px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #f1f5f9;
+  max-width: 40px;
+  background: rgba(30, 41, 59, 0.85);
+  color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   font-family: 'Fredoka', 'Nunito', sans-serif;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   display: flex;
   justify-content: center;
@@ -337,8 +360,8 @@
 }
 
 .wordle-key:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.22);
-  color: #ffffff;
+  background: rgba(51, 65, 85, 0.95);
+  border-color: rgba(139, 92, 246, 0.4);
   transform: translateY(-1px);
 }
 
@@ -346,12 +369,29 @@
   transform: translateY(1px);
 }
 
-.wordle-key--special {
+.wordle-key--enter {
   min-width: 58px;
   max-width: 68px;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 800;
-  background: rgba(255, 255, 255, 0.18);
+  background: linear-gradient(135deg, #a855f7 0%, #38bdf8 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.45);
+}
+
+.wordle-key--enter:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 6px 18px rgba(56, 189, 248, 0.6);
+}
+
+.wordle-key--special {
+  min-width: 44px;
+  max-width: 54px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  background: rgba(51, 65, 85, 0.9);
   color: #ffffff;
 }
 
