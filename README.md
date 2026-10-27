@@ -395,7 +395,3 @@ Contributions make the open-source community an inspiring place to learn and cre
 ## License
 
 Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for more information.
-
-<div align="center">
-  <p>Crafted with ❤️ by <a href="https://github.com/zahin002">zahin002</a></p>
-</div>
