@@ -79,6 +79,31 @@
   flex-wrap: wrap;
 }
 
+.lb-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.lb-brand-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.lb-brand-logo-img {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+
+.lb-brand-logo-img:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 14px rgba(124, 77, 255, 0.45));
+}
+
 .lb-back-btn {
   display: inline-flex;
   align-items: center;

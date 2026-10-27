@@ -85,24 +85,22 @@
 .auth-logo {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  font-family: 'Fredoka', cursive, sans-serif;
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #c4b5fd;
+  justify-content: center;
   text-decoration: none;
   margin-bottom: 1.5rem;
-  transition: transform 0.2s ease, color 0.2s ease;
 }
 
-.auth-logo-icon {
-  font-size: 1.6rem;
-  color: #a78bfa;
+.auth-logo-img {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.25s ease, filter 0.25s ease;
 }
 
-.auth-logo:hover {
-  transform: translateY(-2px);
-  color: #ffffff;
+.auth-logo:hover .auth-logo-img {
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 14px rgba(124, 77, 255, 0.45));
 }
 
 /* ── Glassmorphism Card ─────────────────────────────────────── */

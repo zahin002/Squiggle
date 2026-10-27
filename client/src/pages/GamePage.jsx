@@ -536,7 +536,7 @@ export default function GamePage() {
             <FaArrowLeft className="btn-icon-xs" /> Leave Room
           </button>
           <button className="nav-logo" onClick={handleLeaveRoom} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }} title="Squiggle">
-            <SquiggleLogo size={28} fontSize="1.3rem" id="gameNavGrad" />
+            <SquiggleLogo height={32} />
           </button>
         </div>
 

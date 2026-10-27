@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -84,9 +84,14 @@ export default function LeaderboardPage() {
 
         {/* Header */}
         <header className="lb-header">
-          <button className="lb-back-btn" onClick={() => navigate('/lobby')}>
-            <FaArrowLeft /> Back to Lobby
-          </button>
+          <div className="lb-header-left">
+            <Link to="/" className="lb-brand-link" title="Squiggle Home">
+              <img src="/squiggle-wordmark.png" alt="Squiggle" className="lb-brand-logo-img" />
+            </Link>
+            <button className="lb-back-btn" onClick={() => navigate('/lobby')}>
+              <FaArrowLeft /> Back to Lobby
+            </button>
+          </div>
 
           <div className="lb-header-center">
             <FaTrophy className="lb-header-icon" />

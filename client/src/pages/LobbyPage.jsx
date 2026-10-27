@@ -13,6 +13,19 @@ import {
   FaPaintBrush,
   FaLock,
   FaGlobe,
+  FaPencilAlt,
+  FaPalette,
+  FaLightbulb,
+  FaQuestion,
+  FaDice,
+  FaSmile,
+  FaCrown,
+  FaStar,
+  FaCoins,
+  FaGem,
+  FaBolt,
+  FaEraser,
+  FaComments
 } from 'react-icons/fa';
 import '../styles/Lobby.css';
 
@@ -68,17 +81,25 @@ export default function LobbyPage() {
 
   return (
     <div className="lobby-page">
-      {/* Fixed background layers */}
+      {/* Fixed background layers with vibrant floating doodle icons */}
       <div className="lobby-bg" aria-hidden="true" />
       <div className="lobby-bg-icons" aria-hidden="true">
-        <FaPaintBrush className="lobby-doodle" />
-        <FaGamepad   className="lobby-doodle" />
-        <FaTrophy    className="lobby-doodle" />
-        <FaHashtag   className="lobby-doodle" />
-        <FaLock      className="lobby-doodle" />
-        <FaGlobe     className="lobby-doodle" />
-        <FaPaintBrush className="lobby-doodle" />
-        <FaGamepad   className="lobby-doodle" />
+        <span className="lobby-doodle lobby-doodle--1"><FaPencilAlt /></span>
+        <span className="lobby-doodle lobby-doodle--2"><FaPaintBrush /></span>
+        <span className="lobby-doodle lobby-doodle--3"><FaPalette /></span>
+        <span className="lobby-doodle lobby-doodle--4"><FaLightbulb /></span>
+        <span className="lobby-doodle lobby-doodle--5"><FaQuestion /></span>
+        <span className="lobby-doodle lobby-doodle--6"><FaGamepad /></span>
+        <span className="lobby-doodle lobby-doodle--7"><FaDice /></span>
+        <span className="lobby-doodle lobby-doodle--8"><FaSmile /></span>
+        <span className="lobby-doodle lobby-doodle--9"><FaTrophy /></span>
+        <span className="lobby-doodle lobby-doodle--10"><FaCrown /></span>
+        <span className="lobby-doodle lobby-doodle--11"><FaStar /></span>
+        <span className="lobby-doodle lobby-doodle--12"><FaCoins /></span>
+        <span className="lobby-doodle lobby-doodle--13"><FaGem /></span>
+        <span className="lobby-doodle lobby-doodle--14"><FaBolt /></span>
+        <span className="lobby-doodle lobby-doodle--15"><FaEraser /></span>
+        <span className="lobby-doodle lobby-doodle--16"><FaComments /></span>
       </div>
 
       {/* Scrollable content */}
@@ -86,17 +107,12 @@ export default function LobbyPage() {
 
         {/* Header */}
         <header className="lobby-header">
-          <Link to="/" className="lobby-brand">
-            <svg className="lobby-brand-icon" viewBox="0 0 100 100" fill="none" stroke="url(#lobbyGrad)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round">
-              <defs>
-                <linearGradient id="lobbyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#7c4dff" />
-                  <stop offset="100%" stopColor="#38bdf8" />
-                </linearGradient>
-              </defs>
-              <path d="M10 60 C 10 20, 50 20, 40 50 C 30 80, 70 80, 60 50 C 50 20, 90 20, 90 60" />
-            </svg>
-            <span className="lobby-brand-text">Squiggle</span>
+          <Link to="/" className="lobby-brand" title="Squiggle Home">
+            <img
+              src="/squiggle-wordmark.png"
+              alt="Squiggle"
+              className="lobby-brand-logo-img"
+            />
           </Link>
 
           <div className="lobby-header-right">

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -192,6 +192,9 @@ export default function ProfilePage() {
         {/* ── Header ── */}
         <header className="profile-header">
           <div className="profile-header-left">
+            <Link to="/" className="profile-brand-link" title="Squiggle Home">
+              <img src="/squiggle-wordmark.png" alt="Squiggle" className="profile-brand-logo-img" />
+            </Link>
             <button className="btn-back-profile" onClick={() => navigate('/lobby')}>
               <FaArrowLeft style={{ marginRight: '6px', verticalAlign: '-1px' }} /> Back to Lobby
             </button>

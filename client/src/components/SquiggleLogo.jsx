@@ -35,40 +35,24 @@ export function SquiggleLogoMark({ size = 32, id = 'sqGrad', className = '' }) {
 }
 
 /**
- * The official Squiggle full brand (wave mark + gradient text).
+ * The official Squiggle full brand wordmark image (transparent 3D neon logo).
  */
-export default function SquiggleLogo({ size = 28, fontSize = '1.35rem', id = 'sqFullGrad', className = '' }) {
+export default function SquiggleLogo({ height = 34, size, fontSize, id, className = '', alt = 'Squiggle' }) {
+  const actualHeight = height || (size ? size * 1.2 : 34);
   return (
-    <div
+    <img
+      src="/squiggle-wordmark.png"
+      alt={alt}
       className={`squiggle-full-brand ${className}`}
       style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '8px',
-        userSelect: 'none'
+        height: typeof actualHeight === 'number' ? `${actualHeight}px` : actualHeight,
+        width: 'auto',
+        display: 'inline-block',
+        verticalAlign: 'middle',
+        objectFit: 'contain',
+        userSelect: 'none',
+        transition: 'transform 0.25s ease, filter 0.25s ease'
       }}
-    >
-      <SquiggleLogoMark size={size} id={id} />
-      <span
-        className="squiggle-brand-title"
-        style={{
-          fontFamily: "'Fredoka', 'Nunito', sans-serif",
-          fontSize,
-          fontWeight: 700,
-          background: 'linear-gradient(135deg, #7c4dff, #38bdf8)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-          letterSpacing: '-0.5px',
-          display: 'inline-block',
-          lineHeight: 1.35,
-          paddingBottom: '0.25em',
-          marginBottom: '-0.25em',
-          overflow: 'visible'
-        }}
-      >
-        Squiggle
-      </span>
-    </div>
+    />
   );
 }

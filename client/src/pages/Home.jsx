@@ -76,7 +76,7 @@ export default function Home() {
       <nav className={`home-navbar ${scrolled ? 'scrolled' : ''}`}>
         <Link to="/" className="navbar-brand">
           <img
-            src="/top-corner-logo.png"
+            src="/squiggle-wordmark.png"
             alt="Squiggle"
             className="navbar-logo-img"
           />
@@ -310,7 +310,7 @@ export default function Home() {
       <footer className="home-footer">
         <div className="footer-brand">
           <img
-            src="/top-corner-logo.png"
+            src="/squiggle-wordmark.png"
             alt="Squiggle"
             className="footer-logo-img"
           />
