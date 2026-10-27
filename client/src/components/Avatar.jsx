@@ -333,8 +333,8 @@ function renderHat(style) {
   }
 }
 
-function renderEyebrows(style, isLight) {
-  const strokeColor = isLight ? '#0f172a' : '#ffffff';
+function renderEyebrows(style) {
+  const strokeColor = '#0f172a';
   switch (style) {
     case 'arched':
       return (
@@ -700,7 +700,7 @@ function renderBeard(style) {
     case 'goatee':
       return (
         <path
-          d="M 44 58 Q 50 56 56 58 L 53 68 Q 50 71 47 68 Z"
+          d="M 44 54 Q 50 52 56 54 L 53 63 Q 50 66 47 63 Z"
           fill="#1e293b"
           stroke="#0f172a"
           strokeWidth="1.5"
@@ -709,7 +709,7 @@ function renderBeard(style) {
     case 'full':
       return (
         <path
-          d="M 28 44 Q 24 64 38 72 Q 50 77 62 72 Q 76 64 72 44 Q 66 55 58 57 Q 50 60 42 57 Q 34 55 28 44 Z"
+          d="M 27 42 C 25 55 36 64 50 64 C 64 64 75 55 73 42 C 68 53 60 56 50 56 C 40 56 32 53 27 42 Z"
           fill="#1e293b"
           stroke="#0f172a"
           strokeWidth="2"
@@ -718,23 +718,24 @@ function renderBeard(style) {
     case 'chinstrap':
       return (
         <path
-          d="M 26 44 Q 24 62 38 71 Q 50 75 62 71 Q 76 62 74 44 Q 70 60 62 66 Q 50 70 38 66 Q 30 60 26 44 Z"
+          d="M 27 41 C 26 51 38 58 50 58 C 62 58 74 51 73 41 C 70 48 60 54 50 54 C 40 54 30 48 27 41 Z"
           fill="#1e293b"
           stroke="#0f172a"
           strokeWidth="1.8"
+          strokeLinejoin="round"
         />
       );
     case 'soulpatch':
       return (
         <path
-          d="M 48 57 L 52 57 L 51 62 L 49 62 Z"
+          d="M 48 54 L 52 54 L 51 59 L 49 59 Z"
           fill="#0f172a"
         />
       );
     case 'pointed':
       return (
         <path
-          d="M 44 58 Q 50 57 56 58 L 50 74 Z"
+          d="M 43 54 Q 50 53 57 54 L 50 68 Z"
           fill="#1e293b"
           stroke="#0f172a"
           strokeWidth="1.8"
@@ -814,7 +815,7 @@ function AvatarComponent({ avatar, size = 48, className = '', username = '', isS
         {renderBeard(norm.beard)}
 
         {/* 4. Eyebrows */}
-        {renderEyebrows(norm.eyebrows, isLight)}
+        {renderEyebrows(norm.eyebrows)}
 
         {/* 5. Eye shapes */}
         {renderEyes(norm.eyes)}
