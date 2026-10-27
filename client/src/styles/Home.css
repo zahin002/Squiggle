@@ -705,13 +705,13 @@ body {
   font-family: 'Fredoka', 'Nunito', sans-serif;
   font-size: 1.05rem;
   font-weight: 800;
-  letter-spacing: 2px;
+  letter-spacing: 2.5px;
   text-transform: uppercase;
-  background: linear-gradient(135deg, #a78bfa 0%, #38bdf8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #ffffff;
   display: block;
-  margin-top: 6px;
+  margin-top: 8px;
+  opacity: 0.92;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
 /* ── Animations ────────────────────────────────────────────── */
