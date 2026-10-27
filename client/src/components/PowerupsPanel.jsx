@@ -109,14 +109,16 @@ export default function PowerupsPanel({
         <div className="powerups-header-left">
           <span className="powerups-header-title">
             <LuZap className="powerups-bolt-icon" />
-            <span>POWER-UPS</span>
+            <span>Power-Ups</span>
           </span>
           <div className="powerups-wallet-mini">
             <span className="wallet-coin-item" title="Gold Coins">
-              <LuCoins className="coin-icon" /> Coins: {user?.goldCoins || 0}
+              <LuCoins className="coin-icon" />
+              <span>{user?.goldCoins || 0}</span>
             </span>
             <span className="wallet-gem-item" title="Diamonds">
-              <LuGem className="gem-icon" /> Gems: {user?.diamonds || 0}
+              <LuGem className="gem-icon" />
+              <span>{user?.diamonds || 0}</span>
             </span>
           </div>
         </div>
