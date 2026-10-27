@@ -92,6 +92,7 @@ export default function GamePage() {
   const [guess, setGuess] = useState('');
   const [timeLeft, setTimeLeft] = useState(0);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [roomCodeCopied, setRoomCodeCopied] = useState(false);
   const [activeVote, setActiveVote] = useState(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [voteNotice, setVoteNotice] = useState('');
@@ -713,10 +714,10 @@ export default function GamePage() {
             <button
               type="button"
               className="room-code-copy-btn"
-              onClick={handleCopyInvite}
+              onClick={() => { navigator.clipboard.writeText(roomId); setRoomCodeCopied(true); setTimeout(() => setRoomCodeCopied(false), 2500); }}
               title="Copy Room Link"
             >
-              {copySuccess ? <LuCheck className="code-copy-icon is-copied" /> : <LuCopy className="code-copy-icon" />}
+              {roomCodeCopied ? <LuCheck className="code-copy-icon is-copied" /> : <LuCopy className="code-copy-icon" />}
             </button>
           </div>
 
