@@ -82,7 +82,7 @@ export const BEARD_OPTIONS = [
   { id: 'goatee', label: 'Goatee' },
   { id: 'full', label: 'Full Beard' },
   { id: 'chinstrap', label: 'Chinstrap' },
-  { id: 'soulpatch', label: 'Soul Patch' },
+  { id: 'curly', label: 'Curly Beard' },
   { id: 'pointed', label: 'Wizard' },
 ];
 
@@ -127,6 +127,7 @@ export function normalizeAvatar(raw) {
       beard: 'none',
     };
   }
+  const beard = raw.beard === 'soulpatch' ? 'curly' : (raw.beard || 'none');
   return {
     color: raw.color || '#f5c6a5',
     hat: raw.hat || 'none',
@@ -134,7 +135,7 @@ export function normalizeAvatar(raw) {
     eyes: raw.eyes || 'normal',
     mouth: raw.mouth || 'smile',
     moustache: raw.moustache || 'none',
-    beard: raw.beard || 'none',
+    beard,
   };
 }
 
@@ -710,12 +711,39 @@ function renderBeard(style) {
           strokeLinejoin="round"
         />
       );
+    case 'curly':
     case 'soulpatch':
       return (
-        <path
-          d="M 48 56 L 52 56 L 51 61 L 49 61 Z"
-          fill="#0f172a"
-        />
+        <g id="beard-curly">
+          <path
+            d="M 24 44 C 21 48 20 53 23 57 C 21 61 24 66 29 68 C 32 72 38 74 44 74 C 47 75 53 75 56 74 C 62 74 68 72 71 68 C 76 66 79 61 77 57 C 80 53 79 48 76 44 C 72 52 63 57 50 57 C 37 57 28 52 24 44 Z"
+            fill="#1e293b"
+            stroke="#0f172a"
+            strokeWidth="1.8"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M 33 63 C 31 60 35 58 37 60 C 38 62 36 64 34 64"
+            fill="none"
+            stroke="#475569"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 47 67 C 45 64 49 62 51 64 C 52 66 50 68 48 68"
+            fill="none"
+            stroke="#475569"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 61 63 C 59 60 63 58 65 60 C 66 62 64 64 62 64"
+            fill="none"
+            stroke="#475569"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+          />
+        </g>
       );
     case 'pointed':
       return (
