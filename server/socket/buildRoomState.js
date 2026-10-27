@@ -49,6 +49,18 @@ function buildRoomState(room, currentUserId, socketId) {
       totalGuessers: (room.players || []).filter(p => p.socketId !== room.currentDrawer?.socketId).length
     } : null,
 
+    powerupsAllowed: room.settings?.gameMode === 'standard' && room.settings?.powerupsEnabled !== false,
+    powerupsActive: room.settings?.gameMode === 'standard' && room.settings?.powerupsEnabled !== false && room.status === 'playing' && !isDrawer,
+    freezeState: room.freezeState ? {
+      active: !!room.freezeState.active,
+      userSocketId: room.freezeState.userSocketId,
+      username: room.freezeState.username,
+      freezeSecondsRemaining: room.freezeState.freezeSecondsRemaining,
+      normalTimeFrozenAt: room.freezeState.normalTimeFrozenAt,
+      isNormalTimeExpired: room.timeLeft <= 0
+    } : null,
+    myExtraClues: room.playerExtraClues?.[socketId] || null,
+
     isHost
   };
 }

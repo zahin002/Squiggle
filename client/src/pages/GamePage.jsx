@@ -32,7 +32,10 @@ import {
   FaGamepad,
   FaLightbulb,
   FaPaintBrush,
-  FaArrowRight
+  FaArrowRight,
+  FaSnowflake,
+  FaBolt,
+  FaGem
 } from 'react-icons/fa';
 import DrawingCanvas from '../components/DrawingCanvas';
 import WordleBoard from '../components/WordleBoard';
@@ -74,7 +77,7 @@ export default function GamePage() {
   const location = useLocation();
   const navigate = useNavigate();
   const requestedRole = location.state?.role || 'player';
-  const { user, loginAsGuest, loading } = useAuth();
+  const { user, setUser, loginAsGuest, loading } = useAuth();
   const [activeUser, setActiveUser] = useState(user);
   const [roomState, setRoomState] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -92,6 +95,8 @@ export default function GamePage() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [emojiTab, setEmojiTab] = useState('emojis');
   const [guessWindowOpen, setGuessWindowOpen] = useState(true);
+  const [freezeState, setFreezeState] = useState(null);
+  const [extraCluesData, setExtraCluesData] = useState(null);
 
   const chatBottomRef = useRef(null);
   const chatInputRef = useRef(null);
@@ -237,6 +242,8 @@ export default function GamePage() {
     socket.on('roundStarted', (round) => {
       setIsStartingGame(false);
       setGuessWindowOpen(true);
+      setFreezeState(null);
+      setExtraCluesData(null);
       setRoomState((state) => (state ? { ...state, status: 'playing', ...round } : state));
       if (round?.timeLeft !== undefined) setTimeLeft(round.timeLeft);
       setRoundSplash({
@@ -249,20 +256,27 @@ export default function GamePage() {
 
     socket.on('roundEnded', ({ word, players }) => {
       setIsStartingGame(false);
+      setFreezeState(null);
+      setExtraCluesData(null);
       setRoomState((state) => (state ? { ...state, status: 'roundEnding', revealedWord: word, players: players || state.players } : state));
       setMessages((items) => [...items, { type: 'system', text: `Round over! Word was: "${word}"` }]);
     });
 
     socket.on('gameEnded', ({ winner, players }) => {
       setIsStartingGame(false);
+      setFreezeState(null);
+      setExtraCluesData(null);
       setRoomState((state) => (state ? { ...state, status: 'finished', winner, players: players || state.players } : state));
       setMessages((items) => [...items, { type: 'system', text: `Game Over! Winner: ${winner || 'Nobody'}` }]);
     });
 
-    socket.on('timerTick', ({ timeLeft, wordHint }) => {
+    socket.on('timerTick', ({ timeLeft, wordHint, freezeState: tickFreezeState }) => {
       setTimeLeft(timeLeft);
       if (wordHint) {
         setRoomState((s) => (s ? { ...s, wordHint } : s));
+      }
+      if (tickFreezeState !== undefined) {
+        setFreezeState(tickFreezeState);
       }
     });
 
@@ -355,6 +369,43 @@ export default function GamePage() {
       });
     });
 
+    socket.on('powerupsStatusChanged', ({ powerupsEnabled }) => {
+      setRoomState((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          settings: {
+            ...(prev.settings || {}),
+            powerupsEnabled
+          }
+        };
+      });
+    });
+
+    socket.on('freezeTimeUpdate', (data) => {
+      setFreezeState(data);
+    });
+
+    socket.on('freezeTimeEnded', () => {
+      setFreezeState(null);
+    });
+
+    socket.on('extraCluesUpdated', (data) => {
+      setExtraCluesData(data);
+    });
+
+    socket.on('powerupSuccess', ({ powerup, goldCoins, diamonds }) => {
+      if (setUser) {
+        setUser((prev) => (prev ? { ...prev, goldCoins, diamonds } : prev));
+      }
+      setActiveUser((prev) => (prev ? { ...prev, goldCoins, diamonds } : prev));
+    });
+
+    socket.on('powerupError', ({ message }) => {
+      setError(message);
+      setTimeout(() => setError(''), 4000);
+    });
+
     return () => {
       socket.off('connect', handleConnect);
       socket.off('roomState');
@@ -378,6 +429,12 @@ export default function GamePage() {
       socket.off('wordlePhaseStarted');
       socket.off('wordleActivity');
       socket.off('voiceChatStatusChanged');
+      socket.off('powerupsStatusChanged');
+      socket.off('freezeTimeUpdate');
+      socket.off('freezeTimeEnded');
+      socket.off('extraCluesUpdated');
+      socket.off('powerupSuccess');
+      socket.off('powerupError');
 
       socket.disconnect();
     };
@@ -442,6 +499,20 @@ export default function GamePage() {
         settings: {
           ...(prev.settings || {}),
           voiceChatEnabled: enabled
+        }
+      };
+    });
+  };
+
+  const handleSetPowerups = (enabled) => {
+    socket.emit('setPowerupsEnabled', { roomId, enabled });
+    setRoomState((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        settings: {
+          ...(prev.settings || {}),
+          powerupsEnabled: enabled
         }
       };
     });
@@ -646,10 +717,27 @@ export default function GamePage() {
           {/* Top Bar above Canvas: Clock/Timer + Word Display */}
           {(roomState?.status === 'playing' || roomState?.status === 'wordSelection') && (
             <div className="canvas-header-bar">
+              {/* Freeze Red Timer popup to the left of normal timer */}
+              {freezeState?.active && freezeState.userSocketId === socket.id && (
+                <div className="canvas-freeze-red-timer" title="Active Freeze Time Countdown">
+                  <FaSnowflake className="freeze-pulse-icon" />
+                  <span>+{freezeState.freezeSecondsRemaining}s FREEZE</span>
+                </div>
+              )}
+
               {/* Clock Timer - big and prominent */}
-              <div className={`canvas-timer-pill ${timeLeft <= 10 ? 'warn' : ''}`}>
-                <FaStopwatch className="canvas-timer-icon" />
-                <span className="canvas-timer-text">{timeLeft}s</span>
+              <div className={`canvas-timer-pill ${timeLeft <= 10 && !(freezeState?.active && freezeState.userSocketId === socket.id) ? 'warn' : ''} ${freezeState?.active && freezeState.userSocketId === socket.id ? 'is-frozen' : ''}`}>
+                {freezeState?.active && freezeState.userSocketId === socket.id ? (
+                  <>
+                    <FaSnowflake className="canvas-timer-icon freeze-snow-icon" />
+                    <span className="canvas-timer-text">{freezeState.normalTimeFrozenAt ?? timeLeft}s (FROZEN)</span>
+                  </>
+                ) : (
+                  <>
+                    <FaStopwatch className="canvas-timer-icon" />
+                    <span className="canvas-timer-text">{timeLeft}s</span>
+                  </>
+                )}
               </div>
 
               {/* Word Display (Draw / Guess / Wordle Phase) */}
@@ -722,6 +810,32 @@ export default function GamePage() {
                         <><FaMicrophone className="btn-icon-xs" /> Mic Enabled</>
                       ) : (
                         <><FaMicrophoneSlash className="btn-icon-xs" /> Mic Disabled by Host</>
+                      )}
+                    </span>
+                  )}
+                </div>
+
+                <div className="lobby-voice-setting-row">
+                  <span className="lobby-voice-label">Power-Ups:</span>
+                  {isHost ? (
+                    <button
+                      type="button"
+                      className={`lobby-voice-toggle-btn ${roomState?.settings?.powerupsEnabled !== false ? 'is-enabled' : 'is-disabled'}`}
+                      onClick={() => handleSetPowerups(roomState?.settings?.powerupsEnabled === false)}
+                      title="Click to toggle Power-Ups (Hint Steal, Extra Clues, Freeze Time)"
+                    >
+                      {roomState?.settings?.powerupsEnabled !== false ? (
+                        <><FaBolt className="btn-icon-xs" /> Power-Ups: Enabled (Click to Disable)</>
+                      ) : (
+                        <><FaBolt className="btn-icon-xs" /> Power-Ups: Disabled (Click to Enable)</>
+                      )}
+                    </button>
+                  ) : (
+                    <span className={`lobby-voice-badge ${roomState?.settings?.powerupsEnabled !== false ? 'is-enabled' : 'is-disabled'}`}>
+                      {roomState?.settings?.powerupsEnabled !== false ? (
+                        <><FaBolt className="btn-icon-xs" /> Power-Ups Enabled</>
+                      ) : (
+                        <><FaBolt className="btn-icon-xs" /> Power-Ups Disabled by Host</>
                       )}
                     </span>
                   )}
@@ -813,6 +927,19 @@ export default function GamePage() {
                     ))}
                   </div>
                   <p className="auto-pick-timer">Auto-picking in {timeLeft}s...</p>
+                </div>
+              </div>
+            )}
+
+            {/* OVERLAY: Freeze Time Waiting Banner for other players when normal time expires */}
+            {freezeState?.active && freezeState.userSocketId !== socket.id && timeLeft <= 0 && (
+              <div className="freeze-time-canvas-banner">
+                <div className="freeze-canvas-banner-card">
+                  <FaSnowflake className="freeze-banner-snowflake" />
+                  <div className="freeze-banner-text">
+                    <span><strong>{freezeState.username}</strong> used Freeze Time! Wait for them to finish...</span>
+                    <span className="freeze-banner-remaining">({freezeState.freezeSecondsRemaining}s remaining)</span>
+                  </div>
                 </div>
               </div>
             )}
@@ -1150,6 +1277,10 @@ export default function GamePage() {
           socket.emit('guessWord', { roomId, guess: guessedWord });
           setGuess('');
         }}
+        user={activeUser}
+        setUser={setUser}
+        freezeState={freezeState}
+        extraCluesData={extraCluesData}
       />
 
       {/* Kicked from room full-screen overlay */}

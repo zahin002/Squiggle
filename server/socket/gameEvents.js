@@ -7,6 +7,7 @@ const { buildRoomState } = require('./buildRoomState');
 const drawingEvents = require('./drawingEvents');
 const voiceEvents = require('./voiceEvents');
 const voteKickEvents = require('./voteKickEvents');
+const powerupEvents = require('./powerupEvents');
 
 module.exports = (io) => {
   io.on('connection', (socket) => {
@@ -14,6 +15,7 @@ module.exports = (io) => {
     drawingEvents(socket, io);
     voiceEvents(socket, io);
     voteKickEvents(socket, io);
+    powerupEvents(socket, io);
 
     // ----- JOIN ROOM -----
     socket.on('joinRoom', async ({ roomId, token, userId, username, role, isGuest }) => {
@@ -586,6 +588,13 @@ module.exports = (io) => {
 
         // Broadcast updated players list for scores
         io.to(roomId).emit('playerJoined', { players: room.players });
+
+        // If freeze user guessed and normal time had already expired, end round immediately
+        if (room.timeLeft <= 0 && room.freezeState?.active && room.freezeState.userSocketId === socket.id) {
+          room.freezeState.active = false;
+          require('./roundManager').endRound(io, room, roomId);
+          return;
+        }
 
         // Check if all players (except drawer) have guessed
         if (room.correctGuessers.length >= room.players.length - 1) {

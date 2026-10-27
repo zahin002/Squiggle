@@ -15,7 +15,7 @@ const router = express.Router();
 router.post('/create', optionalAuth, async (req, res) => {
   try {
     const roomId = crypto.randomBytes(3).toString('hex').toUpperCase(); // e.g. 'AB3X9Z'
-    let settings = { ...req.body };
+    let settings = { ...req.body, powerupsEnabled: req.body.powerupsEnabled !== false };
 
     // req.user is null when no valid JWT was provided → guest host
     const isGuestHost = !req.user;

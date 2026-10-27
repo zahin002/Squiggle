@@ -2263,3 +2263,102 @@
   from { opacity: 0; transform: translateY(18px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+/* ── Freeze Time Styles ───────────────────────────────────────── */
+.canvas-freeze-red-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  border: 2px solid #fca5a5;
+  border-radius: 999px;
+  color: #fff;
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 1.02rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.65);
+  animation: freezeRedPulse 1s infinite alternate ease-in-out;
+  margin-right: 8px;
+}
+
+@keyframes freezeRedPulse {
+  0% {
+    transform: scale(0.97);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+  }
+  100% {
+    transform: scale(1.03);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.85);
+  }
+}
+
+.freeze-pulse-icon {
+  font-size: 1.1rem;
+  animation: spinSnowflake 4s linear infinite;
+}
+
+.canvas-timer-pill.is-frozen {
+  background: linear-gradient(135deg, #0e7490 0%, #155e75 100%);
+  border-color: #38bdf8;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
+}
+
+.freeze-snow-icon {
+  color: #67e8f9;
+  animation: spinSnowflake 6s linear infinite;
+}
+
+@keyframes spinSnowflake {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.freeze-time-canvas-banner {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 45;
+  pointer-events: none;
+  animation: fadeInDown 0.35s ease-out;
+}
+
+.freeze-canvas-banner-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 22px;
+  background: rgba(15, 23, 42, 0.94);
+  border: 2px solid #38bdf8;
+  border-radius: 999px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 24px rgba(56, 189, 248, 0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.freeze-banner-snowflake {
+  font-size: 1.35rem;
+  color: #38bdf8;
+  animation: spinSnowflake 3.5s linear infinite;
+  flex-shrink: 0;
+}
+
+.freeze-banner-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.freeze-banner-remaining {
+  margin-left: 6px;
+  color: #f87171;
+  font-weight: 800;
+}
+

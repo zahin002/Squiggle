@@ -9,6 +9,7 @@ import {
   FaQuestion
 } from 'react-icons/fa';
 import WordleBoard from './WordleBoard';
+import PowerupsPanel from './PowerupsPanel';
 import '../styles/DraggableGuessWindow.css';
 
 export default function DraggableGuessWindow({
@@ -22,7 +23,11 @@ export default function DraggableGuessWindow({
   currentWord,
   guess,
   setGuess,
-  onGuessWord
+  onGuessWord,
+  user,
+  setUser,
+  freezeState,
+  extraCluesData
 }) {
   const windowRef = useRef(null);
   const [pos, setPos] = useState({ x: 0, y: 0 });
@@ -184,6 +189,18 @@ export default function DraggableGuessWindow({
                 </button>
               </div>
             </form>
+
+            {/* Power-Ups Panel (Hint Steal, Extra Clues, Freeze Time) */}
+            <PowerupsPanel
+              socket={socket}
+              roomId={roomId}
+              roomState={roomState}
+              user={user}
+              setUser={setUser}
+              freezeState={freezeState}
+              extraCluesData={extraCluesData}
+              onGuessWord={onGuessWord}
+            />
           </div>
         )}
       </div>

@@ -23,6 +23,7 @@ export default function RoomSetup() {
     gameMode: 'standard',
     isPrivate: false,
     voiceChatEnabled: false,
+    powerupsEnabled: true,
     customWords: '',
     selectedGenres: [],
   });
@@ -267,6 +268,17 @@ export default function RoomSetup() {
             onChange={(e) => setSettings({ ...settings, voiceChatEnabled: e.target.checked })}
           />
           <span>Enable Voice Chat</span>
+        </label>
+
+        {/* Power-Ups toggle */}
+        <label className="rs-checkbox-label" title="Allow players to use Hint Steal, Extra Clues, and Freeze Time in Standard Mode">
+          <input
+            className="rs-checkbox"
+            type="checkbox"
+            checked={settings.powerupsEnabled !== false}
+            onChange={(e) => setSettings({ ...settings, powerupsEnabled: e.target.checked })}
+          />
+          <span>Enable Power-Ups (Standard Mode)</span>
         </label>
       </div>
 

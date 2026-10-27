@@ -186,6 +186,8 @@ function processWordSelection(io, roomId, word) {
   room.currentWord = word;
   room.status = 'playing';
   room.revealedHintIndices = [];
+  room.freezeState = null;
+  room.playerExtraClues = {};
 
   const isWordle = room.settings?.gameMode === 'wordle';
   if (isWordle) {
@@ -401,13 +403,73 @@ function startRoundTimer(io, room, roomId) {
     const current = getRoom(roomId);
     if (!current) { clearInterval(room.roundTimer); return; }
 
+    // Check if Freeze Time is active
+    if (current.freezeState && current.freezeState.active && current.freezeState.freezeSecondsRemaining > 0) {
+      current.freezeState.freezeSecondsRemaining -= 1;
+
+      // Normal time ticks down for other players until 0
+      if (current.timeLeft > 0) {
+        current.timeLeft -= 1;
+        if (current.settings?.gameMode !== 'wordle') {
+          updateWordHint(current);
+        }
+      }
+
+      io.to(roomId).emit('timerTick', {
+        timeLeft: current.timeLeft,
+        wordHint: current.wordHint,
+        freezeState: {
+          active: true,
+          userSocketId: current.freezeState.userSocketId,
+          username: current.freezeState.username,
+          freezeSecondsRemaining: current.freezeState.freezeSecondsRemaining,
+          normalTimeFrozenAt: current.freezeState.normalTimeFrozenAt,
+          isNormalTimeExpired: current.timeLeft <= 0
+        }
+      });
+
+      // When freeze time runs out:
+      if (current.freezeState.freezeSecondsRemaining <= 0) {
+        current.freezeState.active = false;
+        io.to(roomId).emit('freezeTimeEnded', {
+          userSocketId: current.freezeState.userSocketId,
+          username: current.freezeState.username
+        });
+        io.to(roomId).emit('chatMessage', {
+          type: 'system',
+          text: `❄️ Freeze time has expired!`
+        });
+
+        // If normal time had already expired while frozen, end the round now
+        if (current.timeLeft <= 0) {
+          clearInterval(current.roundTimer);
+          await endRound(io, current, roomId);
+          return;
+        }
+      }
+
+      setRoom(roomId, current);
+      return;
+    }
+
+    // Normal tick (no freeze active)
     current.timeLeft -= 1;
     if (current.settings?.gameMode !== 'wordle') {
       updateWordHint(current);
     }
-    io.to(roomId).emit('timerTick', { timeLeft: current.timeLeft, wordHint: current.wordHint });
+    io.to(roomId).emit('timerTick', {
+      timeLeft: current.timeLeft,
+      wordHint: current.wordHint,
+      freezeState: null
+    });
 
     if (current.timeLeft <= 0) {
+      // If freeze time became active, hold
+      if (current.freezeState && current.freezeState.active && current.freezeState.freezeSecondsRemaining > 0) {
+        setRoom(roomId, current);
+        return;
+      }
+
       if (current.settings?.gameMode === 'wordle') {
         const shouldEnd = advanceWordlePhase(io, current, roomId);
         if (shouldEnd) {
