@@ -52,24 +52,24 @@ export default function Home() {
 
   return (
     <div className="home-page">
-      {/* Subtle floating vector icons */}
+      {/* Fixed colorful floating background icons (persist across scroll) */}
       <div className="home-doodles" aria-hidden="true">
-        <FaPencilAlt className="doodle" />
-        <FaPaintBrush className="doodle" />
-        <FaGamepad className="doodle" />
-        <FaTrophy className="doodle" />
-        <FaBolt className="doodle" />
-        <FaComments className="doodle" />
-        <FaMedal className="doodle" />
-        <FaEye className="doodle" />
-        <FaLightbulb className="doodle" />
-        <FaPalette className="doodle" />
-        <FaSmile className="doodle" />
-        <FaStar className="doodle" />
-        <FaDice className="doodle" />
-        <FaCrown className="doodle" />
-        <FaEraser className="doodle" />
-        <FaQuestion className="doodle" />
+        <span className="home-doodle home-doodle--1"><FaPencilAlt /></span>
+        <span className="home-doodle home-doodle--2"><FaLightbulb /></span>
+        <span className="home-doodle home-doodle--3"><FaPalette /></span>
+        <span className="home-doodle home-doodle--4"><FaGamepad /></span>
+        <span className="home-doodle home-doodle--5"><FaSmile /></span>
+        <span className="home-doodle home-doodle--6"><FaEraser /></span>
+        <span className="home-doodle home-doodle--7"><FaCrown /></span>
+        <span className="home-doodle home-doodle--8"><FaComments /></span>
+        <span className="home-doodle home-doodle--9"><FaPaintBrush /></span>
+        <span className="home-doodle home-doodle--10"><FaQuestion /></span>
+        <span className="home-doodle home-doodle--11"><FaStar /></span>
+        <span className="home-doodle home-doodle--12"><FaDice /></span>
+        <span className="home-doodle home-doodle--13"><FaTrophy /></span>
+        <span className="home-doodle home-doodle--14"><FaGem /></span>
+        <span className="home-doodle home-doodle--15"><FaBolt /></span>
+        <span className="home-doodle home-doodle--16"><FaCoins /></span>
       </div>
 
       {/* ── Navbar ──────────────────────────────────────────── */}
@@ -116,26 +116,6 @@ export default function Home() {
 
       {/* ── Hero Section ───────────────────────────────────── */}
       <section className="home-hero">
-        {/* Floating playful icons around the hero */}
-        <div className="hero-floating-doodles" aria-hidden="true">
-          <span className="hero-doodle hero-doodle--1"><FaPencilAlt /></span>
-          <span className="hero-doodle hero-doodle--2"><FaPaintBrush /></span>
-          <span className="hero-doodle hero-doodle--3"><FaPalette /></span>
-          <span className="hero-doodle hero-doodle--4"><FaLightbulb /></span>
-          <span className="hero-doodle hero-doodle--5"><FaQuestion /></span>
-          <span className="hero-doodle hero-doodle--6"><FaGamepad /></span>
-          <span className="hero-doodle hero-doodle--7"><FaDice /></span>
-          <span className="hero-doodle hero-doodle--8"><FaSmile /></span>
-          <span className="hero-doodle hero-doodle--9"><FaTrophy /></span>
-          <span className="hero-doodle hero-doodle--10"><FaCrown /></span>
-          <span className="hero-doodle hero-doodle--11"><FaStar /></span>
-          <span className="hero-doodle hero-doodle--12"><FaCoins /></span>
-          <span className="hero-doodle hero-doodle--13"><FaGem /></span>
-          <span className="hero-doodle hero-doodle--14"><FaBolt /></span>
-          <span className="hero-doodle hero-doodle--15"><FaEraser /></span>
-          <span className="hero-doodle hero-doodle--16"><FaComments /></span>
-        </div>
-
         <div className="hero-badge">
           <span className="hero-badge-dot"></span>
           {user && !user.isGuest

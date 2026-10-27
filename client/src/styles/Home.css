@@ -38,162 +38,58 @@ body {
   z-index: 0;
 }
 
-/* ── Floating Doodles (decorative) ─────────────────────────── */
+/* ── Fixed Floating Background Doodles (Persist Across Entire Page & Scroll) ── */
 .home-doodles {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
 }
 
-.doodle {
+.home-doodle {
   position: absolute;
-  font-size: 2rem;
-  color: #c4b5fd;
-  opacity: 0.05;
-  animation: floatDoodle 20s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.26;
+  filter: drop-shadow(0 0 10px currentColor);
+  animation: doodleFloat 9s ease-in-out infinite alternate;
+  user-select: none;
 }
 
-.doodle:nth-child(1) {
-  top: 10%;
-  left: 5%;
-  animation-delay: 0s;
-  font-size: 3rem;
-}
-
-.doodle:nth-child(2) {
-  top: 20%;
-  right: 10%;
-  animation-delay: -3s;
-  font-size: 2.5rem;
-}
-
-.doodle:nth-child(3) {
-  top: 60%;
-  left: 15%;
-  animation-delay: -7s;
-}
-
-.doodle:nth-child(4) {
-  top: 70%;
-  right: 20%;
-  animation-delay: -11s;
-  font-size: 2.8rem;
-}
-
-.doodle:nth-child(5) {
-  top: 40%;
-  left: 50%;
-  animation-delay: -5s;
-  font-size: 3.5rem;
-}
-
-.doodle:nth-child(6) {
-  top: 85%;
-  left: 40%;
-  animation-delay: -14s;
-}
-
-.doodle:nth-child(7) {
-  top: 30%;
-  right: 35%;
-  animation-delay: -9s;
-  font-size: 2.2rem;
-}
-
-.doodle:nth-child(8) {
-  top: 50%;
-  left: 80%;
-  animation-delay: -2s;
-  font-size: 2.6rem;
-}
-
-.doodle:nth-child(9) {
-  top: 15%;
-  left: 32%;
-  animation-delay: -4s;
-  font-size: 2.2rem;
-  color: rgba(245, 158, 11, 0.08);
-}
-
-.doodle:nth-child(10) {
-  top: 25%;
-  left: 72%;
-  animation-delay: -1s;
-  font-size: 2.7rem;
-  color: rgba(236, 72, 153, 0.08);
-}
-
-.doodle:nth-child(11) {
-  top: 48%;
-  left: 8%;
-  animation-delay: -8s;
-  font-size: 2.4rem;
-  color: rgba(16, 185, 129, 0.08);
-}
-
-.doodle:nth-child(12) {
-  top: 12%;
-  right: 25%;
-  animation-delay: -12s;
-  font-size: 2rem;
-  color: rgba(251, 191, 36, 0.09);
-}
-
-.doodle:nth-child(13) {
-  top: 65%;
-  right: 8%;
-  animation-delay: -6s;
-  font-size: 2.8rem;
-  color: rgba(168, 85, 247, 0.08);
-}
-
-.doodle:nth-child(14) {
-  top: 78%;
-  left: 28%;
-  animation-delay: -13s;
-  font-size: 2.5rem;
-  color: rgba(234, 179, 8, 0.08);
-}
-
-.doodle:nth-child(15) {
-  top: 35%;
-  left: 22%;
-  animation-delay: -10s;
-  font-size: 2.1rem;
-}
-
-.doodle:nth-child(16) {
-  top: 80%;
-  right: 32%;
-  animation-delay: -15s;
-  font-size: 2.6rem;
-  color: rgba(56, 189, 248, 0.08);
-}
-
-@keyframes floatDoodle {
-
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
+@keyframes doodleFloat {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
   }
-
-  25% {
-    transform: translateY(-30px) rotate(5deg);
-  }
-
   50% {
-    transform: translateY(-15px) rotate(-3deg);
+    transform: translateY(-20px) rotate(7deg) scale(1.06);
   }
-
-  75% {
-    transform: translateY(-40px) rotate(4deg);
+  100% {
+    transform: translateY(-8px) rotate(-5deg) scale(0.96);
   }
 }
+
+/* Evenly distributed 16 coordinates across viewport avoiding center content */
+.home-doodle--1  { top: 8%;  left: 5%;   color: #38bdf8; font-size: 2.2rem; animation-delay: 0s;    animation-duration: 7.2s; }
+.home-doodle--2  { top: 18%; left: 20%;  color: #fbbf24; font-size: 2.0rem; animation-delay: -1.5s; animation-duration: 8.0s; }
+.home-doodle--3  { top: 42%; left: 6%;   color: #f472b6; font-size: 2.3rem; animation-delay: -3.8s; animation-duration: 9.0s; }
+.home-doodle--4  { top: 58%; left: 18%;  color: #c084fc; font-size: 2.2rem; animation-delay: -5.0s; animation-duration: 7.6s; }
+.home-doodle--5  { top: 76%; left: 8%;   color: #34d399; font-size: 2.1rem; animation-delay: -6.2s; animation-duration: 8.4s; }
+.home-doodle--6  { top: 88%; left: 24%;  color: #60a5fa; font-size: 2.0rem; animation-delay: -2.8s; animation-duration: 9.2s; }
+
+.home-doodle--7  { top: 6%;  left: 48%;  color: #f59e0b; font-size: 2.2rem; animation-delay: -3.2s; animation-duration: 8.2s; }
+.home-doodle--8  { top: 90%; left: 52%;  color: #a855f7; font-size: 2.1rem; animation-delay: -4.5s; animation-duration: 7.8s; }
+
+.home-doodle--9  { top: 10%; right: 8%;  color: #c084fc; font-size: 2.4rem; animation-delay: -2.0s; animation-duration: 8.6s; }
+.home-doodle--10 { top: 22%; right: 22%; color: #06b6d4; font-size: 2.2rem; animation-delay: -3.5s; animation-duration: 7.5s; }
+.home-doodle--11 { top: 40%; right: 6%;  color: #facc15; font-size: 2.0rem; animation-delay: -4.8s; animation-duration: 9.5s; }
+.home-doodle--12 { top: 55%; right: 18%; color: #ec4899; font-size: 2.3rem; animation-delay: -1.2s; animation-duration: 8.1s; }
+.home-doodle--13 { top: 74%; right: 10%; color: #f97316; font-size: 2.3rem; animation-delay: -5.6s; animation-duration: 8.8s; }
+.home-doodle--14 { top: 86%; right: 24%; color: #38bdf8; font-size: 2.1rem; animation-delay: -2.4s; animation-duration: 7.3s; }
+
+.home-doodle--15 { top: 28%; left: 35%;  color: #fb7185; font-size: 2.0rem; animation-delay: -4.2s; animation-duration: 8.7s; }
+.home-doodle--16 { top: 68%; right: 35%; color: #eab308; font-size: 2.1rem; animation-delay: -6.0s; animation-duration: 9.0s; }
 
 /* ── Navbar ────────────────────────────────────────────────── */
 .home-navbar {
@@ -351,57 +247,7 @@ body {
   min-height: 80vh;
 }
 
-/* ── Hero Floating Doodles ─────────────────────────────────── */
-.hero-floating-doodles {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 0;
-}
 
-.hero-doodle {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.32;
-  filter: drop-shadow(0 0 12px currentColor);
-  animation: heroDoodleFloat 9s ease-in-out infinite alternate;
-  user-select: none;
-}
-
-@keyframes heroDoodleFloat {
-  0% {
-    transform: translateY(0) rotate(0deg) scale(1);
-  }
-  50% {
-    transform: translateY(-22px) rotate(8deg) scale(1.08);
-  }
-  100% {
-    transform: translateY(-8px) rotate(-6deg) scale(0.96);
-  }
-}
-
-.hero-doodle--1 { top: 12%; left: 8%; color: #38bdf8; font-size: 2.5rem; animation-delay: 0s; animation-duration: 7s; }
-.hero-doodle--2 { top: 22%; right: 9%; color: #c084fc; font-size: 2.8rem; animation-delay: -2s; animation-duration: 8.5s; }
-.hero-doodle--3 { top: 42%; left: 5%; color: #f472b6; font-size: 2.4rem; animation-delay: -4s; animation-duration: 9s; }
-.hero-doodle--4 { top: 18%; left: 24%; color: #fbbf24; font-size: 2.2rem; animation-delay: -1.5s; animation-duration: 7.5s; }
-.hero-doodle--5 { top: 32%; right: 18%; color: #06b6d4; font-size: 2.6rem; animation-delay: -3s; animation-duration: 8s; }
-.hero-doodle--6 { top: 62%; left: 10%; color: #a855f7; font-size: 2.7rem; animation-delay: -5s; animation-duration: 10s; }
-.hero-doodle--7 { top: 58%; right: 12%; color: #ec4899; font-size: 2.5rem; animation-delay: -2.5s; animation-duration: 9.5s; }
-.hero-doodle--8 { top: 78%; left: 20%; color: #34d399; font-size: 2.3rem; animation-delay: -6s; animation-duration: 8s; }
-.hero-doodle--9 { top: 80%; right: 22%; color: #eab308; font-size: 2.6rem; animation-delay: -1s; animation-duration: 9s; }
-.hero-doodle--10 { top: 8%; right: 28%; color: #f59e0b; font-size: 2.4rem; animation-delay: -3.5s; animation-duration: 7.8s; }
-.hero-doodle--11 { top: 28%; left: 15%; color: #fde047; font-size: 2rem; animation-delay: -4.5s; animation-duration: 8.2s; }
-.hero-doodle--12 { top: 72%; right: 30%; color: #f59e0b; font-size: 2.2rem; animation-delay: -5.5s; animation-duration: 8.8s; }
-.hero-doodle--13 { top: 48%; right: 6%; color: #38bdf8; font-size: 2.3rem; animation-delay: -2s; animation-duration: 7.2s; }
-.hero-doodle--14 { top: 10%; left: 40%; color: #f43f5e; font-size: 2.1rem; animation-delay: -4s; animation-duration: 6.5s; }
-.hero-doodle--15 { top: 85%; left: 8%; color: #94a3b8; font-size: 2rem; animation-delay: -6.5s; animation-duration: 9.2s; }
-.hero-doodle--16 { top: 68%; left: 32%; color: #818cf8; font-size: 2.2rem; animation-delay: -3s; animation-duration: 8.4s; }
 
 .hero-badge {
   display: inline-flex;

@@ -85,21 +85,21 @@ export default function LobbyPage() {
       <div className="lobby-bg" aria-hidden="true" />
       <div className="lobby-bg-icons" aria-hidden="true">
         <span className="lobby-doodle lobby-doodle--1"><FaPencilAlt /></span>
-        <span className="lobby-doodle lobby-doodle--2"><FaPaintBrush /></span>
+        <span className="lobby-doodle lobby-doodle--2"><FaLightbulb /></span>
         <span className="lobby-doodle lobby-doodle--3"><FaPalette /></span>
-        <span className="lobby-doodle lobby-doodle--4"><FaLightbulb /></span>
-        <span className="lobby-doodle lobby-doodle--5"><FaQuestion /></span>
-        <span className="lobby-doodle lobby-doodle--6"><FaGamepad /></span>
-        <span className="lobby-doodle lobby-doodle--7"><FaDice /></span>
-        <span className="lobby-doodle lobby-doodle--8"><FaSmile /></span>
-        <span className="lobby-doodle lobby-doodle--9"><FaTrophy /></span>
-        <span className="lobby-doodle lobby-doodle--10"><FaCrown /></span>
+        <span className="lobby-doodle lobby-doodle--4"><FaGamepad /></span>
+        <span className="lobby-doodle lobby-doodle--5"><FaSmile /></span>
+        <span className="lobby-doodle lobby-doodle--6"><FaEraser /></span>
+        <span className="lobby-doodle lobby-doodle--7"><FaCrown /></span>
+        <span className="lobby-doodle lobby-doodle--8"><FaComments /></span>
+        <span className="lobby-doodle lobby-doodle--9"><FaPaintBrush /></span>
+        <span className="lobby-doodle lobby-doodle--10"><FaQuestion /></span>
         <span className="lobby-doodle lobby-doodle--11"><FaStar /></span>
-        <span className="lobby-doodle lobby-doodle--12"><FaCoins /></span>
-        <span className="lobby-doodle lobby-doodle--13"><FaGem /></span>
-        <span className="lobby-doodle lobby-doodle--14"><FaBolt /></span>
-        <span className="lobby-doodle lobby-doodle--15"><FaEraser /></span>
-        <span className="lobby-doodle lobby-doodle--16"><FaComments /></span>
+        <span className="lobby-doodle lobby-doodle--12"><FaDice /></span>
+        <span className="lobby-doodle lobby-doodle--13"><FaTrophy /></span>
+        <span className="lobby-doodle lobby-doodle--14"><FaGem /></span>
+        <span className="lobby-doodle lobby-doodle--15"><FaBolt /></span>
+        <span className="lobby-doodle lobby-doodle--16"><FaCoins /></span>
       </div>
 
       {/* Scrollable content */}
