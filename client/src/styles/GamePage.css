@@ -619,6 +619,57 @@
   flex: 1;
 }
 
+.player-avatar-badge-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.player-rank-sub-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  border: 1.5px solid #0f172a;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.player-rank-sub-badge.rank-badge-1 {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  color: #78350f;
+  border-color: #fef08a;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.7);
+}
+
+.player-rank-sub-badge.rank-badge-2 {
+  background: linear-gradient(135deg, #94a3b8 0%, #cbd5e1 100%);
+  color: #0f172a;
+  border-color: #e2e8f0;
+}
+
+.player-rank-sub-badge.rank-badge-3 {
+  background: linear-gradient(135deg, #c2410c 0%, #fb923c 100%);
+  color: #431407;
+  border-color: #ffedd5;
+}
+
+.player-rank-sub-badge.rank-badge-default {
+  background: #334155;
+  color: #cbd5e1;
+  border-color: #475569;
+}
+
 .player-avatar-circle {
   width: 30px;
   height: 30px;

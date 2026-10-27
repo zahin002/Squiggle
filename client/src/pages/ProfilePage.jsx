@@ -16,23 +16,30 @@ import {
   FaArrowLeft,
   FaArrowRight,
   FaCheck,
-  FaTimesCircle
+  FaTimesCircle,
+  FaDice,
+  FaUndo
 } from 'react-icons/fa';
+import {
+  LuEye,
+  LuSmile,
+  LuSparkles,
+  LuPalette,
+  LuRotateCcw,
+  LuCheck,
+  LuDices
+} from 'react-icons/lu';
+import Avatar, {
+  AVATAR_COLOR_PRESETS,
+  EYEBROW_OPTIONS,
+  EYE_OPTIONS,
+  MOUTH_OPTIONS,
+  MOUSTACHE_OPTIONS,
+  BEARD_OPTIONS,
+  getRandomAvatar,
+  normalizeAvatar
+} from '../components/Avatar';
 import '../styles/Profile.css';
-
-// Preset avatar color palette (same as GamePage gradient start color options)
-const COLOR_PRESETS = [
-  '#1a64ff', // blue
-  '#7c4dff', // purple
-  '#10b981', // green
-  '#ef4444', // red
-  '#f59e0b', // amber
-  '#0ea5e9', // sky
-  '#ec4899', // pink
-  '#14b8a6', // teal
-  '#f97316', // orange
-  '#6366f1', // indigo
-];
 
 function ordinalSuffix(n) {
   const s = ['th', 'st', 'nd', 'rd'];
@@ -49,10 +56,19 @@ export default function ProfilePage() {
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState('');
 
-  // Avatar color state
-  const [selectedColor, setSelectedColor] = useState('');
-  const [savingColor, setSavingColor]     = useState(false);
-  const [colorMsg, setColorMsg]           = useState('');
+  // Avatar customization state
+  const [avatarState, setAvatarState] = useState({
+    color: '#1a64ff',
+    eyebrows: 'natural',
+    eyes: 'normal',
+    mouth: 'smile',
+    moustache: 'none',
+    beard: 'none',
+  });
+  const [activeTab, setActiveTab]     = useState('eyes'); // 'eyes' | 'eyebrows' | 'mouth' | 'moustache' | 'beard' | 'color'
+  const [savingAvatar, setSavingAvatar] = useState(false);
+  const [avatarMsg, setAvatarMsg]     = useState('');
+  const [isRolling, setIsRolling]     = useState(false);
 
   // ── Fetch profile + rank ────────────────────────────────────
   const fetchProfile = useCallback(async () => {
@@ -65,7 +81,7 @@ export default function ProfilePage() {
       ]);
       setProfile(profileRes.data);
       setRank(rankRes.data.rank);
-      setSelectedColor(profileRes.data.avatar?.color || '#1a64ff');
+      setAvatarState(normalizeAvatar(profileRes.data.avatar));
     } catch {
       setError('Could not load your profile. Please try again.');
     } finally {
@@ -82,25 +98,46 @@ export default function ProfilePage() {
     }
   }, [user, fetchProfile]);
 
-  // ── Save avatar color ────────────────────────────────────────
-  const handleSaveColor = async () => {
-    setSavingColor(true);
-    setColorMsg('');
-    try {
-      const res = await axios.patch('/api/users/me/avatar', { color: selectedColor });
-      // Update AuthContext so avatar shows immediately everywhere
-      setUser(prev => ({ ...prev, avatar: res.data.avatar }));
-      setProfile(prev => ({ ...prev, avatar: res.data.avatar }));
-      setColorMsg('Saved!');
-    } catch {
-      setColorMsg('Failed to save');
-    } finally {
-      setSavingColor(false);
-      setTimeout(() => setColorMsg(''), 2500);
+  // ── Avatar Actions ───────────────────────────────────────────
+  const handleRandomize = () => {
+    setIsRolling(true);
+    const randomized = getRandomAvatar(avatarState.color);
+    setAvatarState(randomized);
+    setTimeout(() => setIsRolling(false), 350);
+  };
+
+  const handleResetAvatar = () => {
+    if (profile?.avatar) {
+      setAvatarState(normalizeAvatar(profile.avatar));
     }
   };
 
-  const colorChanged = selectedColor !== (profile?.avatar?.color || '#1a64ff');
+  const handleSaveAvatar = async () => {
+    setSavingAvatar(true);
+    setAvatarMsg('');
+    try {
+      const res = await axios.patch('/api/users/me/avatar', avatarState);
+      // Update AuthContext so avatar reflects everywhere immediately
+      setUser(prev => ({ ...prev, avatar: res.data.avatar }));
+      setProfile(prev => ({ ...prev, avatar: res.data.avatar }));
+      setAvatarMsg('Saved!');
+    } catch {
+      setAvatarMsg('Failed to save');
+    } finally {
+      setSavingAvatar(false);
+      setTimeout(() => setAvatarMsg(''), 2500);
+    }
+  };
+
+  const savedNorm = normalizeAvatar(profile?.avatar);
+  const hasAvatarChanges = (
+    avatarState.color !== savedNorm.color ||
+    avatarState.eyebrows !== savedNorm.eyebrows ||
+    avatarState.eyes !== savedNorm.eyes ||
+    avatarState.mouth !== savedNorm.mouth ||
+    avatarState.moustache !== savedNorm.moustache ||
+    avatarState.beard !== savedNorm.beard
+  );
 
   // ── Render: loading ──────────────────────────────────────────
   if (loading) {
@@ -246,11 +283,8 @@ export default function ProfilePage() {
 
         {/* ── Hero: Avatar + Name ── */}
         <div className="profile-hero">
-          <div
-            className="profile-avatar-large"
-            style={{ background: `linear-gradient(135deg, ${profile.avatar?.color || '#1a64ff'}, #7c4dff)` }}
-          >
-            {initials}
+          <div className="profile-hero-avatar-box">
+            <Avatar avatar={profile.avatar} size={108} username={profile.username} />
           </div>
           <div className="profile-hero-info">
             <h2 className="profile-username">{profile.username}</h2>
@@ -315,70 +349,261 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* ── Avatar Color Picker ── */}
-        <div className="avatar-color-section">
-          <p className="avatar-color-title">
-            <FaPalette className="profile-inline-icon palette-icon" /> Avatar Color
-          </p>
-          <div className="color-swatches">
-            {COLOR_PRESETS.map((c) => (
+        {/* ── Avatar Customization Studio ── */}
+        <div className="avatar-customizer-panel">
+          <div className="avatar-studio-header">
+            <div className="avatar-studio-title-group">
+              <h3 className="avatar-studio-heading">
+                <FaPalette className="studio-heading-icon" /> Avatar Studio
+              </h3>
+              <p className="avatar-studio-subtitle">
+                Customize your eyebrows, eyes, mouths, facial hair, and colors, or hit Randomize to get an instant unique avatar!
+              </p>
+            </div>
+
+            {/* Quick Actions Bar */}
+            <div className="avatar-studio-actions">
               <button
-                key={c}
-                className={`color-swatch ${selectedColor === c ? 'selected' : ''}`}
-                style={{ background: c }}
-                onClick={() => setSelectedColor(c)}
-                title={c}
-                aria-label={`Select color ${c}`}
-              />
-            ))}
+                type="button"
+                className={`btn-avatar-randomize ${isRolling ? 'is-rolling' : ''}`}
+                onClick={handleRandomize}
+                title="Randomize all avatar features"
+              >
+                <FaDice className="btn-action-svg" />
+                <span>Randomize</span>
+              </button>
 
-            {/* Custom hex color picker */}
-            <div className="color-swatch-custom">
-              <input
-                type="color"
-                value={selectedColor}
-                onChange={(e) => setSelectedColor(e.target.value)}
-                title="Pick a custom color"
-              />
+              <button
+                type="button"
+                className="btn-avatar-reset"
+                onClick={handleResetAvatar}
+                disabled={!hasAvatarChanges}
+                title="Revert to saved avatar"
+              >
+                <FaUndo className="btn-action-svg" />
+                <span>Reset</span>
+              </button>
+
+              <button
+                type="button"
+                className="btn-avatar-save"
+                onClick={handleSaveAvatar}
+                disabled={savingAvatar || !hasAvatarChanges}
+                title="Save avatar changes"
+              >
+                <FaCheck className="btn-action-svg" />
+                <span>{savingAvatar ? 'Saving...' : 'Save Avatar'}</span>
+              </button>
             </div>
+          </div>
 
-            {/* Preview + Save */}
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                background: `linear-gradient(135deg, ${selectedColor}, #7c4dff)`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                fontWeight: 900,
-                fontSize: 14,
-                flexShrink: 0,
-              }}
-              title="Preview"
-            >
-              {initials}
+          {avatarMsg && (
+            <div className={`avatar-studio-alert ${avatarMsg === 'Saved!' ? 'is-success' : 'is-error'}`}>
+              {avatarMsg === 'Saved!' ? (
+                <><FaCheck style={{ marginRight: '6px' }} /> Avatar saved successfully! Visible across games & lobby.</>
+              ) : (
+                <><FaTimesCircle style={{ marginRight: '6px' }} /> {avatarMsg}</>
+              )}
             </div>
+          )}
 
-            <button
-              className="save-color-btn"
-              onClick={handleSaveColor}
-              disabled={savingColor || !colorChanged}
-            >
-              {savingColor ? 'Saving...' : 'Save Color'}
-            </button>
-
-            {colorMsg && (
-              <span className={`save-color-msg ${colorMsg === 'Saved!' ? 'success' : 'error'}`}>
-                {colorMsg === 'Saved!' ? (
-                  <><FaCheck style={{ marginRight: '4px' }} /> Saved!</>
-                ) : (
-                  <><FaTimesCircle style={{ marginRight: '4px' }} /> {colorMsg}</>
+          {/* Studio Body: Live Preview & Options */}
+          <div className="avatar-studio-body">
+            {/* Left: Large Live Interactive Preview */}
+            <div className="avatar-preview-showcase">
+              <div className="avatar-preview-halo" style={{ '--glow-color': avatarState.color || '#1a64ff' }}>
+                <Avatar avatar={avatarState} size={132} username={profile.username} />
+              </div>
+              <div className="avatar-current-chips">
+                <span className="avatar-chip" title="Eyes">👁️ {avatarState.eyes}</span>
+                <span className="avatar-chip" title="Eyebrows">〰️ {avatarState.eyebrows}</span>
+                <span className="avatar-chip" title="Mouth">👄 {avatarState.mouth}</span>
+                {avatarState.moustache !== 'none' && (
+                  <span className="avatar-chip" title="Moustache">🥸 {avatarState.moustache}</span>
                 )}
-              </span>
-            )}
+                {avatarState.beard !== 'none' && (
+                  <span className="avatar-chip" title="Beard">🧔 {avatarState.beard}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Customization Controls */}
+            <div className="avatar-controls-box">
+              {/* Category Navigation Tabs */}
+              <div className="avatar-category-nav" role="tablist">
+                <button
+                  type="button"
+                  className={`avatar-tab-btn ${activeTab === 'eyes' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('eyes')}
+                >
+                  <LuEye className="tab-icon" /> Eyes
+                </button>
+                <button
+                  type="button"
+                  className={`avatar-tab-btn ${activeTab === 'eyebrows' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('eyebrows')}
+                >
+                  <span className="tab-text-icon">〰️</span> Eyebrows
+                </button>
+                <button
+                  type="button"
+                  className={`avatar-tab-btn ${activeTab === 'mouth' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('mouth')}
+                >
+                  <LuSmile className="tab-icon" /> Mouth
+                </button>
+                <button
+                  type="button"
+                  className={`avatar-tab-btn ${activeTab === 'moustache' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('moustache')}
+                >
+                  <span className="tab-text-icon">🥸</span> Moustache
+                </button>
+                <button
+                  type="button"
+                  className={`avatar-tab-btn ${activeTab === 'beard' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('beard')}
+                >
+                  <span className="tab-text-icon">🧔</span> Beard
+                </button>
+                <button
+                  type="button"
+                  className={`avatar-tab-btn ${activeTab === 'color' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('color')}
+                >
+                  <LuPalette className="tab-icon" /> Color
+                </button>
+              </div>
+
+              {/* Tab Contents */}
+              <div className="avatar-tab-content">
+                {/* 1. Eye Shapes */}
+                {activeTab === 'eyes' && (
+                  <div className="avatar-options-grid">
+                    {EYE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        className={`avatar-option-card ${avatarState.eyes === opt.id ? 'is-selected' : ''}`}
+                        onClick={() => setAvatarState((prev) => ({ ...prev, eyes: opt.id }))}
+                      >
+                        <div className="option-avatar-thumb">
+                          <Avatar avatar={{ ...avatarState, eyes: opt.id }} size={42} />
+                        </div>
+                        <span className="option-label">{opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* 2. Eyebrows */}
+                {activeTab === 'eyebrows' && (
+                  <div className="avatar-options-grid">
+                    {EYEBROW_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        className={`avatar-option-card ${avatarState.eyebrows === opt.id ? 'is-selected' : ''}`}
+                        onClick={() => setAvatarState((prev) => ({ ...prev, eyebrows: opt.id }))}
+                      >
+                        <div className="option-avatar-thumb">
+                          <Avatar avatar={{ ...avatarState, eyebrows: opt.id }} size={42} />
+                        </div>
+                        <span className="option-label">{opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* 3. Mouths */}
+                {activeTab === 'mouth' && (
+                  <div className="avatar-options-grid">
+                    {MOUTH_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        className={`avatar-option-card ${avatarState.mouth === opt.id ? 'is-selected' : ''}`}
+                        onClick={() => setAvatarState((prev) => ({ ...prev, mouth: opt.id }))}
+                      >
+                        <div className="option-avatar-thumb">
+                          <Avatar avatar={{ ...avatarState, mouth: opt.id }} size={42} />
+                        </div>
+                        <span className="option-label">{opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* 4. Moustache */}
+                {activeTab === 'moustache' && (
+                  <div className="avatar-options-grid">
+                    {MOUSTACHE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        className={`avatar-option-card ${avatarState.moustache === opt.id ? 'is-selected' : ''}`}
+                        onClick={() => setAvatarState((prev) => ({ ...prev, moustache: opt.id }))}
+                      >
+                        <div className="option-avatar-thumb">
+                          <Avatar avatar={{ ...avatarState, moustache: opt.id }} size={42} />
+                        </div>
+                        <span className="option-label">{opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* 5. Beard */}
+                {activeTab === 'beard' && (
+                  <div className="avatar-options-grid">
+                    {BEARD_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        className={`avatar-option-card ${avatarState.beard === opt.id ? 'is-selected' : ''}`}
+                        onClick={() => setAvatarState((prev) => ({ ...prev, beard: opt.id }))}
+                      >
+                        <div className="option-avatar-thumb">
+                          <Avatar avatar={{ ...avatarState, beard: opt.id }} size={42} />
+                        </div>
+                        <span className="option-label">{opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* 6. Color */}
+                {activeTab === 'color' && (
+                  <div className="avatar-colors-picker-wrap">
+                    <p className="avatar-colors-instruction">Select a base color theme for your avatar:</p>
+                    <div className="avatar-color-swatches-grid">
+                      {AVATAR_COLOR_PRESETS.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          className={`avatar-color-circle ${avatarState.color === c ? 'is-selected' : ''}`}
+                          style={{ background: c }}
+                          onClick={() => setAvatarState((prev) => ({ ...prev, color: c }))}
+                          title={c}
+                          aria-label={`Select color ${c}`}
+                        />
+                      ))}
+
+                      {/* Custom color picker */}
+                      <div className="avatar-custom-color-btn" title="Pick custom color">
+                        <input
+                          type="color"
+                          value={avatarState.color || '#1a64ff'}
+                          onChange={(e) => setAvatarState((prev) => ({ ...prev, color: e.target.value }))}
+                          aria-label="Pick custom color"
+                        />
+                        <span className="custom-color-text">Custom</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 

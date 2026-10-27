@@ -27,8 +27,13 @@ const userSchema = new mongoose.Schema({
   resetPasswordExpires: Date,
   avatar: {
     body: { type: String, default: 'default_body' },
-    color: { type: String, default: '#4A90E2' },
-    accessory: { type: String, default: 'none' }
+    color: { type: String, default: '#1a64ff' },
+    accessory: { type: String, default: 'none' },
+    eyebrows: { type: String, default: 'natural' },
+    eyes: { type: String, default: 'normal' },
+    mouth: { type: String, default: 'smile' },
+    moustache: { type: String, default: 'none' },
+    beard: { type: String, default: 'none' }
   },
   goldCoins: { type: Number, default: 0 },
   diamonds: { type: Number, default: 5 }, // New users get 5 diamonds

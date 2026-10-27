@@ -12,6 +12,7 @@ import {
   FaUser,
   FaMedal,
 } from 'react-icons/fa';
+import Avatar from '../components/Avatar';
 import '../styles/Leaderboard.css';
 
 const TABS = [
@@ -161,8 +162,8 @@ export default function LeaderboardPage() {
                     style={{ '--rank-color': RANK_COLORS[rank - 1] }}
                   >
                     <div className="lb-podium-rank-label">{rank}</div>
-                    <div className="lb-podium-avatar">
-                      {(player.username || 'P').charAt(0).toUpperCase()}
+                    <div className="lb-podium-avatar-wrap">
+                      <Avatar avatar={player.avatar} size={54} username={player.username} />
                     </div>
                     <div className="lb-podium-name">{player.username}</div>
                     <div className="lb-podium-stat">
@@ -213,7 +214,7 @@ export default function LeaderboardPage() {
                       </td>
                       <td>
                         <div className="lb-player-cell">
-                          <div className="lb-avatar">{(p.username || 'P').charAt(0).toUpperCase()}</div>
+                          <Avatar avatar={p.avatar} size={30} username={p.username} />
                           <span className="lb-player-name">{p.username}</span>
                         </div>
                       </td>

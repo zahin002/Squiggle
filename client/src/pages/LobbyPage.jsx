@@ -42,6 +42,7 @@ import {
   LuArrowRight,
   LuEye
 } from 'react-icons/lu';
+import Avatar from '../components/Avatar';
 import '../styles/Lobby.css';
 
 export default function LobbyPage() {
@@ -138,7 +139,7 @@ export default function LobbyPage() {
 
             {user && !user.isGuest ? (
               <button className="lobby-nav-btn lobby-nav-btn--profile" onClick={() => navigate('/profile')}>
-                <FaUser className="lobby-nav-icon" /> {user.username}
+                <Avatar avatar={user.avatar} size={20} username={user.username} /> {user.username}
               </button>
             ) : (
               <span className="lobby-user-badge">

@@ -43,6 +43,7 @@ import {
 import DrawingCanvas from '../components/DrawingCanvas';
 import WordleBoard from '../components/WordleBoard';
 import PowerupsPanel from '../components/PowerupsPanel';
+import Avatar from '../components/Avatar';
 import SquiggleLogo, { SquiggleLogoMark } from '../components/SquiggleLogo';
 import { useAuth } from '../context/AuthContext';
 import useWebRTC from '../hooks/useWebRTC';
@@ -176,6 +177,7 @@ export default function GamePage() {
       roomId,
       token: localStorage.getItem('token'),
       username: curUser.username,
+      avatar: curUser.avatar || null,
       role: requestedRoleRef.current || 'player',
       isGuest: !!curUser.isGuest,
       guestId: curUser.id,
@@ -677,7 +679,7 @@ export default function GamePage() {
           </div>
 
           <div className="user-profile-pill">
-            <LuUser className="user-profile-avatar" />
+            <Avatar avatar={activeUser?.avatar} size={24} username={activeUser?.username} />
             <span className="user-profile-name">{activeUser?.username || 'Player'}</span>
           </div>
         </div>
@@ -742,8 +744,11 @@ export default function GamePage() {
                 return (
                   <div key={player.socketId || player.userId} className={`player-card-compact ${isPlayerHost ? 'is-host' : ''} ${isDrawing ? 'is-drawing' : ''}`}>
                     <div className="player-card-left">
-                      <div className={`player-avatar-circle rank-badge-${rank <= 3 ? rank : 'default'}`} title={`Rank ${rank} • ${player.score || 0} pts`}>
-                        <span className="player-rank-number">{rank}</span>
+                      <div className="player-avatar-badge-wrap" title={`Rank ${rank} • ${player.score || 0} pts`}>
+                        <Avatar avatar={player.avatar} size={32} username={player.username} />
+                        <span className={`player-rank-sub-badge rank-badge-${rank <= 3 ? rank : 'default'}`}>
+                          {rank}
+                        </span>
                       </div>
                       <div className="player-meta-box">
                         <div className="player-name-row">

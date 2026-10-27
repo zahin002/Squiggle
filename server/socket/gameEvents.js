@@ -18,14 +18,15 @@ module.exports = (io) => {
     powerupEvents(socket, io);
 
     // ----- JOIN ROOM -----
-    socket.on('joinRoom', async ({ roomId, token, userId, username, role, isGuest }) => {
+    socket.on('joinRoom', async ({ roomId, token, userId, username, role, isGuest, avatar }) => {
       try {
         console.log('[JOIN ROOM REQUEST]', {
           roomId,
           username,
           role,
           isGuest,
-          socketId: socket.id
+          socketId: socket.id,
+          avatar: !!avatar
         });
 
         let roomState = getRoom(roomId);
@@ -168,6 +169,7 @@ module.exports = (io) => {
             if (existingPlayerIndex !== -1) {
               roomState.players[existingPlayerIndex].socketId = socket.id;
               roomState.players[existingPlayerIndex].username = username;
+              if (avatar) roomState.players[existingPlayerIndex].avatar = avatar;
 
               // Rebind drawer to the latest player record after reconnect.
               const player = roomState.players[existingPlayerIndex];
@@ -190,6 +192,7 @@ module.exports = (io) => {
                 socketId: socket.id,
                 userId: resolvedUserId,
                 username,
+                avatar: avatar || null,
                 isGuest: !!isGuest,
                 score: 0,
                 role: 'player'

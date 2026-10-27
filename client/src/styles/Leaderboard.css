@@ -379,6 +379,16 @@
   text-shadow: 0 0 20px rgba(var(--rank-color), 0.5);
 }
 
+.lb-podium-avatar-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 3px solid var(--rank-color, #7c4dff);
+  box-shadow: 0 0 20px rgba(124, 77, 255, 0.35);
+  margin-bottom: 4px;
+}
+
 .lb-podium-avatar {
   width: 62px;
   height: 62px;
