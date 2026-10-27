@@ -45,7 +45,7 @@ export const EYEBROW_OPTIONS = [
 export const EYE_OPTIONS = [
   { id: 'normal', label: 'Normal' },
   { id: 'dot', label: 'Dot' },
-  { id: 'x_x', label: 'X_X' },
+  { id: 'x_x', label: 'Dead' },
   { id: 'girlie', label: 'Girlie' },
   { id: 'cool', label: 'Sunglasses' },
   { id: 'happy', label: 'Happy' },
