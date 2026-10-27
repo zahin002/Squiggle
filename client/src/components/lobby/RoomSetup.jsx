@@ -1,13 +1,29 @@
 // client/src/components/lobby/RoomSetup.jsx
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
-import { FaPlus, FaExclamationTriangle } from 'react-icons/fa';
+import {
+  FaPlus,
+  FaExclamationTriangle,
+  FaPaintBrush,
+  FaLayerGroup,
+  FaPencilAlt,
+  FaThLarge,
+  FaChevronDown,
+  FaLock,
+} from 'react-icons/fa';
 
 const GENRES = [
   'Animals', 'Food & Drink', 'Nature', 'Entertainment', 'Video Games',
   'Anime & Manga', 'Historical Figures', 'Brands & Logos', 'Space & Sci-Fi', 'Idioms', 'Abstract Concepts', 'Wordle',
+];
+
+const GAME_MODES = [
+  { id: 'standard', label: 'Standard', Icon: FaPaintBrush, color: '#38bdf8' },
+  { id: 'genre',    label: 'Genre',    Icon: FaLayerGroup, color: '#c084fc' },
+  { id: 'custom',   label: 'Custom',   Icon: FaPencilAlt,  color: '#fbbf24' },
+  { id: 'wordle',   label: 'Wordle',   Icon: FaThLarge,    color: '#34d399' },
 ];
 
 export default function RoomSetup() {
@@ -30,8 +46,21 @@ export default function RoomSetup() {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [modeDropdownOpen, setModeDropdownOpen] = useState(false);
+  const modeDropdownRef = useRef(null);
 
   const isGuest = !!user?.isGuest;
+
+  // Close mode dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (modeDropdownRef.current && !modeDropdownRef.current.contains(e.target)) {
+        setModeDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Boundary validation checks
   const isPlayersInvalid = settings.maxPlayers !== '' && (settings.maxPlayers < 2 || settings.maxPlayers > 20);
@@ -122,7 +151,7 @@ export default function RoomSetup() {
       <div className="rs-fields">
         {/* Max Players */}
         <label className="rs-label">
-          Max Players (2–20)
+          Max Players
           <input
             className={`rs-input ${isPlayersInvalid ? 'rs-input--invalid' : ''}`}
             type="number"
@@ -158,7 +187,7 @@ export default function RoomSetup() {
 
         {/* Rounds */}
         <label className="rs-label">
-          Rounds (1–10)
+          Rounds
           <input
             className={`rs-input ${isRoundsInvalid ? 'rs-input--invalid' : ''}`}
             type="number"
@@ -179,24 +208,62 @@ export default function RoomSetup() {
         </label>
 
         {/* Game Mode */}
-        <label className="rs-label">
-          Game Mode
-          <select
-            className="rs-input"
-            value={settings.gameMode}
-            onChange={(e) => {
-              setError('');
-              setSettings({ ...settings, gameMode: e.target.value });
-            }}
+        <div className="rs-label" ref={modeDropdownRef} style={{ position: 'relative' }}>
+          <span>Game Mode</span>
+          <button
+            type="button"
+            className="rs-input rs-mode-trigger"
+            onClick={() => !isGuest && setModeDropdownOpen((prev) => !prev)}
             disabled={isGuest}
-            title={isGuest ? 'Register to unlock additional game modes' : undefined}
+            title={isGuest ? 'Register to unlock additional game modes' : 'Select Game Mode'}
+            aria-expanded={modeDropdownOpen}
           >
-            <option value="standard">Standard</option>
-            {!isGuest && <option value="genre">Genre</option>}
-            {!isGuest && <option value="custom">Custom Words</option>}
-            {!isGuest && <option value="wordle">Wordle Mode</option>}
-          </select>
-        </label>
+            <span className="rs-mode-current">
+              {(() => {
+                const current = GAME_MODES.find((m) => m.id === settings.gameMode) || GAME_MODES[0];
+                const IconComponent = current.Icon;
+                return (
+                  <>
+                    <IconComponent className="rs-mode-icon" style={{ color: current.color }} />
+                    <span className="rs-mode-label">{current.label}</span>
+                  </>
+                );
+              })()}
+            </span>
+            <FaChevronDown
+              className={`rs-mode-chevron ${modeDropdownOpen ? 'rs-mode-chevron--open' : ''}`}
+            />
+          </button>
+
+          {modeDropdownOpen && !isGuest && (
+            <div className="rs-mode-dropdown-menu" role="listbox">
+              {GAME_MODES.map((mode) => {
+                const IconComponent = mode.Icon;
+                const isSelected = settings.gameMode === mode.id;
+                return (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    className={`rs-mode-option ${isSelected ? 'rs-mode-option--selected' : ''}`}
+                    onClick={() => {
+                      setError('');
+                      setSettings({ ...settings, gameMode: mode.id });
+                      setModeDropdownOpen(false);
+                    }}
+                  >
+                    <div className="rs-mode-option-left">
+                      <IconComponent className="rs-mode-icon" style={{ color: mode.color }} />
+                      <span className="rs-mode-label">{mode.label}</span>
+                    </div>
+                    {isSelected && <span className="rs-mode-badge">Selected</span>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* Genre selector */}
         {!isGuest && settings.gameMode === 'genre' && (
@@ -270,16 +337,18 @@ export default function RoomSetup() {
           <span>Enable Voice Chat</span>
         </label>
 
-        {/* Power-Ups toggle */}
-        <label className="rs-checkbox-label" title="Allow players to use Hint Steal, Extra Clues, and Freeze Time in Standard Mode">
-          <input
-            className="rs-checkbox"
-            type="checkbox"
-            checked={settings.powerupsEnabled !== false}
-            onChange={(e) => setSettings({ ...settings, powerupsEnabled: e.target.checked })}
-          />
-          <span>Enable Power-Ups (Standard Mode)</span>
-        </label>
+        {/* Power-Ups toggle - only visible in Standard Mode */}
+        {settings.gameMode === 'standard' && (
+          <label className="rs-checkbox-label" title="Allow players to use Hint Steal, Extra Clues, and Freeze Time">
+            <input
+              className="rs-checkbox"
+              type="checkbox"
+              checked={settings.powerupsEnabled !== false}
+              onChange={(e) => setSettings({ ...settings, powerupsEnabled: e.target.checked })}
+            />
+            <span>Enable Power-Ups</span>
+          </label>
+        )}
       </div>
 
       <button

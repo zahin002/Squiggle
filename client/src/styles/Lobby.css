@@ -318,6 +318,142 @@
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.22) !important;
 }
 
+/* ── Custom Game Mode Dropdown in RoomSetup ─────────────────── */
+.rs-mode-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: #f1f5f9;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.rs-mode-trigger:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(124, 77, 255, 0.5);
+}
+
+.rs-mode-trigger:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.rs-mode-current {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rs-mode-icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.rs-mode-label {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.rs-mode-chevron {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.6);
+  transition: transform 0.2s ease;
+}
+
+.rs-mode-chevron--open {
+  transform: rotate(180deg);
+  color: #c084fc;
+}
+
+.rs-mode-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: #18153c;
+  border: 1px solid rgba(124, 77, 255, 0.4);
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), 0 0 20px rgba(124, 77, 255, 0.2);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: rsDropdownFade 0.15s ease-out;
+}
+
+@keyframes rsDropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rs-mode-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #f1f5f9;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  transition: all 0.18s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.rs-mode-option-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rs-mode-option:hover {
+  background: rgba(124, 77, 255, 0.2);
+  transform: translateX(2px);
+}
+
+.rs-mode-option--selected {
+  background: rgba(124, 77, 255, 0.28);
+  border-color: rgba(124, 77, 255, 0.45);
+}
+
+.rs-mode-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #7c4dff;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
 .rs-field-warning {
   color: #fca5a5;
   font-size: 0.78rem;
