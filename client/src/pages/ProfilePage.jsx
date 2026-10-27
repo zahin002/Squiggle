@@ -79,7 +79,7 @@ function ordinalSuffix(n) {
 }
 
 export default function ProfilePage() {
-  const { user, setUser } = useAuth();
+  const { user, setUser, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const [profile, setProfile]       = useState(null);
@@ -122,13 +122,16 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
+    // Wait until AuthContext finishes checking token
+    if (authLoading) return;
+
     // Guests have no profile — don't bother fetching
     if (user && !user.isGuest) {
       fetchProfile();
     } else {
       setLoading(false);
     }
-  }, [user, fetchProfile]);
+  }, [user, authLoading, fetchProfile]);
 
   // ── Avatar Actions ───────────────────────────────────────────
   const handleRandomize = () => {
@@ -195,8 +198,8 @@ export default function ProfilePage() {
     avatarState.beard !== savedNorm.beard
   );
 
-  // ── Render: loading ──────────────────────────────────────────
-  if (loading) {
+  // ── Render: loading (auth initializing or profile fetching) ──
+  if (authLoading || loading || (!profile && user && !user.isGuest && !error)) {
     return (
       <div className="profile-container">
         <div className="profile-bg" aria-hidden="true" />
@@ -264,8 +267,8 @@ export default function ProfilePage() {
     );
   }
 
-  // ── Render: error ────────────────────────────────────────────
-  if (error) {
+  // ── Render: error or missing profile ─────────────────────────
+  if (error || !profile) {
     return (
       <div className="profile-container">
         <div className="profile-bg" aria-hidden="true" />
@@ -290,7 +293,7 @@ export default function ProfilePage() {
             <div style={{ fontSize: '2.5rem', marginBottom: '12px', color: '#ef4444' }}>
               <FaExclamationTriangle />
             </div>
-            <p style={{ color: '#ef4444', fontWeight: 700 }}>{error}</p>
+            <p style={{ color: '#ef4444', fontWeight: 700 }}>{error || 'Could not load your profile.'}</p>
             <button className="btn-go-register" onClick={fetchProfile} style={{ marginTop: '16px' }}>
               Retry
             </button>
@@ -300,8 +303,8 @@ export default function ProfilePage() {
     );
   }
 
-  const initials = (profile.username || 'U').charAt(0).toUpperCase();
-  const memberSince = profile.createdAt
+  const initials = (profile?.username || 'U').charAt(0).toUpperCase();
+  const memberSince = profile?.createdAt
     ? new Date(profile.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
     : 'Unknown';
 
@@ -385,22 +388,22 @@ export default function ProfilePage() {
         <div className="profile-stats-grid">
           <div className="stat-card gold-coins">
             <div className="stat-icon stat-icon--gold"><FaCoins /></div>
-            <div className="stat-value">{profile.goldCoins.toLocaleString()}</div>
+            <div className="stat-value">{(profile?.goldCoins ?? 0).toLocaleString()}</div>
             <div className="stat-label">Gold Coins</div>
           </div>
           <div className="stat-card diamonds">
             <div className="stat-icon stat-icon--diamond"><FaGem /></div>
-            <div className="stat-value">{profile.diamonds.toLocaleString()}</div>
+            <div className="stat-value">{(profile?.diamonds ?? 0).toLocaleString()}</div>
             <div className="stat-label">Diamonds</div>
           </div>
           <div className="stat-card wins">
             <div className="stat-icon stat-icon--wins"><FaTrophy /></div>
-            <div className="stat-value">{profile.totalWins.toLocaleString()}</div>
+            <div className="stat-value">{(profile?.totalWins ?? 0).toLocaleString()}</div>
             <div className="stat-label">Total Wins</div>
           </div>
           <div className="stat-card streak">
             <div className="stat-icon stat-icon--streak"><FaFire /></div>
-            <div className="stat-value">{profile.currentWinStreak}</div>
+            <div className="stat-value">{profile?.currentWinStreak ?? 0}</div>
             <div className="stat-label">Win Streak</div>
           </div>
         </div>

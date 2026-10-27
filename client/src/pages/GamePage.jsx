@@ -504,10 +504,21 @@ export default function GamePage() {
   const isWordle = roomState?.settings?.gameMode === 'wordle';
   const isDrawingAllowed = isDrawer && (!isWordle || !roomState?.wordleState?.isDrawerLocked);
 
-  if (loading) {
+  if (loading || (!roomState && !error)) {
     return (
       <main className="game-page-modern" style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <p style={{ fontSize: '1.2rem', fontWeight: 700 }}>Loading game session...</p>
+        <p style={{ fontSize: '1.2rem', fontWeight: 700 }}>Connecting to game room...</p>
+      </main>
+    );
+  }
+
+  if (error && !roomState) {
+    return (
+      <main className="game-page-modern" style={{ justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: '16px' }}>
+        <p style={{ fontSize: '1.2rem', fontWeight: 700, color: '#ef4444' }}>{error}</p>
+        <button className="leave-room-box-btn" onClick={() => navigate('/lobby')}>
+          <LuArrowLeft className="btn-icon-xs" /> Back to Lobby
+        </button>
       </main>
     );
   }

@@ -14,6 +14,7 @@ import GamePage from './pages/GamePage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import ProfilePage from './pages/ProfilePage';
 import { Agentation } from 'agentation';
+import ErrorBoundary from './components/ErrorBoundary';
 import './index.css';
 
 // Replace with actual Client ID in production or pass via .env
@@ -21,23 +22,25 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'dummy-client-
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-    <AuthProvider>
-      <ThemeProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
-            <Route path="/lobby" element={<LobbyPage />} />
-            <Route path="/leaderboard" element={<LeaderboardPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/game/:roomId" element={<GamePage />} />
-          </Routes>
-          {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
-        </BrowserRouter>
-      </ThemeProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ThemeProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+              <Route path="/lobby" element={<LobbyPage />} />
+              <Route path="/leaderboard" element={<LeaderboardPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/game/:roomId" element={<GamePage />} />
+            </Routes>
+            {import.meta.env.DEV && <Agentation endpoint="http://localhost:4747" />}
+          </BrowserRouter>
+        </ThemeProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   </GoogleOAuthProvider>
 );
