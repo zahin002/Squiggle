@@ -521,7 +521,12 @@ export default function GamePage() {
   };
 
   const handleStartGame = () => {
-    if (isStartingGame || roomState?.status === 'starting' || (roomState?.players?.length || 0) < 1) return;
+    if (isStartingGame || roomState?.status === 'starting') return;
+    if ((roomState?.players?.length || 0) < 2) {
+      setError('At least 2 players are needed to start the game!');
+      setTimeout(() => setError(''), 4000);
+      return;
+    }
     setIsStartingGame(true);
     socket.emit('startGame', { roomId });
   };
@@ -963,25 +968,43 @@ export default function GamePage() {
                 </div>
 
                 {isHost ? (
-                  <button
-                    className={`start-game-btn ${isStartingGame || roomState?.status === 'starting' ? 'is-loading' : ''}`}
-                    onClick={handleStartGame}
-                    disabled={isStartingGame || roomState?.status === 'starting' || (roomState?.players?.length || 0) < 1}
-                  >
-                    {isStartingGame || roomState?.status === 'starting' ? (
-                      <>
-                        <span className="spinner-mini" /> STARTING GAME...
-                      </>
-                    ) : (
-                      <>
-                        <LuPlay className="btn-play-icon" /> START GAME NOW
-                      </>
+                  <>
+                    <button
+                      className={`start-game-btn ${isStartingGame || roomState?.status === 'starting' ? 'is-loading' : ''}`}
+                      onClick={handleStartGame}
+                      disabled={isStartingGame || roomState?.status === 'starting' || (roomState?.players?.length || 0) < 2}
+                      title={(roomState?.players?.length || 0) < 2 ? 'At least 2 players are needed to start the game' : 'Start game now'}
+                    >
+                      {isStartingGame || roomState?.status === 'starting' ? (
+                        <>
+                          <span className="spinner-mini" /> STARTING GAME...
+                        </>
+                      ) : (roomState?.players?.length || 0) < 2 ? (
+                        <>
+                          <LuPlay className="btn-play-icon" /> START GAME (NEED 2+ PLAYERS)
+                        </>
+                      ) : (
+                        <>
+                          <LuPlay className="btn-play-icon" /> START GAME NOW
+                        </>
+                      )}
+                    </button>
+                    {(roomState?.players?.length || 0) < 2 && (
+                      <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
+                        Waiting for at least 1 more player to join to begin the match.
+                      </p>
                     )}
-                  </button>
+                  </>
                 ) : (
                   <div className="waiting-host-box">
                     <span className="pulse-dot" />
-                    <span>{roomState?.status === 'starting' ? 'Game is starting...' : 'Waiting for room host to start...'}</span>
+                    <span>
+                      {(roomState?.players?.length || 0) < 2
+                        ? 'Waiting for at least 2 players to join...'
+                        : roomState?.status === 'starting'
+                        ? 'Game is starting...'
+                        : 'Waiting for room host to start...'}
+                    </span>
                   </div>
                 )}
               </div>

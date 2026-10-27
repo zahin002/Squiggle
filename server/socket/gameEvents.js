@@ -366,11 +366,11 @@ module.exports = (io) => {
         return;
       }
 
-      if (roomState.players.length < 1) {
-        console.log('[START GAME FAILED] Not enough players');
+      if (roomState.players.length < 2) {
+        console.log('[START GAME FAILED] Not enough players (min 2 required):', roomState.players.length);
         socket.emit('error', {
           code: 'NOT_ENOUGH_PLAYERS',
-          message: 'Need at least 1 player to start'
+          message: 'At least 2 players are required to start the game'
         });
         return;
       }
