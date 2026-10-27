@@ -360,7 +360,7 @@ export default function ProfilePage() {
           <div className="profile-rank-banner">
             <div>
               <div className="profile-rank-label">
-                <FaGlobeAmericas className="profile-inline-icon rank-globe-icon" /> Global Rank (by Gold Coins)
+                <FaGlobeAmericas className="profile-inline-icon rank-globe-icon" /> Global Rank
               </div>
               <div>
                 <span className="profile-rank-number">{ordinalSuffix(rank)}</span>
