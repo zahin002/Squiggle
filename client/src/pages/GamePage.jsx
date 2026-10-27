@@ -38,6 +38,9 @@ import {
   LuPlay,
   LuTrophy,
   LuLock,
+  LuRotateCcw,
+  LuEye,
+  LuEyeOff,
   LuX
 } from 'react-icons/lu';
 import DrawingCanvas from '../components/DrawingCanvas';
@@ -100,6 +103,7 @@ export default function GamePage() {
   const [emojiTab, setEmojiTab] = useState('emojis');
   const [freezeState, setFreezeState] = useState(null);
   const [extraCluesData, setExtraCluesData] = useState(null);
+  const [showFinalDrawing, setShowFinalDrawing] = useState(false);
 
   const chatBottomRef = useRef(null);
   const chatInputRef = useRef(null);
@@ -275,12 +279,44 @@ export default function GamePage() {
       setMessages((items) => [...items, { type: 'system', text: `Round over! Word was: "${word}"` }]);
     });
 
-    socket.on('gameEnded', ({ winner, players }) => {
+    socket.on('gameEnded', ({ winner, players, reason }) => {
+      setIsStartingGame(false);
+      setShowFinalDrawing(false);
+      setFreezeState(null);
+      setExtraCluesData(null);
+      setRoomState((state) => (state ? {
+        ...state,
+        status: 'finished',
+        winner,
+        endReason: reason,
+        players: players || state.players
+      } : state));
+      setMessages((items) => [
+        ...items,
+        {
+          type: 'system',
+          text: reason === 'insufficient_players'
+            ? `Game over! All other players left the room.`
+            : `Game Over! Winner: ${winner || 'Nobody'}`
+        }
+      ]);
+    });
+
+    socket.on('gameReset', ({ players, status }) => {
+      setShowFinalDrawing(false);
       setIsStartingGame(false);
       setFreezeState(null);
       setExtraCluesData(null);
-      setRoomState((state) => (state ? { ...state, status: 'finished', winner, players: players || state.players } : state));
-      setMessages((items) => [...items, { type: 'system', text: `Game Over! Winner: ${winner || 'Nobody'}` }]);
+      setRoomState((prev) => (prev ? {
+        ...prev,
+        status: status || 'lobby',
+        players: players || prev.players,
+        winner: null,
+        endReason: null,
+        wordChoices: null,
+        currentWord: null,
+        currentDrawer: null
+      } : prev));
     });
 
     socket.on('timerTick', ({ timeLeft, wordHint, freezeState: tickFreezeState }) => {
@@ -429,6 +465,7 @@ export default function GamePage() {
       socket.off('roundStarted');
       socket.off('roundEnded');
       socket.off('gameEnded');
+      socket.off('gameReset');
       socket.off('yourWord');
       socket.off('chatMessage');
       socket.off('timerTick');
@@ -544,6 +581,10 @@ export default function GamePage() {
     }
     setIsStartingGame(true);
     socket.emit('startGame', { roomId });
+  };
+
+  const handlePlayAgain = () => {
+    socket.emit('playAgain', { roomId });
   };
 
   const currentWordDisplay = roomState?.currentWord || roomState?.selectedWord;
@@ -1134,28 +1175,175 @@ export default function GamePage() {
               </div>
             )}
 
-            {/* OVERLAY 4: Game Ended Podium */}
-            {roomState?.status === 'finished' && (
-              <div className="game-ended-overlay">
+            {/* OVERLAY 4: Game Ended Canvas Overlay (Top 3 or Top 1 Ranking Podium) */}
+            {roomState?.status === 'finished' && !showFinalDrawing && (
+              <div className="game-ended-canvas-overlay">
                 <div className="game-ended-card">
-                  <h2><LuTrophy style={{ color: '#f59e0b', marginRight: '8px', verticalAlign: '-2px' }} /> Game Over!</h2>
-                  <p className="winner-announcement">
-                    Winner: <strong>{roomState.winner || sortedPlayers[0]?.username || 'Player'}</strong>!
-                  </p>
-                  <div className="podium-scores-list">
-                    {sortedPlayers.slice(0, 5).map((p, idx) => (
-                      <div key={p.socketId || idx} className="podium-player-row">
-                        <span className="podium-rank">#{idx + 1}</span>
-                        <span className="podium-name">{p.username}</span>
-                        <span className="podium-score">{p.score || 0} pts</span>
-                      </div>
-                    ))}
+                  {/* Header */}
+                  <div className="game-ended-header-box">
+                    <div className="game-ended-trophy-ring">
+                      <LuTrophy className="game-ended-trophy-svg" />
+                    </div>
+                    <h2 className="game-ended-title">
+                      {roomState?.endReason === 'insufficient_players' || sortedPlayers.length <= 1
+                        ? 'Victory by Default!'
+                        : 'Game Over!'}
+                    </h2>
+                    <p className="game-ended-sub-msg">
+                      {roomState?.endReason === 'insufficient_players' || sortedPlayers.length <= 1
+                        ? 'All other players left the room.'
+                        : (roomState?.winner ? `${roomState.winner} won the match!` : 'Match concluded!')}
+                    </p>
                   </div>
-                  <button className="start-game-btn" onClick={handleLeaveRoom} style={{ marginTop: '12px' }}>
-                    Return to Lobby
-                  </button>
+
+                  {/* Top 3 (or Top 1) Podium */}
+                  <div className={`game-ended-podium-container podium-count-${Math.min(3, sortedPlayers.length)}`}>
+                    {sortedPlayers.length >= 3 ? (
+                      <>
+                        {/* 2nd Place */}
+                        <div className="podium-col rank-2">
+                          <div className="podium-player-avatar-wrap">
+                            <Avatar avatar={sortedPlayers[1]?.avatar} size={50} username={sortedPlayers[1]?.username} />
+                            <span className="podium-rank-badge badge-silver">2</span>
+                          </div>
+                          <div className="podium-player-name" title={sortedPlayers[1]?.username}>
+                            {sortedPlayers[1]?.username}
+                          </div>
+                          <div className="podium-player-score">{sortedPlayers[1]?.score || 0} pts</div>
+                          <div className="podium-bar bar-silver">
+                            <span>2nd</span>
+                          </div>
+                        </div>
+
+                        {/* 1st Place */}
+                        <div className="podium-col rank-1 is-first">
+                          <div className="podium-crown-tag"><LuCrown /></div>
+                          <div className="podium-player-avatar-wrap">
+                            <Avatar avatar={sortedPlayers[0]?.avatar} size={64} username={sortedPlayers[0]?.username} />
+                            <span className="podium-rank-badge badge-gold">1</span>
+                          </div>
+                          <div className="podium-player-name" title={sortedPlayers[0]?.username}>
+                            {sortedPlayers[0]?.username}
+                          </div>
+                          <div className="podium-player-score">{sortedPlayers[0]?.score || 0} pts</div>
+                          <div className="podium-bar bar-gold">
+                            <span>1st</span>
+                          </div>
+                        </div>
+
+                        {/* 3rd Place */}
+                        <div className="podium-col rank-3">
+                          <div className="podium-player-avatar-wrap">
+                            <Avatar avatar={sortedPlayers[2]?.avatar} size={46} username={sortedPlayers[2]?.username} />
+                            <span className="podium-rank-badge badge-bronze">3</span>
+                          </div>
+                          <div className="podium-player-name" title={sortedPlayers[2]?.username}>
+                            {sortedPlayers[2]?.username}
+                          </div>
+                          <div className="podium-player-score">{sortedPlayers[2]?.score || 0} pts</div>
+                          <div className="podium-bar bar-bronze">
+                            <span>3rd</span>
+                          </div>
+                        </div>
+                      </>
+                    ) : sortedPlayers.length === 2 ? (
+                      <>
+                        {/* 1st Place */}
+                        <div className="podium-col rank-1 is-first">
+                          <div className="podium-crown-tag"><LuCrown /></div>
+                          <div className="podium-player-avatar-wrap">
+                            <Avatar avatar={sortedPlayers[0]?.avatar} size={62} username={sortedPlayers[0]?.username} />
+                            <span className="podium-rank-badge badge-gold">1</span>
+                          </div>
+                          <div className="podium-player-name" title={sortedPlayers[0]?.username}>
+                            {sortedPlayers[0]?.username}
+                          </div>
+                          <div className="podium-player-score">{sortedPlayers[0]?.score || 0} pts</div>
+                          <div className="podium-bar bar-gold">
+                            <span>1st</span>
+                          </div>
+                        </div>
+
+                        {/* 2nd Place */}
+                        <div className="podium-col rank-2">
+                          <div className="podium-player-avatar-wrap">
+                            <Avatar avatar={sortedPlayers[1]?.avatar} size={52} username={sortedPlayers[1]?.username} />
+                            <span className="podium-rank-badge badge-silver">2</span>
+                          </div>
+                          <div className="podium-player-name" title={sortedPlayers[1]?.username}>
+                            {sortedPlayers[1]?.username}
+                          </div>
+                          <div className="podium-player-score">{sortedPlayers[1]?.score || 0} pts</div>
+                          <div className="podium-bar bar-silver">
+                            <span>2nd</span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      /* 1 Player Left */
+                      <div className="podium-col rank-1 is-solo-winner">
+                        <div className="podium-crown-tag"><LuCrown /></div>
+                        <div className="podium-player-avatar-wrap">
+                          <Avatar avatar={sortedPlayers[0]?.avatar} size={72} username={sortedPlayers[0]?.username} />
+                          <span className="podium-rank-badge badge-gold">1</span>
+                        </div>
+                        <div className="podium-player-name" title={sortedPlayers[0]?.username}>
+                          {sortedPlayers[0]?.username}
+                        </div>
+                        <div className="podium-player-score">{sortedPlayers[0]?.score || 0} pts</div>
+                        <div className="podium-bar bar-solo">
+                          <span>Champion</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions Bar */}
+                  <div className="game-ended-actions">
+                    {isHost && (
+                      <button
+                        type="button"
+                        className="btn-game-ended-action btn-game-ended-playagain"
+                        onClick={handlePlayAgain}
+                        title="Reset room for another game"
+                      >
+                        <LuRotateCcw className="btn-icon-xs" /> Play Again
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      className="btn-game-ended-action btn-game-ended-leave"
+                      onClick={handleLeaveRoom}
+                      title="Return to lobby"
+                    >
+                      <LuArrowLeft className="btn-icon-xs" /> Return to Lobby
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn-game-ended-action btn-game-ended-viewcanvas"
+                      onClick={() => setShowFinalDrawing(true)}
+                      title="View canvas drawing without overlay"
+                    >
+                      <LuEye className="btn-icon-xs" /> View Drawing
+                    </button>
+                  </div>
                 </div>
               </div>
+            )}
+
+            {/* Minimized floating button to restore overlay when inspecting canvas */}
+            {roomState?.status === 'finished' && showFinalDrawing && (
+              <button
+                type="button"
+                className="btn-restore-ended-overlay"
+                onClick={() => setShowFinalDrawing(false)}
+                title="Show match results"
+              >
+                <LuTrophy className="btn-icon-xs" />
+                <span>Show Results</span>
+              </button>
             )}
           </div>
 

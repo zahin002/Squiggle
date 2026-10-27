@@ -94,6 +94,11 @@ function executeKick(io, room, roomId, voteKick) {
 
   room.activeVoteKick = null;
   setRoom(roomId, room);
+
+  if (room.players.length === 1 && (room.status === 'playing' || room.status === 'wordSelection' || room.status === 'starting' || room.status === 'roundEnding')) {
+    console.log('[ONLY 1 PLAYER LEFT AFTER KICK - ENDING GAME]', roomId);
+    require('./roundManager').triggerGameEnd(io, room, roomId, 'insufficient_players');
+  }
 }
 
 module.exports = (socket, io) => {

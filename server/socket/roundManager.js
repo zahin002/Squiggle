@@ -1,6 +1,104 @@
 const { getRoom, setRoom, persistRoom } = require('./roomStore');
 const { getWordChoices } = require('../utils/WordBank');
 
+async function triggerGameEnd(io, room, roomId, reason = 'normal') {
+  if (!room || room.status === 'finished') return;
+
+  // Clear all running timers
+  if (room.roundTimer) {
+    clearInterval(room.roundTimer);
+    room.roundTimer = null;
+  }
+  if (room.wordSelectionTimer) {
+    clearInterval(room.wordSelectionTimer);
+    room.wordSelectionTimer = null;
+  }
+  if (room.nextRoundTimeout) {
+    clearTimeout(room.nextRoundTimeout);
+    room.nextRoundTimeout = null;
+  }
+  if (room.freezeTimeout) {
+    clearTimeout(room.freezeTimeout);
+    room.freezeTimeout = null;
+  }
+
+  const sortedPlayers = [...(room.players || [])].sort((a, b) => (b.score || 0) - (a.score || 0));
+  const winner = sortedPlayers[0];
+
+  if (reason === 'insufficient_players') {
+    io.to(roomId).emit('chatMessage', {
+      type: 'system',
+      text: `⚠️ All other players left! The game has ended.`
+    });
+  }
+
+  // Award win bonuses to MongoDB for registered winner
+  if (winner?.userId && !winner?.isGuest) {
+    const User = require('../models/User');
+    const Reward = require('../models/Reward');
+
+    try {
+      const user = await User.findById(winner.userId);
+      if (user) {
+        const newStreak = (user.currentWinStreak || 0) + 1;
+        const earnsDiamond = (newStreak % 2 === 0);
+        const diamondBonus = earnsDiamond ? 1 : 0;
+
+        user.goldCoins = (user.goldCoins || 0) + 20;
+        user.totalWins = (user.totalWins || 0) + 1;
+        user.currentWinStreak = newStreak;
+        if (diamondBonus > 0) {
+          user.diamonds = (user.diamonds || 0) + diamondBonus;
+        }
+        await user.save();
+
+        Reward.create({
+          userId: user._id,
+          type: 'game_win',
+          amount: 20,
+          currency: 'goldCoins'
+        }).catch(() => {});
+
+        if (diamondBonus > 0) {
+          Reward.create({
+            userId: user._id,
+            type: 'win_streak',
+            amount: diamondBonus,
+            currency: 'diamonds'
+          }).catch(() => {});
+
+          io.to(roomId).emit('chatMessage', {
+            type: 'system',
+            text: `💎 WIN STREAK BONUS! ${winner.username} reached a ${newStreak}-win streak and earned +1 Diamond!`
+          });
+        }
+      }
+    } catch (err) {
+      console.error('[WIN BONUS ERROR]', err);
+    }
+
+    const otherUserIds = (room.players || [])
+      .filter(p => p.userId && !p.isGuest && p.userId.toString() !== winner.userId.toString())
+      .map(p => p.userId);
+
+    if (otherUserIds.length > 0) {
+      const User = require('../models/User');
+      User.updateMany({ _id: { $in: otherUserIds } }, { $set: { currentWinStreak: 0 } }).catch(() => {});
+    }
+  }
+
+  room.status = 'finished';
+  room.currentWord = null;
+  setRoom(roomId, room);
+  persistRoom(roomId, { status: 'finished' });
+
+  io.to(roomId).emit('gameEnded', {
+    players: sortedPlayers,
+    winner: winner?.username,
+    reason: reason
+  });
+}
+
 async function startNextRound(io, roomId) {
   const room = getRoom(roomId);
   if (!room) return;
@@ -10,6 +108,11 @@ async function startNextRound(io, roomId) {
   if (!['starting', 'roundEnding'].includes(room.status)) return;
 
   if (room.players.length === 0) return;
+
+  if (room.players.length === 1) {
+    await triggerGameEnd(io, room, roomId, 'insufficient_players');
+    return;
+  }
 
   // Handle round & turn progression:
   // Each round consists of EVERY player getting 1 turn to draw.
@@ -38,73 +141,7 @@ async function startNextRound(io, roomId) {
   }
 
   if (room.currentRound > room.settings.rounds) {
-    const sortedPlayers = [...room.players].sort((a, b) => (b.score || 0) - (a.score || 0));
-    const winner = sortedPlayers[0];
-    
-    // Award win bonuses to MongoDB for registered winner
-    if (winner?.userId && !winner?.isGuest) {
-      const User = require('../models/User');
-      const Reward = require('../models/Reward');
-
-      try {
-        const user = await User.findById(winner.userId);
-        if (user) {
-          const newStreak = (user.currentWinStreak || 0) + 1;
-          const earnsDiamond = (newStreak % 2 === 0); // Every 2 consecutive wins awards 1 diamond
-          const diamondBonus = earnsDiamond ? 1 : 0;
-
-          user.goldCoins = (user.goldCoins || 0) + 20;
-          user.totalWins = (user.totalWins || 0) + 1;
-          user.currentWinStreak = newStreak;
-          if (diamondBonus > 0) {
-            user.diamonds = (user.diamonds || 0) + diamondBonus;
-          }
-          await user.save();
-
-          // Audit log in Reward collection
-          Reward.create({
-            userId: user._id,
-            type: 'game_win',
-            amount: 20,
-            currency: 'goldCoins'
-          }).catch(() => {});
-
-          if (diamondBonus > 0) {
-            Reward.create({
-              userId: user._id,
-              type: 'win_streak',
-              amount: diamondBonus,
-              currency: 'diamonds'
-            }).catch(() => {});
-
-            io.to(roomId).emit('chatMessage', {
-              type: 'system',
-              text: `💎 WIN STREAK BONUS! ${winner.username} reached a ${newStreak}-win streak and earned +1 Diamond!`
-            });
-          }
-        }
-      } catch (err) {
-        console.error('[WIN BONUS ERROR]', err);
-      }
-
-      // Reset win streaks for other registered players who lost
-      const otherUserIds = room.players
-        .filter(p => p.userId && !p.isGuest && p.userId.toString() !== winner.userId.toString())
-        .map(p => p.userId);
-
-      if (otherUserIds.length > 0) {
-        const User = require('../models/User');
-        User.updateMany({ _id: { $in: otherUserIds } }, { $set: { currentWinStreak: 0 } }).catch(() => {});
-      }
-    }
-
-    io.to(roomId).emit('gameEnded', {
-      players: room.players,
-      winner: winner?.username
-    });
-    room.status = 'finished';
-    setRoom(roomId, room);
-    persistRoom(roomId, { status: 'finished' });
+    await triggerGameEnd(io, room, roomId, 'normal');
     return;
   }
 
@@ -603,4 +640,4 @@ async function endRound(io, room, roomId) {
   setRoom(roomId, room);
 }
 
-module.exports = { startNextRound, startRoundTimer, endRound, processWordSelection, advanceWordlePhase };
+module.exports = { startNextRound, startRoundTimer, endRound, processWordSelection, advanceWordlePhase, triggerGameEnd };

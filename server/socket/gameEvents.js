@@ -695,14 +695,20 @@ module.exports = (io) => {
         return;
       }
 
-      // If drawer left during a round, end the round
-      const wasDrawer = room.currentDrawer && room.currentDrawer.socketId === disconnectedSocketId;
-      if (wasDrawer && (room.status === 'playing' || room.status === 'wordSelection')) {
-        io.to(targetRoomId).emit('chatMessage', {
-          type: 'system',
-          text: `The drawer left! Round over.`
-        });
-        require('./roundManager').endRound(io, room, targetRoomId);
+      // If only 1 player remains while game was active, end the game immediately
+      if (room.players.length === 1 && (room.status === 'playing' || room.status === 'wordSelection' || room.status === 'starting' || room.status === 'roundEnding')) {
+        console.log('[ONLY 1 PLAYER LEFT - ENDING GAME]', targetRoomId);
+        require('./roundManager').triggerGameEnd(io, room, targetRoomId, 'insufficient_players');
+      } else {
+        // If drawer left during a round, end the round
+        const wasDrawer = room.currentDrawer && room.currentDrawer.socketId === disconnectedSocketId;
+        if (wasDrawer && (room.status === 'playing' || room.status === 'wordSelection')) {
+          io.to(targetRoomId).emit('chatMessage', {
+            type: 'system',
+            text: `The drawer left! Round over.`
+          });
+          require('./roundManager').endRound(io, room, targetRoomId);
+        }
       }
 
       // If target of active vote-kick left, cancel vote
@@ -884,6 +890,10 @@ module.exports = (io) => {
             type: 'system',
             text: `${disconnectedUsername}${disconnectedIsGuest ? ' (Guest)' : ''} left the room.`
           });
+          if (room.players.length === 1 && (room.status === 'playing' || room.status === 'wordSelection' || room.status === 'starting' || room.status === 'roundEnding')) {
+            console.log('[ONLY 1 PLAYER LEFT AFTER DISCONNECT - ENDING GAME]', roomIdForCleanup);
+            require('./roundManager').triggerGameEnd(io, room, roomIdForCleanup, 'insufficient_players');
+          }
         }, 5000);
 
 
@@ -914,6 +924,37 @@ module.exports = (io) => {
           text: `${username}${isGuest ? ' (Guest)' : ''} left the room.`
         });
       }
+    });
+
+    // ----- PLAY AGAIN (RESET ROOM BACK TO LOBBY) -----
+    socket.on('playAgain', ({ roomId }) => {
+      if (!roomId) return;
+      const room = getRoom(roomId);
+      if (!room) return;
+
+      const isHost = (room.hostId === socket.id) ||
+        (room.hostSocketId === socket.id) ||
+        (room.hostUserId && socket.data?.userId && String(room.hostUserId) === String(socket.data.userId));
+      if (!isHost) return;
+
+      room.status = 'lobby';
+      room.currentRound = 0;
+      room.drawersDrawnThisRound = 0;
+      room.currentDrawerIndex = 0;
+      room.currentWord = null;
+      room.currentDrawer = null;
+      room.wordChoices = null;
+      room.wordHint = null;
+      (room.players || []).forEach(p => { p.score = 0; });
+      setRoom(roomId, room);
+      persistRoom(roomId, { status: 'lobby' });
+
+      io.to(roomId).emit('clearCanvas');
+      io.to(roomId).emit('roomStateUpdated', buildRoomState(room, null, null));
+      io.to(roomId).emit('chatMessage', {
+        type: 'system',
+        text: '🔄 The host has reset the room for a new game!'
+      });
     });
   });
 

@@ -2631,3 +2631,296 @@
   font-weight: 800;
 }
 
+/* ── Game Ended Canvas Overlay (Translucent with Top 3 Podium) ── */
+.game-ended-canvas-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 55;
+  background: rgba(10, 8, 30, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.game-ended-card {
+  background: rgba(20, 16, 52, 0.9);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 30px rgba(124, 77, 255, 0.3);
+  border-radius: 20px;
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 520px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.game-ended-header-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.game-ended-trophy-ring {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.35) 100%);
+  border: 2px solid #fbbf24;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.game-ended-trophy-svg {
+  font-size: 1.7rem;
+  color: #facc15;
+}
+
+.game-ended-title {
+  font-family: 'Fredoka', 'Nunito', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.game-ended-sub-msg {
+  font-size: 0.9rem;
+  color: #cbd5e1;
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Podium Layout */
+.game-ended-podium-container {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  padding: 0 10px;
+}
+
+.podium-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  max-width: 120px;
+}
+
+.podium-crown-tag {
+  color: #facc15;
+  font-size: 1.3rem;
+  margin-bottom: -4px;
+  animation: floatBounce 2s ease-in-out infinite;
+  filter: drop-shadow(0 2px 6px rgba(250, 204, 21, 0.6));
+}
+
+@keyframes floatBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.podium-player-avatar-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.podium-rank-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #0f172a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.podium-rank-badge.badge-gold {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  color: #78350f;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+}
+
+.podium-rank-badge.badge-silver {
+  background: linear-gradient(135deg, #94a3b8, #e2e8f0);
+  color: #0f172a;
+}
+
+.podium-rank-badge.badge-bronze {
+  background: linear-gradient(135deg, #c2410c, #fb923c);
+  color: #431407;
+}
+
+.podium-player-name {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #ffffff;
+  max-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.podium-player-score {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #38bdf8;
+  margin-bottom: 6px;
+}
+
+.podium-bar {
+  width: 100%;
+  border-radius: 10px 10px 4px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 800;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.podium-bar.bar-gold {
+  height: 60px;
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.4) 0%, rgba(217, 119, 6, 0.7) 100%);
+  border: 1px solid #fbbf24;
+  color: #fef08a;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.35);
+}
+
+.podium-bar.bar-silver {
+  height: 44px;
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.3) 0%, rgba(100, 116, 139, 0.6) 100%);
+  border: 1px solid #cbd5e1;
+  color: #f1f5f9;
+}
+
+.podium-bar.bar-bronze {
+  height: 32px;
+  background: linear-gradient(180deg, rgba(194, 65, 12, 0.3) 0%, rgba(154, 52, 18, 0.6) 100%);
+  border: 1px solid #fb923c;
+  color: #ffedd5;
+}
+
+.podium-bar.bar-solo {
+  height: 50px;
+  background: linear-gradient(180deg, rgba(124, 77, 255, 0.4) 0%, rgba(79, 70, 229, 0.7) 100%);
+  border: 1px solid #818cf8;
+  color: #e0e7ff;
+}
+
+/* Actions bar in game ended overlay */
+.game-ended-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.btn-game-ended-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.btn-game-ended-playagain {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+}
+
+.btn-game-ended-playagain:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.55);
+}
+
+.btn-game-ended-leave {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.btn-game-ended-leave:hover {
+  background: rgba(239, 68, 68, 0.35);
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.btn-game-ended-viewcanvas {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.btn-game-ended-viewcanvas:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+/* Floating button to restore overlay */
+.btn-restore-ended-overlay {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(18, 14, 45, 0.9);
+  border: 1px solid #fbbf24;
+  color: #facc15;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 12px rgba(245, 158, 11, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-restore-ended-overlay:hover {
+  transform: scale(1.05);
+  background: #231b54;
+}
+
