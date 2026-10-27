@@ -402,7 +402,27 @@ module.exports = (io) => {
     // ----- WORD SELECTED -----
     socket.on('wordSelected', ({ roomId, word }) => {
       const room = getRoom(roomId);
-      if (!room || room.currentDrawer?.socketId !== socket.id) return;
+      if (!room) return;
+
+      const isDrawerSocket = room.currentDrawer?.socketId === socket.id;
+      const isDrawerUser = (room.currentDrawer?.userId && socket.data?.userId && String(room.currentDrawer.userId) === String(socket.data.userId));
+      const isDrawerUsername = (socket.data?.username && room.currentDrawer?.username === socket.data.username);
+
+      if (!isDrawerSocket && !isDrawerUser && !isDrawerUsername) {
+        console.warn(`[wordSelected REJECTED] Socket ${socket.id} is not drawer:`, {
+          drawerSocket: room.currentDrawer?.socketId,
+          drawerUser: room.currentDrawer?.userId,
+          drawerName: room.currentDrawer?.username,
+          socketUser: socket.data?.userId,
+          socketName: socket.data?.username,
+        });
+        return;
+      }
+
+      // Keep current drawer socketId up to date
+      if (room.currentDrawer) {
+        room.currentDrawer.socketId = socket.id;
+      }
 
       require('./roundManager.js').processWordSelection(io, roomId, word);
     });

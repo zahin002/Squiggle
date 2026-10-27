@@ -135,7 +135,7 @@ export default function DrawingCanvas({ socket, roomId, isDrawer, status }) {
 
   const handleMouseDown = useCallback((e) => {
     if (!isDrawer) return;
-    if (status !== 'playing') return;
+    if (status && status !== 'playing') return;
 
     if (tool === 'fill') {
       // Fill tool: act immediately on mouseDown, no drag
@@ -170,7 +170,7 @@ export default function DrawingCanvas({ socket, roomId, isDrawer, status }) {
 
   const handleMouseMove = useCallback((e) => {
     if (!isDrawer) return;
-    if (status !== 'playing') return;
+    if (status && status !== 'playing') return;
 
     const SHAPE_KEYS = ['rect', 'circle', 'line', 'oval', 'dotted_line', 'curve', 'arrow_single', 'arrow_double', 'arc', 'squircle'];
     if (SHAPE_KEYS.includes(tool) && isShapeDrawing.current) {
@@ -195,7 +195,7 @@ export default function DrawingCanvas({ socket, roomId, isDrawer, status }) {
 
   const handleMouseUp = useCallback((e) => {
     if (!isDrawer) return;
-    if (status !== 'playing') return;
+    if (status && status !== 'playing') return;
 
     const SHAPE_KEYS = ['rect', 'circle', 'line', 'oval', 'dotted_line', 'curve', 'arrow_single', 'arrow_double', 'arc', 'squircle'];
     if (SHAPE_KEYS.includes(tool) && isShapeDrawing.current) {

@@ -246,7 +246,16 @@ export default function GamePage() {
       setGuessWindowOpen(true);
       setFreezeState(null);
       setExtraCluesData(null);
-      setRoomState((state) => (state ? { ...state, status: 'playing', ...round } : state));
+      setRoomState((state) => {
+        if (!state) return state;
+        return {
+          ...state,
+          status: 'playing',
+          wordChoices: null,
+          currentDrawer: round.drawer ? { ...state.currentDrawer, ...round.drawer } : state.currentDrawer,
+          ...round
+        };
+      });
       if (round?.timeLeft !== undefined) setTimeLeft(round.timeLeft);
       setRoundSplash({
         round: round.round,
@@ -442,7 +451,11 @@ export default function GamePage() {
     };
   }, [roomId, socket, emitJoin, navigate]);
 
-  const isDrawer = roomState?.currentDrawer?.socketId === socket.id;
+  const isDrawer = Boolean(
+    (roomState?.currentDrawer?.socketId && socket?.id && roomState.currentDrawer.socketId === socket.id) ||
+    (roomState?.currentDrawer?.userId && (activeUser?.id || activeUser?._id) && String(roomState.currentDrawer.userId) === String(activeUser.id || activeUser._id)) ||
+    (roomState?.currentDrawer?.username && (activeUser?.username || user?.username) && roomState.currentDrawer.username === (activeUser?.username || user?.username))
+  );
   const isHost =
     roomState?.isHost !== undefined
       ? !!roomState.isHost
@@ -1071,7 +1084,13 @@ export default function GamePage() {
                           style={{ fontSize }}
                           onClick={() => {
                             socket.emit('wordSelected', { roomId, word });
-                            setRoomState((s) => ({ ...s, wordChoices: null, selectedWord: word, currentWord: word }));
+                            setRoomState((s) => ({
+                              ...s,
+                              wordChoices: null,
+                              selectedWord: word,
+                              currentWord: word,
+                              status: 'playing',
+                            }));
                           }}
                           title={word}
                         >

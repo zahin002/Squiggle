@@ -132,9 +132,9 @@ async function startNextRound(io, roomId) {
 
   // Get word choices (async — Gemini or static fallback)
   const choices = await getWordChoices(room.settings);
-  // The room may have ended or been replaced while an AI request was pending.
+  // The room may have ended or been closed while an AI request was pending.
   const currentRoom = getRoom(roomId);
-  if (!currentRoom || currentRoom !== room || currentRoom.status !== 'wordSelection') return;
+  if (!currentRoom || currentRoom.status !== 'wordSelection') return;
   if (!Array.isArray(choices) || choices.length === 0) {
     currentRoom.status = 'finished';
     setRoom(roomId, currentRoom);
@@ -142,48 +142,63 @@ async function startNextRound(io, roomId) {
     io.to(roomId).emit('error', { message: 'Unable to generate words for this round.' });
     return;
   }
-  room.wordChoices = choices;
-  setRoom(roomId, room);
+  currentRoom.wordChoices = choices;
+  setRoom(roomId, currentRoom);
 
   // Emit roomState with `isHost` computed per-socket.
-  // `room` contains host identifiers; `isHost` needs to be resolved against each socket.
+  // `currentRoom` contains host identifiers; `isHost` needs to be resolved against each socket.
   const { buildRoomState } = require('./buildRoomState');
   const nsp = io.of('/');
   const sockets = await nsp.in(roomId).fetchSockets();
   sockets.forEach((s) => {
     const roomStateForThisSocket = buildRoomState(
-      room,
+      currentRoom,
       s.data?.userId ?? null,
       s.id
     );
     s.emit('roomState', roomStateForThisSocket);
   });
 
-
-
   // Only the drawer gets word choices
-  io.to(room.currentDrawer.socketId).emit('wordChoices', { choices });
-
+  if (currentRoom.currentDrawer?.socketId) {
+    io.to(currentRoom.currentDrawer.socketId).emit('wordChoices', { choices });
+  }
 
   io.to(roomId).emit('chatMessage', {
     type: 'system',
-    text: `${room.currentDrawer.username} is choosing a word...`
+    text: `${currentRoom.currentDrawer.username} is choosing a word...`
   });
 
-  startWordSelectionTimer(io, room, roomId);
+  startWordSelectionTimer(io, currentRoom, roomId);
 }
 
 function processWordSelection(io, roomId, word) {
   const room = getRoom(roomId);
   if (!room || room.status !== 'wordSelection') return;
-  if (typeof word !== 'string' || !room.wordChoices.includes(word)) return;
+
+  // Resolve word robustly against choices (case-insensitive & trimmed)
+  let chosenWord = typeof word === 'string' ? word.trim() : '';
+  if (Array.isArray(room.wordChoices) && room.wordChoices.length > 0) {
+    const matched = room.wordChoices.find(
+      c => typeof c === 'string' && c.trim().toLowerCase() === chosenWord.toLowerCase()
+    );
+    if (matched) {
+      chosenWord = matched;
+    } else if (!chosenWord) {
+      chosenWord = room.wordChoices[0];
+    }
+  }
+
+  if (!chosenWord) {
+    chosenWord = (Array.isArray(room.wordChoices) && room.wordChoices[0]) || 'Squiggle';
+  }
 
   if (room.wordSelectionTimer) {
     clearInterval(room.wordSelectionTimer);
     room.wordSelectionTimer = null;
   }
 
-  room.currentWord = word;
+  room.currentWord = chosenWord;
   room.status = 'playing';
   room.revealedHintIndices = [];
   room.freezeState = null;
@@ -206,7 +221,7 @@ function processWordSelection(io, roomId, word) {
   }
   
   // Calculate dynamic max hints for the round based on word length
-  const len = word.length;
+  const len = chosenWord.length;
   let maxHints = 0;
   if (len === 4) {
     maxHints = 1;
@@ -220,15 +235,15 @@ function processWordSelection(io, roomId, word) {
   }
   room.maxHints = maxHints;
 
-  setRoom(roomId, room);
-
-  const hint = word.replace(/[a-zA-Z]/g, '_').split('').join(' ');
+  const hint = chosenWord.replace(/[a-zA-Z]/g, '_').split('').join(' ');
   room.wordHint = hint;
+
+  setRoom(roomId, room);
 
   io.to(roomId).emit('roundStarted', {
     drawer: { username: room.currentDrawer.username, socketId: room.currentDrawer.socketId },
     wordHint: hint,
-    wordLength: word.length,
+    wordLength: chosenWord.length,
     round: room.currentRound,
     totalRounds: room.settings.rounds,
     timeLeft: room.timeLeft,
@@ -250,7 +265,18 @@ function processWordSelection(io, roomId, word) {
     text: startMsg
   });
 
-  io.to(room.currentDrawer.socketId).emit('yourWord', { word });
+  if (room.currentDrawer?.socketId) {
+    io.to(room.currentDrawer.socketId).emit('yourWord', { word: chosenWord });
+  }
+
+  // Broadcast updated roomState immediately to every player so the UI transitions out of wordSelection
+  const { buildRoomState } = require('./buildRoomState');
+  const nspRound = io.of('/');
+  nspRound.in(roomId).fetchSockets().then((roundSockets) => {
+    roundSockets.forEach((s) => {
+      s.emit('roomState', buildRoomState(room, s.data?.userId ?? null, s.id));
+    });
+  }).catch((err) => console.error('[processWordSelection fetchSockets error]', err));
 
   startRoundTimer(io, room, roomId);
 }

@@ -9,7 +9,9 @@ function buildRoomState(room, currentUserId, socketId) {
     ? (currentUserIdStr != null && hostUserId === currentUserIdStr)
     : (hostSocketId ? (hostSocketId === socketId || room.hostId === socketId) : false);
 
-  const isDrawer = room.currentDrawer?.socketId === socketId;
+  const isDrawer =
+    (room.currentDrawer?.socketId && room.currentDrawer.socketId === socketId) ||
+    (room.currentDrawer?.userId && currentUserIdStr && String(room.currentDrawer.userId) === currentUserIdStr);
 
   return {
     roomId: room.roomId,
