@@ -570,6 +570,119 @@ module.exports = (io) => {
       processWordleGuess(room, roomId, player, guess);
     });
 
+    function isWordMatch(guessWord, targetWord) {
+      if (!guessWord || !targetWord) return false;
+      const cleanG = guessWord.trim().toLowerCase();
+      const cleanT = targetWord.trim().toLowerCase();
+      if (cleanG === cleanT) return true;
+
+      const normG = cleanG.replace(/[^a-z0-9]/g, '');
+      const normT = cleanT.replace(/[^a-z0-9]/g, '');
+      if (normG.length > 0 && normG === normT) return true;
+
+      return false;
+    }
+
+    function isCloseGuess(guessNorm, targetNorm) {
+      if (!guessNorm || !targetNorm) return false;
+      if (guessNorm === targetNorm) return false;
+      if (targetNorm.length < 3) return false;
+      if (Math.abs(guessNorm.length - targetNorm.length) > 1) return false;
+
+      let edits = 0;
+      let i = 0;
+      let j = 0;
+      while (i < guessNorm.length && j < targetNorm.length) {
+        if (guessNorm[i] !== targetNorm[j]) {
+          edits++;
+          if (edits > 1) return false;
+          if (guessNorm.length > targetNorm.length) {
+            i++;
+          } else if (targetNorm.length > guessNorm.length) {
+            j++;
+          } else {
+            i++;
+            j++;
+          }
+        } else {
+          i++;
+          j++;
+        }
+      }
+      if (i < guessNorm.length || j < targetNorm.length) edits++;
+      return edits === 1;
+    }
+
+    function processCorrectStandardGuess(room, targetRoomId, player, guessingSocket) {
+      const guesserId = player.userId || guessingSocket.id;
+      if (!room.correctGuessers) room.correctGuessers = [];
+      if (room.correctGuessers.includes(guesserId)) return;
+
+      room.correctGuessers.push(guesserId);
+
+      // Award points based on timeLeft
+      const points = Math.max(10, (room.timeLeft || 0) * 10);
+      player.score = (player.score || 0) + points;
+
+      // Award points to drawer as well
+      if (room.currentDrawer) {
+        const drawerPlayer = room.players.find(
+          p => (p.userId && p.userId === room.currentDrawer.userId) || p.socketId === room.currentDrawer.socketId
+        );
+        if (drawerPlayer) drawerPlayer.score = (drawerPlayer.score || 0) + 50;
+      }
+
+      // Persist Gold Coins to MongoDB for registered users & record audit in Reward
+      if (player.userId && !player.isGuest) {
+        User.findByIdAndUpdate(player.userId, { $inc: { goldCoins: 1 } }).catch(() => {});
+        Reward.create({
+          userId: player.userId,
+          type: 'correct_guess',
+          amount: 1,
+          currency: 'goldCoins'
+        }).catch(() => {});
+      }
+
+      setRoom(targetRoomId, room);
+
+      // Announce to the entire room that player guessed the word (NEVER reveal the word in chat!)
+      io.to(targetRoomId).emit('chatMessage', {
+        type: 'system',
+        text: `${player.username} guessed the word!`
+      });
+
+      // Send private feedback to the guessing socket
+      guessingSocket.emit('guessResult', {
+        correct: true,
+        points,
+        word: room.currentWord
+      });
+
+      // Broadcast updated players list for scores
+      io.to(targetRoomId).emit('playerJoined', { players: room.players });
+
+      // Broadcast updated roomState immediately to every player so hasGuessed and scores sync
+      const { buildRoomState } = require('./buildRoomState');
+      const nsp = io.of('/');
+      nsp.in(targetRoomId).fetchSockets().then((roundSockets) => {
+        roundSockets.forEach((s) => {
+          s.emit('roomState', buildRoomState(room, s.data?.userId ?? null, s.id));
+        });
+      }).catch((err) => console.error('[guessWord fetchSockets error]', err));
+
+      // If freeze user guessed and normal time had already expired, end round immediately
+      if (room.timeLeft <= 0 && room.freezeState?.active && room.freezeState.userSocketId === guessingSocket.id) {
+        room.freezeState.active = false;
+        require('./roundManager').endRound(io, room, targetRoomId);
+        return;
+      }
+
+      // Check if all players (except drawer) have guessed
+      if (room.correctGuessers.length >= room.players.length - 1) {
+        require('./roundManager').endRound(io, room, targetRoomId);
+      }
+    }
+
     // ----- GUESS WORD -----
     socket.on('guessWord', ({ roomId, guess }) => {
       const room = getRoom(roomId);
@@ -586,65 +699,33 @@ module.exports = (io) => {
         return;
       }
 
-      const isCorrect = guess.toLowerCase() === room.currentWord?.toLowerCase();
+      const guesserId = player.userId || socket.id;
+      if (room.correctGuessers?.includes(guesserId)) return;
+
+      const cleanGuess = (guess || '').trim();
+      const isCorrect = isWordMatch(cleanGuess, room.currentWord);
 
       if (isCorrect) {
-        // Prevent duplicate scoring
-        const guesserId = player.userId || player.socketId;
-        if (!room.correctGuessers) room.correctGuessers = [];
-        if (room.correctGuessers.includes(guesserId)) return;
-        
-        room.correctGuessers.push(guesserId);
-
-        // Award points based on timeLeft
-        const points = Math.max(10, room.timeLeft * 10);
-        player.score += points;
-        
-        // Award points to drawer as well
-        if (room.currentDrawer) {
-          const drawerPlayer = room.players.find(p => p.userId === room.currentDrawer.userId || p.socketId === room.currentDrawer.socketId);
-          if (drawerPlayer) drawerPlayer.score += 50;
-        }
-
-        // Persist Gold Coins to MongoDB for registered users & record audit in Reward
-        if (player.userId && !player.isGuest) {
-          User.findByIdAndUpdate(player.userId, { $inc: { goldCoins: 1 } }).catch(() => {});
-          Reward.create({
-            userId: player.userId,
-            type: 'correct_guess',
-            amount: 1,
-            currency: 'goldCoins'
-          }).catch(() => {});
-        }
-
-        setRoom(roomId, room);
-
-        io.to(roomId).emit('chatMessage', {
-          type: 'system',
-          text: `${player.username} guessed the word!`
-        });
-
-        // Broadcast updated players list for scores
-        io.to(roomId).emit('playerJoined', { players: room.players });
-
-        // If freeze user guessed and normal time had already expired, end round immediately
-        if (room.timeLeft <= 0 && room.freezeState?.active && room.freezeState.userSocketId === socket.id) {
-          room.freezeState.active = false;
-          require('./roundManager').endRound(io, room, roomId);
-          return;
-        }
-
-        // Check if all players (except drawer) have guessed
-        if (room.correctGuessers.length >= room.players.length - 1) {
-           require('./roundManager').endRound(io, room, roomId);
-        }
-
+        processCorrectStandardGuess(room, roomId, player, socket);
       } else {
-        // Incorrect guess -> standard chat message
-        io.to(roomId).emit('chatMessage', {
-          type: 'chat',
-          text: `${player.username}: ${guess}`
+        // Incorrect guess -> DO NOT broadcast to the room's live chat!
+        // What other people are guessing remains hidden from other players.
+        const normGuess = cleanGuess.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const normTarget = (room.currentWord || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        const isClose = isCloseGuess(normGuess, normTarget);
+
+        socket.emit('guessResult', {
+          correct: false,
+          guess: cleanGuess,
+          isClose
         });
+
+        if (isClose) {
+          socket.emit('chatMessage', {
+            type: 'system',
+            text: `💡 "${cleanGuess}" is very close!`
+          });
+        }
       }
     });
 
@@ -655,7 +736,8 @@ module.exports = (io) => {
       const player = room.players.find(p => p.socketId === socket.id);
       if (!player) return;
 
-      let cleanText = text;
+      let cleanText = (text || '').trim();
+      if (!cleanText) return;
 
       // Wordle Mode spoiler protection: If player already solved, mask the secret word
       if (room.settings?.gameMode === 'wordle' && room.currentWord) {
@@ -668,6 +750,35 @@ module.exports = (io) => {
               type: 'system',
               text: '[Wordle] Secret word masked to prevent spoilers for other players.'
             });
+          }
+        }
+      }
+
+      // Standard / Genre / Custom Mode spoiler protection and chat guess interception
+      if (room.settings?.gameMode !== 'wordle' && room.status === 'playing' && room.currentWord) {
+        const isDrawer = room.currentDrawer?.socketId === socket.id;
+        const guesserId = player.userId || socket.id;
+        const hasGuessed = (room.correctGuessers || []).includes(guesserId);
+
+        if (isDrawer || hasGuessed) {
+          // Drawer or already-guessed players cannot reveal the secret word
+          const escapedWord = room.currentWord.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+          const wordRegex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
+          if (wordRegex.test(cleanText) || isWordMatch(cleanText, room.currentWord)) {
+            cleanText = cleanText.replace(wordRegex, '*****');
+            if (isWordMatch(cleanText, room.currentWord)) {
+              cleanText = '*****';
+            }
+            socket.emit('chatMessage', {
+              type: 'system',
+              text: 'Secret word masked to prevent spoilers for other players.'
+            });
+          }
+        } else {
+          // If a player who hasn't guessed yet types the secret word in the live chat input:
+          if (isWordMatch(cleanText, room.currentWord)) {
+            processCorrectStandardGuess(room, roomId, player, socket);
+            return; // Intercepted: word is NEVER revealed in chat!
           }
         }
       }

@@ -1267,6 +1267,30 @@
   transition: transform 0.2s ease;
 }
 
+.guesser-bar-submit-btn.is-solved-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.45) !important;
+  opacity: 1 !important;
+  cursor: default !important;
+}
+
+.player-guessed-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  background: #10b981;
+  color: #ffffff;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 800;
+  margin-left: 5px;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+  flex-shrink: 0;
+}
+
 .guesser-wordle-board-container {
   width: 100%;
   margin-top: 6px;

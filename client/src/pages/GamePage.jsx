@@ -333,6 +333,13 @@ export default function GamePage() {
       setMessages((items) => [...items.slice(-40), message]);
     });
 
+    socket.on('guessResult', ({ correct, word }) => {
+      if (correct) {
+        setGuess('');
+        setRoomState((s) => (s ? { ...s, hasGuessed: true, currentWord: word || s.currentWord } : s));
+      }
+    });
+
     socket.on('error', (payload) => {
       setIsStartingGame(false);
       setError(payload.message || 'Something went wrong');
@@ -460,6 +467,7 @@ export default function GamePage() {
       socket.off('gameReset');
       socket.off('yourWord');
       socket.off('chatMessage');
+      socket.off('guessResult');
       socket.off('timerTick');
       socket.off('error');
       socket.off('voteKickStarted');
@@ -796,6 +804,9 @@ export default function GamePage() {
                       <div className="player-meta-box">
                         <div className="player-name-row">
                           <span className="player-name-text" title={player.username}>{player.username}</span>
+                          {player.hasGuessed && !isDrawing && (
+                            <span className="player-guessed-badge" title="Guessed the word!">✓</span>
+                          )}
                           {roomState?.settings?.voiceChatEnabled && (
                             <span className="player-mic-mini">
                               {player.isMuted ? <LuMicOff className="mic-muted-red" /> : <LuMic className="mic-on-green" />}
@@ -943,10 +954,10 @@ export default function GamePage() {
                   <span className="canvas-word-tag">DRAW:</span>
                   {renderDrawerWord(currentWordDisplay)}
                 </div>
-              ) : !isDrawer && roomState?.status === 'playing' && roomState?.wordHint ? (
-                <div className="canvas-word-pill is-guesser">
-                  <span className="canvas-word-tag">GUESS:</span>
-                  {renderWordHint(roomState.wordHint)}
+              ) : !isDrawer && roomState?.status === 'playing' && (roomState?.hasGuessed ? currentWordDisplay : roomState?.wordHint) ? (
+                <div className={`canvas-word-pill ${roomState?.hasGuessed ? 'is-drawer' : 'is-guesser'}`}>
+                  <span className="canvas-word-tag">{roomState?.hasGuessed ? 'WORD:' : 'GUESS:'}</span>
+                  {roomState?.hasGuessed ? renderDrawerWord(currentWordDisplay) : renderWordHint(roomState.wordHint)}
                 </div>
               ) : null}
             </div>
@@ -1366,9 +1377,11 @@ export default function GamePage() {
                     placeholder={
                       roomState?.status !== 'playing'
                         ? 'Waiting for round to start...'
+                        : roomState?.hasGuessed
+                        ? '🎉 You guessed the word! Waiting for next round...'
                         : 'Type your guess here...'
                     }
-                    disabled={roomState?.status !== 'playing' || requestedRole === 'spectator'}
+                    disabled={roomState?.status !== 'playing' || requestedRole === 'spectator' || roomState?.hasGuessed}
                     autoComplete="off"
                     maxLength={40}
                   />
@@ -1376,12 +1389,12 @@ export default function GamePage() {
 
                 <button
                   type="submit"
-                  className="guesser-bar-submit-btn"
-                  disabled={!guess.trim() || roomState?.status !== 'playing' || requestedRole === 'spectator'}
-                  title="Submit your guess"
+                  className={`guesser-bar-submit-btn ${roomState?.hasGuessed ? 'is-solved-btn' : ''}`}
+                  disabled={!guess.trim() || roomState?.status !== 'playing' || requestedRole === 'spectator' || roomState?.hasGuessed}
+                  title={roomState?.hasGuessed ? 'You have already guessed the word' : 'Submit your guess'}
                 >
-                  <span>GUESS</span>
-                  <LuArrowRight className="guesser-btn-arrow" />
+                  <span>{roomState?.hasGuessed ? 'SOLVED' : 'GUESS'}</span>
+                  {roomState?.hasGuessed ? <LuCheck className="guesser-btn-arrow" /> : <LuArrowRight className="guesser-btn-arrow" />}
                 </button>
               </form>
             </div>
@@ -1411,7 +1424,7 @@ export default function GamePage() {
           <div className="chat-messages">
             {messages.map((message, index) => {
               const isSystem = message.type === 'system';
-              const senderName = isSystem ? 'System' : message.username || message.sender || 'Unknown';
+              const senderName = isSystem ? 'System' : message.username || message.sender || 'Player';
               const msgTime = message.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
               if (isSystem) {

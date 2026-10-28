@@ -13,28 +13,38 @@ function buildRoomState(room, currentUserId, socketId) {
     (room.currentDrawer?.socketId && room.currentDrawer.socketId === socketId) ||
     (room.currentDrawer?.userId && currentUserIdStr && String(room.currentDrawer.userId) === currentUserIdStr);
 
+  const hasGuessed = (room.correctGuessers || []).some(
+    id => String(id) === String(socketId) || (currentUserIdStr && String(id) === currentUserIdStr)
+  );
+
   return {
     roomId: room.roomId,
     settings: room.settings,
     hostUserId,
     hostId: hostSocketId || room.hostId || null,
 
-    // Annotate each player with isHost so the UI can show host badges
+    // Annotate each player with isHost and hasGuessed so the UI can show badges
     players: (room.players || []).map(p => {
       const pUserIdStr = p.userId ? String(p.userId) : null;
+      const pSocketId = p.socketId;
+      const pHasGuessed = (room.correctGuessers || []).some(
+        id => (pSocketId && String(id) === String(pSocketId)) || (pUserIdStr && String(id) === pUserIdStr)
+      );
       return {
         ...p,
         isHost: hostUserId
           ? (pUserIdStr != null && pUserIdStr === hostUserId)
           : (hostSocketId ? (p.socketId === hostSocketId || p.socketId === room.hostId) : false),
+        hasGuessed: pHasGuessed
       };
     }),
     spectators: room.spectators,
 
     status: room.status,
     currentDrawer: room.currentDrawer,
-    // The word and alternatives must never be included in another player's state.
-    currentWord: isDrawer ? room.currentWord : null,
+    // The word is visible to the drawer and anyone who has already solved/guessed it.
+    currentWord: (isDrawer || hasGuessed) ? room.currentWord : null,
+    hasGuessed,
     currentRound: room.currentRound,
     timeLeft: room.timeLeft,
     wordChoices: isDrawer ? room.wordChoices : [],
