@@ -420,14 +420,32 @@
 /* In Wordle mode, ensure chat adapts so the large Wordle guesser board is never compressed */
 .is-wordle-mode .chat-messages {
   max-height: 140px;
-  min-height: 50px;
-  padding: 10px 14px;
+  min-height: 60px;
+  padding: 8px 12px;
 }
 
 .is-wordle-mode .guess-section-wrapper {
   margin: 6px 12px 10px 12px;
   flex-shrink: 0;
   overflow: visible;
+}
+
+.wordle-sidebar-container {
+  margin: 4px 8px 10px 8px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.wordle-sidebar-container::-webkit-scrollbar {
+  width: 5px;
+}
+.wordle-sidebar-container::-webkit-scrollbar-thumb {
+  background: rgba(124, 77, 255, 0.4);
+  border-radius: 4px;
 }
 
 .game-error-banner {

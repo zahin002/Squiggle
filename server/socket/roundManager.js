@@ -448,6 +448,12 @@ function advanceWordlePhase(io, room, roomId) {
     timeLeft: room.timeLeft
   });
 
+  io.to(roomId).emit('timerTick', {
+    timeLeft: room.timeLeft,
+    wordHint: room.wordHint || '',
+    freezeState: null
+  });
+
   io.to(roomId).emit('chatMessage', {
     type: 'system',
     text: `[Wordle] ${phaseMsg}`
@@ -455,6 +461,16 @@ function advanceWordlePhase(io, room, roomId) {
 
   const { setRoom } = require('./roomStore');
   setRoom(roomId, room);
+
+  // Broadcast updated roomState immediately to every player in room
+  const { buildRoomState } = require('./buildRoomState');
+  const nspRound = io.of('/');
+  nspRound.in(roomId).fetchSockets().then((roundSockets) => {
+    roundSockets.forEach((s) => {
+      s.emit('roomState', buildRoomState(room, s.data?.userId ?? null, s.id));
+    });
+  }).catch((err) => console.error('[advanceWordlePhase fetchSockets error]', err));
+
   return false;
 }
 
@@ -537,10 +553,12 @@ function startRoundTimer(io, room, roomId) {
         if (shouldEnd) {
           clearInterval(current.roundTimer);
           await endRound(io, current, roomId);
+          return;
         }
       } else {
         clearInterval(current.roundTimer);
         await endRound(io, current, roomId);
+        return;
       }
     }
 

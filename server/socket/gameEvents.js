@@ -555,6 +555,21 @@ module.exports = (io) => {
       processWordleGuess(room, roomId, player, guess);
     });
 
+    // ----- GUESS WORDLE (Fallback Alias) -----
+    socket.on('guessWordle', ({ roomId, guess }) => {
+      const room = getRoom(roomId);
+      if (!room || room.status !== 'playing') return;
+
+      const player = room.players.find(p => p.socketId === socket.id);
+      if (!player) return;
+
+      if (room.currentDrawer?.socketId === socket.id) {
+        return socket.emit('wordleError', { message: 'Drawers cannot submit guesses.' });
+      }
+
+      processWordleGuess(room, roomId, player, guess);
+    });
+
     // ----- GUESS WORD -----
     socket.on('guessWord', ({ roomId, guess }) => {
       const room = getRoom(roomId);

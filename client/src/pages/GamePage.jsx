@@ -600,7 +600,7 @@ export default function GamePage() {
     e?.preventDefault();
     if (!guess.trim() || roomState?.status !== 'playing' || isDrawer) return;
     if (isWordle) {
-      socket.emit('guessWordle', { roomId, guess: guess.trim().toUpperCase() });
+      socket.emit('submitWordleGuess', { roomId, guess: guess.trim().toUpperCase() });
     } else {
       socket.emit('guessWord', { roomId, guess: guess.trim() });
     }
@@ -610,7 +610,7 @@ export default function GamePage() {
   const handleGuessWordDirect = (wordToGuess) => {
     if (!wordToGuess || roomState?.status !== 'playing' || isDrawer) return;
     if (isWordle) {
-      socket.emit('guessWordle', { roomId, guess: wordToGuess.trim().toUpperCase() });
+      socket.emit('submitWordleGuess', { roomId, guess: wordToGuess.trim().toUpperCase() });
     } else {
       socket.emit('guessWord', { roomId, guess: wordToGuess.trim() });
     }
@@ -952,8 +952,8 @@ export default function GamePage() {
             </div>
           )}
 
-          {/* Canvas Wrapper: Slightly resized for guesser, full-size for drawer */}
-          <div className={`canvas-wrapper-relative ${!isDrawer ? 'is-guesser-canvas' : 'is-drawer-canvas'}`}>
+          {/* Canvas Wrapper: Slightly resized for guesser in standard mode, full-size for drawer and Wordle */}
+          <div className={`canvas-wrapper-relative ${(!isDrawer && !isWordle) ? 'is-guesser-canvas' : 'is-drawer-canvas'}`}>
             <DrawingCanvas socket={socket} roomId={roomId} isDrawer={isDrawingAllowed} status={roomState?.status} />
 
             {/* OVERLAY: Blind Phase Canvas Lock for Drawer in Wordle */}
@@ -1348,8 +1348,8 @@ export default function GamePage() {
             )}
           </div>
 
-          {/* 7 & 8. DEDICATED GUESS BAR DIRECTLY UNDERNEATH CANVAS (GUESSER ONLY) */}
-          {!isDrawer && (
+          {/* 7 & 8. DEDICATED GUESS BAR DIRECTLY UNDERNEATH CANVAS (GUESSER ONLY IN STANDARD MODE) */}
+          {!isDrawer && !isWordle && (
             <div className="guesser-bottom-bar-wrapper">
               <form className="guesser-control-bar" onSubmit={handleGuessSubmit}>
                 <div className="guesser-bar-tag">
@@ -1366,13 +1366,11 @@ export default function GamePage() {
                     placeholder={
                       roomState?.status !== 'playing'
                         ? 'Waiting for round to start...'
-                        : isWordle
-                        ? `Type 5-letter deduction (${6 - (roomState?.wordleState?.guesses?.length || 0)} tries left)...`
                         : 'Type your guess here...'
                     }
                     disabled={roomState?.status !== 'playing' || requestedRole === 'spectator'}
                     autoComplete="off"
-                    maxLength={isWordle ? 5 : 40}
+                    maxLength={40}
                   />
                 </div>
 
@@ -1386,30 +1384,11 @@ export default function GamePage() {
                   <LuArrowRight className="guesser-btn-arrow" />
                 </button>
               </form>
-
-              {/* If Wordle mode is active, also render the compact Wordle keyboard/board underneath */}
-              {isWordle && roomState?.status === 'playing' && (
-                <div className="guesser-wordle-board-container">
-                  <WordleBoard
-                    wordleState={roomState?.wordleState}
-                    isDrawer={false}
-                    onKeyInput={(letter) => {
-                      if (letter === 'ENTER') {
-                        handleGuessSubmit();
-                      } else if (letter === 'BACKSPACE') {
-                        setGuess((prev) => prev.slice(0, -1));
-                      } else if (guess.length < 5) {
-                        setGuess((prev) => (prev + letter).toUpperCase());
-                      }
-                    }}
-                  />
-                </div>
-              )}
             </div>
           )}
 
-          {/* Drawer Banner when Drawer is drawing */}
-          {isDrawer && roomState?.status === 'playing' && (
+          {/* Drawer Banner when Drawer is drawing (STANDARD MODE ONLY) */}
+          {isDrawer && !isWordle && roomState?.status === 'playing' && (
             <div className="drawer-active-banner">
               <LuPaintbrush className="drawer-banner-icon" />
               <span>You are drawing! Watch player guesses in live chat.</span>
@@ -1546,6 +1525,19 @@ export default function GamePage() {
               </button>
             </form>
           </div>
+
+          {/* Wordle Mode: Interactive Board for Guesser OR Status Dashboard for Drawer */}
+          {isWordle && roomState?.status === 'playing' && requestedRole !== 'spectator' && (
+            <div className="wordle-sidebar-container">
+              <WordleBoard
+                socket={socket}
+                roomId={roomId}
+                isDrawer={isDrawer}
+                roomState={roomState}
+                currentWord={currentWordDisplay}
+              />
+            </div>
+          )}
         </aside>
       </main>
 

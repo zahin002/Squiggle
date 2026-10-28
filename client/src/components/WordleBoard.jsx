@@ -24,6 +24,7 @@ export default function WordleBoard({
   roomId,
   isDrawer,
   roomState,
+  wordleState: propWordleState,
   currentWord,
   onGuessSubmitted
 }) {
@@ -33,11 +34,12 @@ export default function WordleBoard({
   const [solvedInfo, setSolvedInfo] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [showRules, setShowRules] = useState(false);
+  const [localPhaseInfo, setLocalPhaseInfo] = useState(null);
 
-  const wordleState = roomState?.wordleState || {};
-  const currentGuessPhase = wordleState.currentGuessPhase || 1;
-  const isDrawerLocked = wordleState.isDrawerLocked ?? true;
-  const phase = wordleState.phase || (currentGuessPhase <= 2 ? 1 : 2);
+  const wordleState = propWordleState || roomState?.wordleState || {};
+  const currentGuessPhase = localPhaseInfo?.guessPhase || wordleState.currentGuessPhase || 1;
+  const isDrawerLocked = localPhaseInfo?.isDrawerLocked ?? (wordleState.isDrawerLocked ?? true);
+  const phase = localPhaseInfo?.phase || wordleState.phase || (currentGuessPhase <= 2 ? 1 : 2);
 
   // Sync initial state from roomState
   useEffect(() => {
@@ -50,7 +52,7 @@ export default function WordleBoard({
     }
   }, [wordleState]);
 
-  // Socket listeners for Wordle guess feedback
+  // Socket listeners for Wordle guess feedback and phase changes
   useEffect(() => {
     if (!socket) return;
 
@@ -72,12 +74,20 @@ export default function WordleBoard({
       setTimeout(() => setErrorMessage(''), 3500);
     };
 
+    const handlePhaseStarted = ({ guessPhase, isDrawerLocked: locked, phase: p }) => {
+      setLocalPhaseInfo({ guessPhase, isDrawerLocked: locked, phase: p });
+      setCurrentInput('');
+      setErrorMessage('');
+    };
+
     socket.on('wordleGuessResult', handleGuessResult);
     socket.on('wordleError', handleWordleError);
+    socket.on('wordlePhaseStarted', handlePhaseStarted);
 
     return () => {
       socket.off('wordleGuessResult', handleGuessResult);
       socket.off('wordleError', handleWordleError);
+      socket.off('wordlePhaseStarted', handlePhaseStarted);
     };
   }, [socket, onGuessSubmitted]);
 
@@ -88,6 +98,7 @@ export default function WordleBoard({
     setSolvedInfo(null);
     setCurrentInput('');
     setErrorMessage('');
+    setLocalPhaseInfo(null);
   }, [roomState?.currentRound]);
 
   // Clear unsubmitted input when phase advances
@@ -146,6 +157,11 @@ export default function WordleBoard({
     }
     if (currentInput.length !== 5) {
       setErrorMessage('Word must be exactly 5 letters.');
+      return;
+    }
+
+    if (!socket) {
+      setErrorMessage('Connecting to game server...');
       return;
     }
 
