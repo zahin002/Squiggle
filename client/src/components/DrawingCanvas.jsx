@@ -2,16 +2,8 @@
  * client/src/components/canvas/DrawingCanvas.jsx
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * WHAT CHANGED vs the previous version
+ * DrawingCanvas.jsx:
  * ─────────────────────────────────────────────────────────────────────────────
- * OLD DrawingCanvas.jsx:
- *   - Imported ToolBar and ColorPicker but their files didn't exist yet
- *   - Only handled 'brush' and 'eraser' tools via useCanvas
- *   - No shape tools (rect, circle, line)
- *   - No fill tool
- *   - No keyboard shortcuts
- *
- * NEW DrawingCanvas.jsx:
  *   - ToolBar.jsx and ColorPicker.jsx are now fully implemented
  *   - Shape tools (rect, circle, line) rendered with a preview ghost while
  *     dragging, emitted as 'drawShape' on mouseUp
@@ -39,12 +31,12 @@ import '../styles/canvas.css';
 // feedback about which tool is active.
 
 const TOOL_CURSORS = {
-  brush:  'crosshair',
+  brush: 'crosshair',
   eraser: 'cell',
-  fill:   'copy',
-  rect:   'crosshair',
+  fill: 'copy',
+  rect: 'crosshair',
   circle: 'crosshair',
-  line:   'crosshair',
+  line: 'crosshair',
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -52,15 +44,15 @@ const TOOL_CURSORS = {
 export default function DrawingCanvas({ socket, roomId, isDrawer, status }) {
   console.log("DrawingCanvas rendered");
   // ── Tool / Color / Size state ─────────────────────────────────────────────
-  const [tool, setTool]   = useState('brush');
+  const [tool, setTool] = useState('brush');
   const [color, setColor] = useState('#000000');
-  const [size, setSize]   = useState(5);
+  const [size, setSize] = useState(5);
 
   // ── Shape drawing state ───────────────────────────────────────────────────
   // Shapes (rect, circle, line) are drawn by recording startPos on mouseDown,
   // rendering a live "ghost" on mouseMoveShape, then emitting + finalising on mouseUp.
-  const isShapeDrawing  = useRef(false);
-  const shapeStartPos   = useRef({ x: 0, y: 0 });
+  const isShapeDrawing = useRef(false);
+  const shapeStartPos = useRef({ x: 0, y: 0 });
   // We keep a snapshot of the canvas BEFORE the shape preview begins so we can
   // restore it on each mousemove before re-drawing the ghost.
   const preShapeSnapshot = useRef(null);
@@ -125,7 +117,7 @@ export default function DrawingCanvas({ socket, roomId, isDrawer, status }) {
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     return {
       x: (clientX - rect.left) * (canvas.width / rect.width),
-      y: (clientY - rect.top)  * (canvas.height / rect.height),
+      y: (clientY - rect.top) * (canvas.height / rect.height),
     };
   }, [canvasRef]);
 
@@ -303,9 +295,9 @@ function renderShape(ctx, shapeType, startX, startY, endX, endY, color, size) {
   ctx.save();
   ctx.globalCompositeOperation = 'source-over';
   ctx.strokeStyle = color;
-  ctx.lineWidth   = size;
-  ctx.lineCap     = 'round';
-  ctx.lineJoin    = 'round';
+  ctx.lineWidth = size;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
 
   ctx.beginPath();
 
@@ -348,8 +340,8 @@ function renderShape(ctx, shapeType, startX, startY, endX, endY, color, size) {
     ctx.moveTo(startX, startY);
     const dx = endX - startX;
     const dy = endY - startY;
-    const cx = startX + dx/2 - dy/2;
-    const cy = startY + dy/2 + dx/2;
+    const cx = startX + dx / 2 - dy / 2;
+    const cy = startY + dy / 2 + dx / 2;
     ctx.quadraticCurveTo(cx, cy, endX, endY);
     ctx.stroke();
 
@@ -358,7 +350,7 @@ function renderShape(ctx, shapeType, startX, startY, endX, endY, color, size) {
     ctx.moveTo(startX, startY);
     ctx.lineTo(endX, endY);
     ctx.stroke();
-    
+
     // Draw arrow head at 'end'
     const drawArrowHead = (x, y, angle) => {
       const headLen = Math.max(15, size * 3);
@@ -390,7 +382,7 @@ function renderShape(ctx, shapeType, startX, startY, endX, endY, color, size) {
     const w = endX - startX;
     const h = endY - startY;
     // heavily rounded corners, but constrained by size
-    const radius = Math.min(Math.abs(w)/3, Math.abs(h)/3, 30); 
+    const radius = Math.min(Math.abs(w) / 3, Math.abs(h) / 3, 30);
     if (ctx.roundRect) {
       ctx.roundRect(startX, startY, w, h, radius);
       ctx.stroke();
@@ -483,7 +475,7 @@ function applyFloodFill(canvas, startX, startY, fillHex) {
    */
   function setPixel(x, y) {
     const i = idx(x, y);
-    data[i]     = fill[0];
+    data[i] = fill[0];
     data[i + 1] = fill[1];
     data[i + 2] = fill[2];
     data[i + 3] = fill[3];
