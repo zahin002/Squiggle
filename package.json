@@ -9,7 +9,8 @@
     "server": "node --watch server/index.js",
     "install:all": "npm install && npm install --prefix client",
     "build": "npm run build --prefix client",
-    "start": "node server/index.js"
+    "start": "node server/index.js",
+    "test": "node --test code/server/test/suite.test.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
